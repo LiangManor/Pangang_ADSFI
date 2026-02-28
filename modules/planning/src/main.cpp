@@ -1,0 +1,38 @@
+/*
+ * Description: Define multisensor_fusion main
+ * Copyright (c) Huawei Technologies Co., Ltd. 2019-2021. All rights reserved.
+ */
+
+#include <iostream>
+#include <csignal>
+#include <unistd.h>
+#include "core/core.h"
+#include "multisensor_fusion.h"
+
+
+using namespace Adsfi;
+namespace {
+}
+
+int32_t main() {
+    try {
+        // 启用2/3个子线程去独立执行两个函数: 去构建两个UDP通讯（一个udp去订阅车控数据，另一个udp往车控发送数据）
+        // 然后再开启1/3个线程，去循环获取感知结果，获取定位结果，然后把结构化数据发送到车控
+        auto msf = std::make_unique<MultisensorFusion>("Config.yaml"); 
+        //初始化node节点（mdc节点之间通讯体）
+        HafStatus ret = msf->Init();
+
+        if (ret == HAF_SUCCESS) {
+        // 如果初始化成功则执行下一步
+            msf->Process();// 启用两个子线程去独立执行两个函数: getZcData(),mdcBroadcastData()
+        } else {
+            std::cout << "初始化失败" << std::endl;
+            return -1;
+        }
+        std::cout << "****************end*********************" << std::endl;
+    } catch (const std::exception &e) {
+        std::cerr << "程序异常：" << e.what() << std::endl;
+    }
+    return 0;
+}
+

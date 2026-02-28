@@ -1,0 +1,20 @@
+
+logFile: ./    #logPath, Does not support dynamic modification
+appName: LDT #Node name
+description: Lidar 3D detection module
+priority: 0    #{0 ... 12} not currently used
+scheduleFrequency: 10 #not currently used
+isDetermineSchedule: false    #{true, false}, not currently used
+logMode: 6    #{0, 1, 2, 3, 4, 5, 6}, 0: 固定文件存储，异步日志 1: 打屏，同步日志，适合调试， 2: 指定文件存储，同步日志，适合调试，
+              #3：固定+打屏， 4：固定+指定， 5：打屏+指定， 6：固定+打屏+指定
+logLevel: 2    #{0，1，2，3，4，5, 6}， 0：verbose, 1：debug, 2：info, 3：warn, 4：error, 5：fatal, 6：off
+
+isObjectSend: true
+isLocationActivate: true
+
+recvInstanceID: 
+    lidarInstanceID: [4,6]        # 上A3(3) 下A4(4) 上B1(5) 下B2(6)   写两个ID就意味着必须要开两个驱动
+    locationInstanceID: 113   # location instance id
+sendInstanceID: 
+    detectionOutInstanceID: 2005 #{2001...2005} send object array instance id
+mvizVision: 1

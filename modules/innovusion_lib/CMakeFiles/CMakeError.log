@@ -1,0 +1,30 @@
+Performing C++ SOURCE FILE Test HAS_MACRO_PREFIX_MAP_GCCXX failed with the following output:
+Change Dir: /home/qjj/CRRC/图达通开发文档/inno-lidar-sdk-release-client-sdk-3.102.6-public/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make cmTC_3e02e/fast && /usr/bin/make -f CMakeFiles/cmTC_3e02e.dir/build.make CMakeFiles/cmTC_3e02e.dir/build
+make[1]: Entering directory '/home/qjj/CRRC/图达通开发文档/inno-lidar-sdk-release-client-sdk-3.102.6-public/CMakeFiles/CMakeTmp'
+Building CXX object CMakeFiles/cmTC_3e02e.dir/src.cxx.o
+/usr/bin/c++    -std=gnu++11 -fPIC -DHAS_MACRO_PREFIX_MAP_GCCXX   -fmacro-prefix-map -o CMakeFiles/cmTC_3e02e.dir/src.cxx.o -c /home/qjj/CRRC/图达通开发文档/inno-lidar-sdk-release-client-sdk-3.102.6-public/CMakeFiles/CMakeTmp/src.cxx
+c++: error: unrecognized command line option '-fmacro-prefix-map'; did you mean '-fmacro-prefix-map='?
+make[1]: *** [CMakeFiles/cmTC_3e02e.dir/build.make:66: CMakeFiles/cmTC_3e02e.dir/src.cxx.o] Error 1
+make[1]: Leaving directory '/home/qjj/CRRC/图达通开发文档/inno-lidar-sdk-release-client-sdk-3.102.6-public/CMakeFiles/CMakeTmp'
+make: *** [Makefile:121: cmTC_3e02e/fast] Error 2
+
+
+Source file was:
+int main() { return 0; }
+Performing C++ SOURCE FILE Test HAS_MACRO_PREFIX_MAP_GCCXX failed with the following output:
+Change Dir: /home/qjj/CRRC/图达通开发文档/inno-lidar-sdk-release-client-sdk-3.102.6-public/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make cmTC_97820/fast && /usr/bin/make -f CMakeFiles/cmTC_97820.dir/build.make CMakeFiles/cmTC_97820.dir/build
+make[1]: Entering directory '/home/qjj/CRRC/图达通开发文档/inno-lidar-sdk-release-client-sdk-3.102.6-public/CMakeFiles/CMakeTmp'
+Building CXX object CMakeFiles/cmTC_97820.dir/src.cxx.o
+/usr/bin/c++    -std=gnu++11 -fPIC -DHAS_MACRO_PREFIX_MAP_GCCXX   -fmacro-prefix-map -o CMakeFiles/cmTC_97820.dir/src.cxx.o -c /home/qjj/CRRC/图达通开发文档/inno-lidar-sdk-release-client-sdk-3.102.6-public/CMakeFiles/CMakeTmp/src.cxx
+c++: error: unrecognized command line option '-fmacro-prefix-map'; did you mean '-fmacro-prefix-map='?
+make[1]: *** [CMakeFiles/cmTC_97820.dir/build.make:66: CMakeFiles/cmTC_97820.dir/src.cxx.o] Error 1
+make[1]: Leaving directory '/home/qjj/CRRC/图达通开发文档/inno-lidar-sdk-release-client-sdk-3.102.6-public/CMakeFiles/CMakeTmp'
+make: *** [Makefile:121: cmTC_97820/fast] Error 2
+
+
+Source file was:
+int main() { return 0; }

@@ -1,0 +1,330 @@
+#ifndef EKF_H
+#define EKF_H
+#include "Eigen/Dense"
+#include <vector>
+#include <string>
+#include <cmath>
+
+using namespace std; 
+
+//定义小车状态
+class vehicleState
+{
+public:
+    // 估计的5个车辆状态（后验估计）
+    float x       = 0.;//米
+    float y       = 0.;
+    float z       = 0.;
+    float v       = 0.;//米每秒
+    float yaw     = 0.;//弧度
+    float yawRate = 0.;//弧度每秒
+    // 前后时间差
+    float dt      = 0.; // 秒（imu提供）
+//    // 是否有 imu 结果
+//    bool  isImuNewData  = false;
+    // 车辆状态是否初始化
+    bool  init = false;
+
+public:
+     vehicleState(){}
+    ~vehicleState(){}
+};
+
+struct GPSDATA
+{
+    float x;
+    float y;
+    float heading;
+};
+
+
+
+
+
+
+class EKF
+{
+public:
+   bool first_init_;
+   bool second_init_;//两次初始化的原因是:只有两帧才可以拟合出速度
+   Eigen::MatrixXf FGeneral;//状态转移模型(一般情况) ctrv
+   Eigen::MatrixXf FSpecial;//状态转移模型(特殊情况) cv
+   Eigen::MatrixXf H;//状态向量to传感器估计值的映射模型(映射模型为线性模型)
+   Eigen::MatrixXf R;//传感器噪声矩阵
+   Eigen::MatrixXf Q;//状态量噪声矩阵
+   Eigen::MatrixXf kGain;//卡尔曼增益
+   Eigen::MatrixXf x_pre_;//先验状态量
+   Eigen::MatrixXf x_post_;//后验状态量
+   Eigen::MatrixXf p_pre_;//先验协方差
+   Eigen::MatrixXf p_post_;//后验协方差
+   Eigen::MatrixXf z_pre_;//先验传感器预测值
+   Eigen::MatrixXf s_pre_;//传感器估计值先验协方差
+   float dt;//传感器采样周期
+
+
+public:
+   EKF()
+   {
+      dt = 0.1;//采样一帧lidar为0.1秒
+      //目标有位置x，y，速度v（xy合速度），朝向角θ，以及角速度ω。这五个参数组成了状态向量(单位分别为:米、米每秒、弧度、弧度每秒)
+      FGeneral.resize(5,5);
+      FSpecial.resize(5,5);
+      H.resize(2, 5);//滤波器估计值与传感器测量值的映射（不考虑z轴方向），只映射x、y
+      H << 1, 0, 0, 0, 0,
+           0, 1, 0, 0, 0;
+      //定义传感器噪声矩阵R
+      R.resize(2, 2);
+      R <<  0.25, 0,
+            0, 0.25;
+      //定义运动模型噪声矩阵Q
+      Q.resize(5, 5);
+      Q<<0.001,0.,0.,0., 0.,//关于ctrv模型坐标x的噪声
+         0.,0.001,0.,0., 0.,//关于ctrv模型坐标y的噪声
+         0.,0.,0.005,0., 0.,//关于ctrv模型合速度v的噪声
+         0.,0.,0.,0.005, 0.,//关于ctrv模型航向角θ的噪声
+         0.,0.,0.,0., 0.005;//关于ctrv模型角速度ω的噪声
+      //
+      kGain.resize(5, 2);
+      kGain<<1,0,
+             0,1,
+             0,0,
+             0,0,
+             0,0;
+      x_pre_.resize(5, 1);
+      x_post_.resize(5, 1);
+      p_pre_.resize(5, 5);
+      p_post_.resize(5, 5);
+      z_pre_.resize(2, 1);
+      s_pre_.resize(2, 2);//传感器估计值先验协方差
+      first_init_  = false;
+      second_init_ = false;
+   }
+   void run(const vehicleState & state)
+   {
+      if(!first_init_)
+      {
+         initialize(state);
+         return;
+      }
+      if(!second_init_)
+      {
+         secondInit(state);
+         return;
+      }
+      prediction(state);
+      if(first_init_ && second_init_)
+      {
+         update(state);
+         //std::cout<<"debug"<<std::endl;
+      }
+      return;
+   }
+   void initialize(const vehicleState state)
+   {
+      this->x_post_<< state.x, state.y, state.v, state.yaw, 0.0;//初始化后验估计
+      this->p_post_<<1, 0, 0, 0, 0,//初始化值越大，则表明刚开始更相信测量值；
+                     0, 1, 0, 0, 0,
+                     0, 0, 1, 0, 0,
+                     0, 0, 0, 1, 0,
+                     0, 0, 0, 0, 1;
+      this->first_init_ = true;
+      return;
+   }
+   void secondInit(const vehicleState state)
+   {
+      //前向欧拉拟合出 速度和角速度
+      //拟合速度（有 IMU 则用IMU替代）
+      float current_x = state.x;
+      float diff_x = current_x - this->x_post_(0,0);
+      float vx = diff_x/dt;
+      float current_y = state.y;
+      float diff_y = current_y - this->x_post_(1,0);
+      float vy = diff_y/dt;
+            float v = sqrt(vx*vx + vy*vy);
+      //拟合角速度（有IMU则用IMU替代）
+      float diff_yaw = limit_yaw(this->x_post_(3,0)) - limit_yaw(state.yaw);//-----------------------------------
+            float yawRate = 0.0;
+      //拟合结果
+      this->x_post_<<state.x, state.y, v, state.yaw, yawRate;
+      this->second_init_ = true;
+      return;
+   }
+   void prediction(const vehicleState state) 
+   {
+      float x       = this->x_post_(0);
+      float y       = this->x_post_(1);
+      float v       = this->x_post_(2);
+      float yaw     = state.yaw;
+      float yawRate = 0.0;
+      //因为CTRV模型会因为yawRate是否为了0分为两种情况
+      if (yawRate> 0.0001)
+      {
+         float a11 = 1;
+         float a12 = 0;
+         float a13 = (1 / yawRate) * (sin(yaw + yawRate * dt) - sin(yaw));
+         float a14 = (v / yawRate) * (cos(yaw + yawRate * dt) - cos(yaw));
+         float a15 = dt * (v / yawRate) * cos(yaw + yawRate * dt) - ((v / (yawRate * yawRate)) * (sin(yaw + yawRate * dt) - sin(yaw)));
+
+         float a21 = 0;
+         float a22 = 1;
+         float a23 = (1 / yawRate) * (cos(yaw) - cos(yaw + yawRate * dt));
+         float a24 = (v / yawRate) * (sin(yaw + yawRate * dt) - sin(yaw));
+         float a25 = dt * (v / yawRate) * sin(yaw + yawRate * dt) - ((v / (yawRate * yawRate)) * (cos(yaw) - cos(yaw + yawRate * dt)));
+
+         float a31 = 0;
+         float a32 = 0;
+         float a33 = 1;
+         float a34 = 0;
+         float a35 = 0;
+
+         float a41 = 0;
+         float a42 = 0;
+         float a43 = 0;
+         float a44 = 1;
+         float a45 = dt;
+
+         float a51 = 0;
+         float a52 = 0;
+         float a53 = 0;
+         float a54 = 0;
+         float a55 = 1;
+         // ctrv模型的雅克比矩阵(运动模型对各状态量的偏导)
+         FGeneral<<a11, a12 ,a13, a14, a15,
+                   a21, a22, a23, a24, a25,
+                   a31, a32, a33, a34, a35,
+                   a41, a42, a43, a44, a45,
+                   a51, a52, a53, a54, a55;
+         this->x_pre_ = this->FGeneral*this->x_post_;
+         this->p_pre_ = this->FGeneral*(this->p_post_)*this->FGeneral.transpose() + this->Q;
+      }
+      else// 退化为cv模型
+      {
+         float a11 = 1;
+         float a12 = 0;
+         float a13 = dt * cos(yaw);
+         float a14 = -1 * dt * v * sin(yaw);
+         float a15 = 0;
+
+         float a21 = 0;
+         float a22 = 1;
+         float a23 = dt * sin(yaw);
+         float a24 = dt * v * cos(yaw);
+         float a25 = 0;
+
+         float a31 = 0;
+         float a32 = 0;
+         float a33 = 1;
+         float a34 = 0;
+         float a35 = 0;
+
+         float a41 = 0;
+         float a42 = 0;
+         float a43 = 0;
+         float a44 = 1;
+         float a45 = dt;
+
+         float a51 = 0;
+         float a52 = 0;
+         float a53 = 0;
+         float a54 = 0;
+         float a55 = 1;
+         // ctrv模型的雅克比矩阵
+         FSpecial<<a11, a12 ,a13, a14, a15,
+                   a21, a22, a23, a24, a25,
+                   a31, a32, a33, a34, a35,
+                   a41, a42, a43, a44, a45,
+                   a51, a52, a53, a54, a55;
+          // 计算先验估计 与 先验估计协方差矩阵
+          this->x_pre_ = this->FSpecial*this->x_post_;
+          this->p_pre_ = this->FSpecial*(this->p_post_)*this->FSpecial.transpose() + this->Q;
+      }
+      //获取传感器测量值估计值
+      this->z_pre_ = this->H*this->x_pre_;
+      this->s_pre_ = this->H*this->p_pre_*this->H.transpose() + this->R;
+   }
+   void update(const vehicleState & state)
+   {
+      //传感器测量值
+      Eigen::MatrixXf meas;
+      meas.resize(2, 1);
+      meas<< state.x, state.y;
+      //计算卡尔曼增益
+      this->kGain = this->p_pre_ * H.transpose() * this->s_pre_.inverse();
+      //计算后验估计 与 后验估计协方差矩阵
+      this->x_post_ = this->x_pre_ + this->kGain * ( meas - this->z_pre_);
+      this->p_post_ = this->p_pre_ - this->kGain * H * this->p_pre_;
+
+
+      this->x_post_(3) = limit_yaw(this->x_post_(3)); //yaw
+      if( std::abs(this->x_post_(2)) < 0.05 )
+      {
+           this->x_post_(2) = 0.0;
+      }
+   }
+   //如何理解该函数:
+   //当把前后两帧求解出的偏航角归一化到 -pi/2 to pi/2之间，更有利于求解前后两帧之间的角度差
+   float limit_yaw(float psi)
+   {
+       //角度归一化 [-pi,pi];
+       while (psi > M_PI || psi < -M_PI)
+       {
+           if (psi > M_PI)
+           {
+               psi -= 2 * M_PI;
+           }
+           if (psi < -M_PI)
+           {
+               psi += 2 * M_PI;
+           }
+       }
+       return psi;
+   }
+   ~EKF(){}
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#endif // EKF_H
+
+
+
+
+
+
+
+
+
+
+
+

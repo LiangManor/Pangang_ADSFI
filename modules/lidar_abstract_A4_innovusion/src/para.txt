@@ -1,0 +1,4 @@
+x_angle=0
+y_angle=-1.55
+z_angle=3.7
+isVision=1

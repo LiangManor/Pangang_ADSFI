@@ -1,0 +1,69 @@
+identifier:
+  "MAPPING"
+description: "Mapping module"
+diag_agent:
+  sendInstanceID:
+  recvInstanceID:
+    DiagComClient:
+        instanceId: [1,2]
+        portName: ["DiagComClientRPort","DiagComClientRPort"]
+ins_a_cm:
+  sendInstanceID:
+    GnssInfoServiceInterface:
+        instanceId: [1]
+        portName: ["GnssRawToAppPPort"]
+    ImuInfoServiceInterface:
+        instanceId: [1]
+        portName: ["ImuToAppPPort"]
+    DataFlowServiceInterface:
+        instanceId: [4]
+        portName: ["InsDataFlowPPort"]
+    TimeDelayServiceInterface:
+        instanceId: [4]
+        portName: ["InsTimeDelayPPort"]
+    InsInfoServiceInterface:
+        instanceId: [1]
+        portName: ["InsToAppPPort"]
+    UartFwdServiceInterface:
+        instanceId: [1]
+        portName: ["UartMsgToAppPPort"]
+    TsyncGnssServiceInterface:
+        instanceId: [1]
+        portName: ["UtcTimeToAppPPort"]
+    InsGsvInfoServiceInterface:
+        instanceId: [1]
+        portName: ["GsvMsgToAppPPort"]
+    InsImuRawInfoServiceInterface:
+        instanceId: [1]
+        portName: ["ImuRawMsgToAppPPort"]
+    InsStatusInfoServiceInterface:
+        instanceId: [1]
+        portName: ["InsStatusInfoToAppPPort"]
+  recvInstanceID:
+    MntDelayServiceInterface:
+        instanceId: [1]
+        portName: ["InsMntRPort"]
+    CanFdRxServiceInterface:
+        instanceId: [1]
+        portName: ["CanFdMsgFromMcuRPort"]
+    ChassisReportServiceInterface:
+        instanceId: [1]
+        portName: ["ChassisFromAppRPort"]
+    ConfigServerServiceInterface:
+        instanceId: [1]
+        portName: ["InsCfgClientRPort"]
+    NrmCenterServiceInterface:
+        instanceId: [1]
+        portName: ["InsNrmcRPort"]
+    TsyncMeasureServiceInterface:
+        instanceId: [1]
+        portName: ["TimeCompensateFromAppRPort"]
+    UartFwdServiceInterface:
+        instanceId: [21]
+        portName: ["UartMsgFromAppRPort"]
+    DevmCenterServiceInterface:
+        instanceId: [1,101]
+        portName: ["InsDevmFromAppRPort","InsDevmFromAppRPort"]
+    FmReportEventService:
+        instanceId: [1444]
+        portName: ["reportEventRPort"]

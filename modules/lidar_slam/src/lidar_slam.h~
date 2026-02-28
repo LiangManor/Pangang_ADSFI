@@ -1,0 +1,491 @@
+#ifndef SAMPLE_LIDAR_SLAM_H
+#define SAMPLE_LIDAR_SLAM_H
+
+#include "adsf/lidar_slam_base.h"
+#include "core/core.h"
+#include "dnn/dnn.h"
+#include <ctime>
+#include <sys/time.h>
+#include "yaml-cpp/yaml.h"
+#include <unistd.h>
+#include <thread>
+#include <sstream>
+// pcl库头文件
+#include <Eigen/Core>
+#include <Eigen/Geometry>
+#include <iostream>
+#include <pcl/io/pcd_io.h>
+#include <pcl/point_types.h>
+#include <pcl/point_cloud.h>
+#include <pcl/registration/ndt.h>
+#include <pcl/registration/gicp.h>
+#include <pcl/filters/voxel_grid.h>
+// omp加速库
+#include <pclomp/ndt_omp.h>
+#include <pclomp/gicp_omp.h>
+#include <fstream>//c++文件操作的头文件
+#include <cstring>
+#include <string>
+#include <vector>
+#include <chrono>
+#include <stdexcept>
+
+//
+#include "get_save_init_point.h"
+//
+#include "AN.h"
+
+// Mviz可视化
+#include <publisher.h> //点云Mviz可视化
+// 
+#include "ekf.h"
+//
+#include "slidingwindowfilter.h"
+//
+#include "rfid.h"
+//
+
+
+using namespace std;
+using namespace Adsfi;
+
+struct ONLINEPTS
+{
+    std::vector<double> x;
+    std::vector<double> y;
+    std::vector<double> yaw;
+};
+
+class LidarSlam {
+public:
+    // 构造函数，用于初始化参数
+    explicit LidarSlam(std::string configFile) : node(configFile) 
+    {
+        //
+        demo.setFilePath("../Config.yaml");
+        // 初始化flag
+        this->initLocation = true;
+         //读取配置文件 
+        auto config = Adsfi::HafYamlNode("Config.yaml");
+        // 配置初始原点以及方位角
+        config.GetValue<decltype(this->initX)>(("initX"), (this->initX));// 笛卡尔坐标系三轴坐标
+        config.GetValue<decltype(this->initY)>(("initY"), (this->initY));
+        config.GetValue<decltype(this->initZ)>(("initZ"), (this->initZ));
+        config.GetValue<decltype(this->initThetaX)>(("initThetaX"), (this->initThetaX));// 笛卡尔坐标系三轴旋转角
+        config.GetValue<decltype(this->initThetaY)>(("initThetaY"), (this->initThetaY));
+        config.GetValue<decltype(this->initThetaZ)>(("initThetaZ"), (this->initThetaZ));
+        
+        // 配置体素边长
+        // 用于当前帧下采样
+        config.GetValue<decltype(this->voxelGridSize)>(("voxelGridSize"), (this->voxelGridSize));
+        this->voxelgrid.setLeafSize(this->voxelGridSize, this->voxelGridSize, this->voxelGridSize);
+        // 用于点云地图下采样
+        config.GetValue<decltype(this->voxelGridSize2)>(("voxelGridSize2"), (this->voxelGridSize2));
+        this->voxelgrid2.setLeafSize(this->voxelGridSize2, this->voxelGridSize2, this->voxelGridSize2);
+
+
+        // 配置ndt定位器参数
+        config.GetValue<decltype(this->ndtGridResolution)>(("ndtGridResolution"), (this->ndtGridResolution));// ndt体素边长
+        config.GetValue<decltype(this->precision)>(("precision"), (this->precision));// 迭代精度（米）
+        config.GetValue<decltype(this->step)>(("step"), (this->step));// ndt体素移动步长
+        config.GetValue<decltype(this->iterations)>(("iterations"), (this->iterations));// 迭代次数
+        config.GetValue<decltype(this->threadNum)>(("threadNum"), (this->threadNum));// 启用的线程数
+        
+        // 是否启用RTK初始位姿
+        config.GetValue<decltype(this->useRTK)>(("useRTK"), (this->useRTK));//
+        // 大地坐标系 到 点云地图坐标系转换
+        config.GetValue<decltype(this->longitudeOfOrigin)>(("longitudeOfOrigin"), (this->longitudeOfOrigin));// 原点经度
+        config.GetValue<decltype(this->latitudeOfOrigin)>(("latitudeOfOrigin"), (this->latitudeOfOrigin));// 原点纬度
+        
+        
+        config.GetValue<decltype(this->xParam)>(("xParam"), (this->xParam));// 大地坐标系 到 点云地图坐标系的标定参数:x
+        config.GetValue<decltype(this->yParam)>(("yParam"), (this->yParam));// 大地坐标系 到 点云地图坐标系的标定参数:y
+        config.GetValue<decltype(this->zAngle)>(("zAngle"), (this->zAngle));// 大地坐标系 到 点云地图坐标系的标定参数: z轴转角
+        
+        // 工作模式
+        config.GetValue<decltype(this->workingMode)>(("workingMode"), (this->workingMode));// 切换工作模式
+        config.GetValue<decltype(this->filePath)>(("filePath"), (this->filePath));// 轨迹记录路径
+        config.GetValue<decltype(this->latLonOriginPath)>(("latLonOriginPath"), (this->latLonOriginPath));// 轨迹记录路径
+        // 是否可视化定位效果 
+        config.GetValue<decltype(this->isVision)>(("isVision"), (this->isVision));// 表示进行可视化
+        config.GetValue<decltype(this->isManualInit)>(("isManualInit"), (this->isManualInit));// 表示人为初始化
+
+
+        // rfid上线点文件,文件格式如下：
+        // 第一行 (站位行):0,0,0
+        // 第二行 (工位点1在点云地图下面的坐标：经度-纬度-航向角 或 x-y-航向角):*,*,*
+        // 第三行 (工位点2在点云地图下面的坐标):*,*,*
+        config.GetValue<decltype(this->rfidPath)>(("rfidPath"), (this->rfidPath));// 获取存放 rfid 上线点的文件路径
+        
+        // 创建文件文本 
+        this->file_write.open(filePath);
+        // ndt 参数 
+        this->ndt_omp = boost::make_shared<pclomp::NormalDistributionsTransform<pcl::PointXYZ, pcl::PointXYZ>>();
+        this->ndt_omp->setResolution(this->ndtGridResolution);//设置NDT网格结构的分辨率（必须大于0.1） 1.5
+        this->ndt_omp->setStepSize(this->step);//为More-Thuente线搜索设置最大步长，太小容易陷入局部最优解  0.6
+        this->ndt_omp->setMaximumIterations (this->iterations);//设置匹配迭代的最大次数
+        this->ndt_omp->setTransformationEpsilon (this->precision);//设置求解精度（迭代增量的大小）   0.01
+        this->ndt_omp->setNumThreads(this->threadNum);//设置线程数
+        this->ndt_omp->setNeighborhoodSearchMethod(pclomp::DIRECT7);
+        // 获取地图路径
+        config.GetValue<decltype(this->mapPath)>(("mapPath"), (this->mapPath));
+        // 导入地图 
+        importMap();
+        std::cout<<" <----------------- ndt 算法参数 --------------------> "<<std::endl;
+        std::cout<<" initX      "<<initX<<std::endl;
+        std::cout<<" initY      "<<initY<<std::endl;
+        std::cout<<" initZ      "<<initZ<<std::endl;
+        std::cout<<" initThetaX "<<initThetaX<<std::endl;
+        std::cout<<" initThetaY "<<initThetaY<<std::endl;
+        std::cout<<" initThetaZ "<<initThetaZ<<std::endl;
+        std::cout<<" voxelGridSize     "<<voxelGridSize<<std::endl;
+        std::cout<<" ndtGridResolution "<<ndtGridResolution<<std::endl;
+        std::cout<<" precision         "<<precision<<std::endl;
+        std::cout<<" step              "<<step<<std::endl;
+        std::cout<<" iterations        "<<iterations<<std::endl;
+        std::cout<<" threadNum         "<<threadNum<<std::endl;
+        std::cout<<" <----------------- 工作模式 --------------------> "<<std::endl;
+        if(this->workingMode == 0)
+        {
+            std::cout<<"标定模式"<<std::endl;
+            std::cout<<"待标定文件路径:"<<filePath<<std::endl;
+        }
+        else
+        {
+            std::cout<<"普通模式"<<std::endl;
+        }
+
+        // 度 转换 弧度
+        // 
+//        this->initThetaX = this->initThetaX * (3.1415926536/180.0);
+//        this->initThetaY = this->initThetaY * (3.1415926536/180.0);
+//        this->initThetaZ = this->initThetaZ * (3.1415926536/180.0);
+        // 
+        this->zAngle     = this->zAngle     * (3.1415926536/180.0);
+
+        // 最初考虑的是每个工位点对应经纬度信息，但现场rtk信号不好，所以方法1只用于保留，并未使用，而是使用方法2
+        // 方法1:获取每个工位点对应的坐标信息（上线点格式为：lat-lon-heading(大地坐标系)）
+        rfid.getOnlinePoint(this->rfidPath);
+        // 方法2: 获取每个工位点对应的坐标信息（上线点格式为：x-y-yaw）
+        getOnlineX_Y_Yaw(this->rfidPath);
+        // 与rfid标签机（型号RF650R）建立udp通讯
+        rfid.connectRF650R();
+
+    };
+    
+    ~LidarSlam()
+    {
+        for (auto &it : pool) {
+            if (it.joinable()) {
+                it.join();
+            }
+        }
+    };
+
+    Adsfi::HafStatus Init()
+    {
+        return node.Init(); // 初始化LidarSlam框架对象
+    };
+    void Stop()
+    {
+        node.Stop(); // 停止LidarSlam框架的收发子线程
+        return;
+    };
+    void Process();
+    void ImuPredCurFrame(vehicleState & state);
+    void mvizView(pcl::PointCloud<pcl::PointXYZ>::Ptr alignedPC, vehicleState egoState, GPSDATA gpsData);
+    void getOnlineX_Y_Yaw(std::string path)
+    {
+        std::ifstream file_read(path);
+        std::string line;
+        while(file_read)
+        {
+            if(getline(file_read,line)) //从文件file_path中获取以'\n'为结尾的字符串,存入line中,然后文件指针自动下移至下一行
+            {
+                std::vector<std::string> str_vec_ptr = split(line);
+                if(str_vec_ptr.empty()) continue;
+                this->olPts.x.push_back(std::stod(str_vec_ptr[0]));
+                this->olPts.y.push_back(std::stod(str_vec_ptr[1]));
+                this->olPts.yaw.push_back(std::stod(str_vec_ptr[2]));
+            }
+        }
+    }
+    float normalizeYaw(float yaw)
+    {
+        float PI = 3.14159265358979323846f;
+        yaw = std::fmod(yaw + PI, 2 * PI); // 将角度映射到 [0, 2*PI) 范围内
+        if (yaw < 0) 
+        {
+            yaw += 2 * PI; // 确保范围在 [0, 2*PI)
+        }
+        return yaw - PI; // 映射到 [-PI, PI]
+    }
+    
+    // 该函数用于更新 rfid 的数值
+    void threadGetRfid()
+    {
+    	while(!node.IsStop())
+    	{
+            this->rfid.getID(this->id,this->intensity);
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));  // 1毫秒
+    	}
+    }
+    
+public:
+    mdc::visual::Publisher pcPointXYZIRPub {}; //发布坐标变换后的点云
+    mdc::visual::Publisher mapPub {};          // 发布地图
+    mdc::visual::Publisher lidarTrajectPub {};          // 发布lidar轨迹
+    mdc::visual::Publisher imuTrajectPub {};          // 发布imu推理轨迹
+    mdc::visual::Publisher gnssTrajectPub {};          // 发布gnss轨迹
+    int sum = 0;
+    // 需要上报的rfid参数
+    int id = -1;
+    int intensity = -1;
+    bool threadEnable = false;
+// 算法参数
+public:
+    bool initLocation;//初始化flag标志位
+    int useRTK;
+    Eigen::Matrix4f lastLocation;//上一时刻位姿
+    pcl::PointCloud<pcl::PointXYZ>::Ptr mapCloud;
+    
+    pcl::VoxelGrid<pcl::PointXYZ> voxelgrid;//体素滤波器（当前帧）
+    pcl::VoxelGrid<pcl::PointXYZ> voxelgrid2;//体素滤波器（地图）
+    boost::shared_ptr<pclomp::NormalDistributionsTransform<pcl::PointXYZ, pcl::PointXYZ>> ndt_omp;//ndt 定位器(为共享指针，同上)
+    float initX, initY, initZ, initThetaX, initThetaY, initThetaZ;
+    float voxelGridSize, voxelGridSize2 ,ndtGridResolution, precision, step;
+    int iterations, threadNum, workingMode;
+    double longitudeOfOrigin, latitudeOfOrigin;
+    float xParam, yParam, zAngle;
+    std::string mapPath;
+    std::string filePath;
+    std::string latLonOriginPath;
+    std::string rfidPath;
+    // 声明 ofstream 变量   
+    std::ofstream file_write;
+    // rfid通讯
+    RFID rfid;
+    // 检查传感器是否丢掉数据链路
+    int insCounter = 0;
+    int lidarCounter = 0;
+    // 判断是否可视化定位效果
+    int isVision = 0;// 默认不可视化
+    int isManualInit = 0;// 默认不手动进行初始化
+    ONLINEPTS olPts;
+    std::vector<std::thread> pool;
+    //
+    AN an;
+    
+// 算法实现
+public:
+void importMap()//导入全局地图
+{
+    this->mapCloud.reset(new pcl::PointCloud<pcl::PointXYZ>());
+    std::fstream input(this->mapPath.c_str(), ios::in | ios::binary);
+    // 检查文件是否成功打开
+    std::cout << "正在检查地图路径 ......";  
+    if (input.is_open()) 
+    {  
+        std::cout << "[ 地图路径输入正确 ]\n" << std::endl;  
+    } 
+    else
+    {  
+        std::cout << "[ 地图路径输入错误, 请确认地图文件地址是否正确 !!! ]\n" << std::endl;  
+        this->node.Stop();//关闭程序
+        return;
+    }
+    std::cout << "正在导入全局地图 ......";
+    for(int i = 0; input.good() && !input.eof(); i++)
+    {
+        pcl::PointXYZ PointXYZ;
+        input.read((char *)&PointXYZ.x, 3 * sizeof(float));
+        this->mapCloud->points.push_back(PointXYZ);
+    }
+    std::cout << "地图导入成功" << std::endl;
+
+    //
+    an.init(this->mapCloud);
+    std::cout << "地图已经导入AN算法" << std::endl;
+
+    //对地图进行下采样
+    this->voxelgrid2.setInputCloud((this->mapCloud));//设置输入点云
+    this->voxelgrid2.filter(*(this->mapCloud));      //设置输出点云
+    this->ndt_omp->setInputTarget((this->mapCloud));//设置地图
+}
+    
+pcl::PointCloud<pcl::PointXYZ>::Ptr align(const pcl::PointCloud<pcl::PointXYZ>::Ptr& scan_cloud_ ,float & score) //返回转化后的点云
+{
+    pcl::PointCloud<pcl::PointXYZ>::Ptr scan_cloud(new pcl::PointCloud<pcl::PointXYZ>);
+    *scan_cloud = *scan_cloud_;
+    voxelgrid.setInputCloud(scan_cloud);//对当前帧进行下采样
+    voxelgrid.filter(*scan_cloud);
+    ndt_omp->setInputSource(scan_cloud);
+    pcl::PointCloud<pcl::PointXYZ>::Ptr aligned(new pcl::PointCloud<pcl::PointXYZ>());
+    // 匹配算法数值初始化
+    if(initLocation)
+    {
+        initLocation = false;
+        Eigen::Translation3f init_translation(this->initX, this->initY, this->initZ);
+        Eigen::AngleAxisf init_rotation_x(this->initThetaX, Eigen::Vector3f::UnitX());//roll
+        Eigen::AngleAxisf init_rotation_y(this->initThetaY, Eigen::Vector3f::UnitY());//pitch
+        Eigen::AngleAxisf init_rotation_z(this->initThetaZ, Eigen::Vector3f::UnitZ());//yaw
+        Eigen::Matrix4f init_guess = (init_translation * init_rotation_z * init_rotation_y * init_rotation_x).matrix();
+        ndt_omp->align(*aligned, init_guess);
+        score  = ndt_omp->getFitnessScore ();
+        this->lastLocation = ndt_omp->getFinalTransformation();//保存当前时刻的位姿
+        return aligned;
+    }
+    else
+    {
+        ndt_omp->align(*aligned, this->lastLocation);//以上一时刻的位姿为初值
+        score  = ndt_omp->getFitnessScore ();
+        this->lastLocation = ndt_omp->getFinalTransformation();//保存当前时刻的位姿
+        return aligned;
+    }
+}
+    
+void print4x4Matrix()
+{
+    printf("Rotation matrix :\n");
+    printf("    | %6.3f %6.3f %6.3f | \n", lastLocation(0, 0), lastLocation(0, 1), lastLocation(0, 2));
+    printf("R = | %6.3f %6.3f %6.3f | \n", lastLocation(1, 0), lastLocation(1, 1), lastLocation(1, 2));
+    printf("    | %6.3f %6.3f %6.3f | \n", lastLocation(2, 0), lastLocation(2, 1), lastLocation(2, 2));
+    printf("Translation vector :\n");
+    printf("T = < x = %6.3f, y = %6.3f, z = %6.3f >\n", lastLocation(0, 3), lastLocation(1, 3), lastLocation(2, 3));
+    Eigen::Matrix3f submatrix = lastLocation.block<3, 3>(0, 0);
+    Eigen::Vector3f delta_euler = submatrix.eulerAngles(2,1,0);
+    printf("欧拉角 :\n");
+    printf("< yaw(z轴) = %6.3f, pitch(y轴) = %6.3f, roll(x轴) = %6.3f >\n\n", delta_euler(0), delta_euler(1), delta_euler(2));
+}
+    
+//经纬度转高斯坐标:x轴指向正东方，y轴指向正北方
+void LatLon2XY(const double & lat, const double & lon,double & current_x,double & current_y)
+{
+    /****************************************************************************************************/
+    /***********     转化为东北天坐标系：东北天坐标系定义正东为x轴正方向，正北为y轴正方向 ************/
+    /****************************************************************************************************/  
+    /*此部分函数内容不是研究重点,代码使用者可以不用深究怎么转换，会使用即可*/
+    double pi = 3.1415926536;
+    double a = 6378137.0;//地球赤道半径
+    double b = 6356752.314245;//地球极半径
+    //---------度转弧度
+    //原点经纬度单位转换
+    double Lat0  = this->latitudeOfOrigin * pi / 180.;
+    double Lont0 = this->longitudeOfOrigin * pi / 180.;	
+    //车辆当前经纬度单位转换
+    double Lat1  = lat * pi / 180.;
+    double Lont1 = lon * pi / 180.;	  
+    //---------设定的原点 相对于 大地上某位置Q的坐标
+    double X0 = a*a / (sqrt(a*a + b*b * (tan(Lat0)) * (tan(Lat0)) ));
+    double Y0 = b*b / (sqrt(b*b + a*a * (1/tan(Lat0))*(1/tan(Lat0)) ));
+
+    //---------车辆当前点 相对于 大地上某位置Q的坐标
+    double X1=a*a / (sqrt(a*a + b*b * (tan(Lat1)) * (tan(Lat1)) ));
+    double Y1=b*b / (sqrt(b*b + a*a * (1/tan(Lat1))*(1/tan(Lat1)) ));
+
+    int k1;
+    if((Lat1-Lat0)>0){k1=1;}
+    if((Lat1-Lat0)==0){k1=0;}
+    if((Lat1-Lat0)<0){k1=-1;}
+
+    // 将X1，Y1转移到以X0，Y0为原点的坐标系上；经纬度转换成高斯坐标系后: x轴指向正东方，y轴指向正北方
+    double relative_x = X0*(Lont1-Lont0); 		 
+    double relative_y = k1*sqrt( (X1-X0)*(X1-X0) + (Y1-Y0)*(Y1-Y0) );
+    
+    // 坐标变换
+    Eigen::Translation3f init_translation(this->xParam, this->yParam, 0);// 平移量
+    Eigen::AngleAxisf init_rotation_x(0., Eigen::Vector3f::UnitX());//roll
+    Eigen::AngleAxisf init_rotation_y(0., Eigen::Vector3f::UnitY());//pitch
+    Eigen::AngleAxisf init_rotation_z(this->zAngle, Eigen::Vector3f::UnitZ());//yaw(已经转为rad)
+    Eigen::Matrix4f   init_guess = (init_translation * init_rotation_z * init_rotation_y * init_rotation_x).matrix();
+    Eigen::Matrix<float, 4, 1> vec4x1;
+    vec4x1 << relative_x,
+              relative_y,
+              0.        ,
+              1.        ;
+    Eigen::Matrix<float, 4, 1> result = init_guess*vec4x1;
+    relative_x = result(0,0);
+    relative_y = result(1,0);
+    current_x = relative_x;
+    current_y = relative_y;
+}
+
+bool getGpsStatus(uint16_t status);
+
+void calibrationMode();
+void verifyCalibration();
+
+void reset(); //如果定位漂移了，使用此函数初始化定位参数
+
+void PackageSendLocation();
+
+void fitLinearCurve(std::vector<float>& x_data, std::vector<float>& y_data, float& a, float& b);
+
+float getWeight(const float score)
+{
+    if (score <= 1)
+    {
+        return 0.9f;
+    }
+    else if ( (1 < score) && (score <= 5) )
+    {
+        return 0.8f;
+    } 
+    else if ( (  5 < score) && (score <= 10) )
+    {
+        return 0.7f;
+    } 
+    else if ( (  10 < score) && (score <= 15) )
+    {
+        return 0.6f;
+    } 
+    else if ( (  15 < score) && (score <= 25) )
+    {
+        return 0.55f;
+    }
+    else
+    {
+    	return 0.5f;
+    }
+}
+
+
+std::vector<std::string> split(const std::string &readData)
+{
+       std::vector<std::string> str_vec_ptr;
+       std::string token;
+       std::stringstream ss(readData);  //stringstream::str将流中数据转换成string字符串
+        // 如果输入数据为空，则直接返回空的vector
+        if (readData.empty()) {
+            return str_vec_ptr;
+        }
+       while (getline(ss, token, ',')){//从字符串中ss读取字符，以逗号为结束符，将读到的数据存入token变量;直到读取完一整条nmea数据
+             str_vec_ptr.push_back(token);
+       }
+       return str_vec_ptr;
+}
+
+private:
+    Adsfi::LidarSlamBase node; // 实例化LidarSlam框架
+};
+
+
+
+
+
+
+#endif // SAMPLE_LIDAR_SLAM_H
+
+
+
+
+
+
+
+
+
+
+
+
+
+

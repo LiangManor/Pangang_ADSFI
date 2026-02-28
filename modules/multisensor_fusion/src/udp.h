@@ -1,0 +1,142 @@
+#include <iostream>
+#include <string>
+#include <cstring>
+#include <arpa/inet.h>
+#include <sys/socket.h>
+#include <unistd.h>
+#include <ifaddrs.h>
+#include <array>
+#include <netinet/in.h>
+class UdpMulticastReceiver {
+public:
+UdpMulticastReceiver(){};
+~UdpMulticastReceiver() 
+{
+    close(this->sockfd);
+}
+            
+void initSock()
+{
+    // 创建UDP套接字
+    this->sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+    if (this->sockfd < 0) 
+    {
+        perror("Socket creation failed");
+        exit(EXIT_FAILURE);
+    }
+
+    // 设置地址复用
+    int reuse = 1;
+    if (setsockopt(this->sockfd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) < 0) 
+    {
+        perror("Setting SO_REUSEADDR failed");
+        close(this->sockfd);
+        exit(EXIT_FAILURE);
+    }
+
+    // 绑定到本地的指定端口
+    struct sockaddr_in localAddr;
+/*    memset(&localAddr, 0, sizeof(localAddr));*/
+    localAddr.sin_family = AF_INET;
+    localAddr.sin_port = htons(this->port);
+    localAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+
+    if (bind(this->sockfd, (struct sockaddr*)&localAddr, sizeof(localAddr)) < 0) 
+    {
+        perror("Binding failed");
+        close(this->sockfd);
+        exit(EXIT_FAILURE);
+    }
+
+    // 获取指定网卡的 IP 地址
+    struct in_addr localInterface;
+    if (!getInterfaceAddress( localInterface)) 
+    {
+        std::cerr << "Failed to get IP address for interface " << this->interfaceName << std::endl;
+        close(sockfd);
+        exit(EXIT_FAILURE);
+    }
+
+    // 设置组播地址和接口
+    struct ip_mreqn mreq;
+    mreq.imr_multiaddr.s_addr = inet_addr(this->multicastAddress.c_str());
+    mreq.imr_address = localInterface;
+    mreq.imr_ifindex = 0;
+
+    if (setsockopt(sockfd, IPPROTO_IP, IP_ADD_MEMBERSHIP, &mreq, sizeof(mreq)) < 0) 
+    {
+        perror("Adding multicast group failed");
+        close(sockfd);
+        exit(EXIT_FAILURE);
+    }
+}
+
+// 修改返回类型为std::array<int, 4>，表示包含4个整数的数组
+std::array<int, 4> receiveMessage() 
+{
+    // 缓冲区大小设为4字节，每个字节对应一个整数
+    char buffer[4];
+    
+    ssize_t receivedBytes = recvfrom(sockfd, buffer, sizeof(buffer), 0, nullptr, nullptr);
+    if (receivedBytes < 0) 
+    {
+        perror("Failed to receive message");
+        return {-1, -1, -1, -1};  // 返回错误值
+    } 
+    else if (receivedBytes < 4) 
+    {
+        std::cerr << "Received incomplete message (expected 3 bytes, got " 
+                  << receivedBytes << " bytes)" << std::endl;
+        return {-1, -1, -1, -1};
+    }
+    else 
+    {
+        // 将两个字节分别转换为整数
+        int first = static_cast<int>(static_cast<uint8_t>(buffer[0]));
+        int second = static_cast<int>(static_cast<uint8_t>(buffer[1]));
+        int third = static_cast<int>(static_cast<uint8_t>(buffer[2]));
+        int forth = static_cast<int>(static_cast<uint8_t>(buffer[3]));
+        return {first, second, third, forth};
+    }
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////
+
+// 获取指定接口的 IP 地址
+bool getInterfaceAddress( struct in_addr& addr) 
+{
+    struct ifaddrs* ifaddr;
+    if (getifaddrs(&ifaddr) == -1) 
+    {
+        perror("getifaddrs failed");
+        return false;
+    }
+    for (struct ifaddrs* ifa = ifaddr; ifa != nullptr; ifa = ifa->ifa_next) 
+    {
+        if (ifa->ifa_addr == nullptr) continue;
+        if (ifa->ifa_addr->sa_family == AF_INET && this->interfaceName == ifa->ifa_name)
+        {
+            struct sockaddr_in* sa = (struct sockaddr_in*)ifa->ifa_addr;
+            addr = sa->sin_addr;
+            freeifaddrs(ifaddr);
+            return true;
+        }
+    }
+    freeifaddrs(ifaddr);
+    return false;
+}
+
+public:
+    int sockfd;
+    // 配置组播地址、端口和接口名称
+    std::string multicastAddress = "239.0.0.1";  // 替换为组播地址
+    uint16_t port = 8848;  // 替换为端口
+    std::string interfaceName = "eth0.12";  // 替换为实际的网卡名称
+};
+
+
+
+
+
+
+
+

@@ -1,0 +1,77 @@
+
+
+#include "segment_inwinic.h"
+#include <cfloat>
+#include <chrono>
+#include <iostream>
+#include <chrono>
+
+typedef pcl::PointXYZ PointT;
+using namespace std;
+struct GroundSegmentationParams
+{
+
+  
+  float r_min_ = 0.2;//ROI区域最小半径
+  float r_max_ = 180.0;//ROI区域最大半径
+  int n_segments = 180;//segment的个数 180
+  float max_dist_to_line = 0.15;//点 到 拟合的线的
+  float line_search_angle = 0.6;// 领域搜索范围 [rad]0.6
+  float max_z =  -0.5;//地面检测范围最大高度(米)!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  float max_abs_x = 20.0;//地面检测范围最大宽度（单侧）
+
+
+  //组件2需要的参数
+  // bin的个数
+  int n_bins = 150;//-------------100---------------1
+  // 最小坡度阈值:小于该值则认为是下坡
+  float min_slope = -5.0;//------------0.0------------2
+  // 最大坡度阈值:大于该值则认为是上坡
+  float max_slope = 5.0;//-------------5.0----------3
+  // 线拟合的最大误差
+  float max_error_square = 1.;//---------0.06--------------4
+  // 被视为彼此远离的点之间的距离
+  float long_threshold = 2.0;//---------2.0--------------5
+  // 最大斜率
+  float max_long_height = 0.1;//----------0.2-------------6
+  // 起始线标记为地面的最大高度
+  float max_start_height = 0.4;//----------0.4-------------7
+  // 传感器离地高度
+  float sensor_height = 0.5;//------------1.73-----------8
+
+};
+
+
+class GroundSegmentation
+{
+public:
+   GroundSegmentationParams params_;
+  //用于管理每个segment，而每个segment用于管理bins
+  std::vector<Segment> segments_;
+
+  // 用于标记每个点落在哪个segment,bin,对于不在segment和bin上的点，记为(-1，-1)
+  std::vector<std::pair<int, int>> point_segment_bin_idx;
+
+  // 将点云的坐标形式由(x,y,z)降维为(d,z),方便拟合直线(z = kd +b)
+  std::vector<Bin::MinZPoint> new_coordinates;
+
+public:
+  //构造函数与非构造函数
+  GroundSegmentation(GroundSegmentationParams params_);
+  ~GroundSegmentation();
+  //算法入口
+  void segment(pcl::PointCloud<PointT>::Ptr cloud,
+               pcl::PointCloud<PointT>::Ptr ground_pc,
+               pcl::PointCloud<PointT>::Ptr non_ground_pc);
+  //步骤1:给ROI区域的点云打上标签
+  void insertPoints(pcl::PointCloud<PointT>::Ptr cloud);
+  //步骤2:拟合每个segment中的直线
+  void getLines();
+  //步骤3:分割地面点和非地面点
+  void assignCluster(pcl::PointCloud<PointT>::Ptr cloud,
+                     pcl::PointCloud<PointT>::Ptr ground_pc,
+                     pcl::PointCloud<PointT>::Ptr non_ground_pc);
+  //功能函数
+  float fastAtan2(float y, float x);
+};
+

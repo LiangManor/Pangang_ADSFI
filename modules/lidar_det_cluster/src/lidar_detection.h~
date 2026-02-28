@@ -1,0 +1,97 @@
+/*
+ * Copyright (c) Huawei Technologies Co., Ltd. 2020-2021. All rights reserved.
+ * Description:  lidar_det demo
+ */
+
+#ifndef SAMPLE_LIDAR_DETECTION_H
+#define SAMPLE_LIDAR_DETECTION_H
+
+#include "core/core.h"
+#include "adsf/lidar_det_base.h"
+#include "udp.h"
+#include <iostream>
+#include <string>
+#include <cstring>
+#include <arpa/inet.h>
+#include <sys/socket.h>
+#include <unistd.h>
+#include <ifaddrs.h>
+#include <netinet/in.h>
+using namespace std;
+using namespace Adsfi;
+
+
+class LidarDetection {
+public:
+    explicit LidarDetection(std::string configFile, const bool isLidarReArrange) : 
+    node(configFile, isLidarReArrange), isLidarReArrange_(isLidarReArrange) ,counter(4, 0)
+    {
+        this->receiver.initSock();
+		//读取配置文件
+		auto config = Adsfi::HafYamlNode("Config.yaml");
+		config.GetValue<decltype(this->mvizVision)>(("mvizVision"), (this->mvizVision));
+
+
+    };
+    ~LidarDetection();
+
+    Adsfi::HafStatus Init()
+    {
+        return node.Init();
+    };
+
+    bool IsStop() const
+    {
+        return node.IsStop();
+    }
+
+    void Stop()
+    {
+        node.Stop();
+        return;
+    };
+    void Process();
+    std::vector<int> counter;// 元素大小为4，初始值设为0
+    // 实例化sock
+    UdpMulticastReceiver receiver;
+    int model = 0;
+    int mvizVision = 0;
+    float curX = 0.;
+    float curX = 0.;
+    float curX = 0.;
+public:
+    Adsfi::LidarDetBase node;
+    bool isLidarReArrange_{false};
+    void SubLidar();
+    void SubLidarReArrange();
+    void SubLocation();
+    void PubObjects();
+    void getDirect();
+    bool drivingDiretion(int model, int lidarID);
+    uint32_t getLidarID(int model_)
+    {
+    	if(model_ == 1) // 往1端行驶
+    	{
+    		return 4;
+    	}
+    	else if(model_ == 2)// 往2端行驶
+    	{
+    		return 6;
+    	}
+    	else // 静止
+    	{
+    		return 0;// 表示不进行激光雷达检测
+		}
+    }
+    std::vector<std::thread> pool;
+};
+#endif
+
+
+
+
+
+
+
+
+

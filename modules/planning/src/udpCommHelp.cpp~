@@ -1,0 +1,189 @@
+#include <iostream>
+#include <iomanip>
+#include <vector>
+#include <cstring>
+#include <csignal>
+#include <unistd.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <thread>
+#include <atomic>
+#include "multisensor_fusion.h"
+#include <fcntl.h>
+#include <sys/select.h>
+
+using namespace std;
+
+// 全局原子变量，用于控制程序的运行状态
+std::atomic<bool> running(true);
+
+// 套接字变量和相关状态标志
+int serverSock_Lidar_B3 = -1; // 服务器套接字，用于连接Lidar B3
+int clientSock_ZC = -1;       // 客户端套接字，用于与目标通信
+int tempSocket = -1;          // 临时服务器套接字
+sockaddr_in serverSockZC; // 用于存储目标服务器地址
+bool isConn_ClientSock_ZC = false; // 标志客户端套接字是否已初始化
+
+/**
+ * 析构函数，释放所有已打开的套接字资源
+ */
+udpCommHelp::~udpCommHelp() {
+    if (serverSock_Lidar_B3 != -1) {
+        close(serverSock_Lidar_B3); // 关闭服务器套接字
+    }
+    if (clientSock_ZC != -1) {
+        close(clientSock_ZC); // 关闭客户端套接字
+    }
+}
+
+/**
+ * 发送消息到已初始化的客户端目标
+ * @param message 要发送的消息，字节形式的数组
+ */
+void udpCommHelp::sendMsg(const std::vector <uint8_t> &message) {
+    // 检查客户端套接字是否已初始化
+    if (!isConn_ClientSock_ZC) {
+        std::cerr << "客户端套接字尚未初始化，请先调用 initClientSock_ZC。" << std::endl;
+        return;
+    }
+
+    // 使用 sendto 函数发送数据
+    ssize_t bytesSent = sendto(clientSock_ZC, message.data(), message.size(), 0,
+                               (struct sockaddr *) &serverSockZC,
+                               sizeof(serverSockZC));
+    if (bytesSent == -1) {
+        // 如果发送失败，输出错误信息
+        std::cerr << "发送数据失败，错误：" << strerror(errno) << std::endl;
+    } else {
+        // 如果发送成功，打印发送的十六进制数据
+        printHex(message);
+    }
+}
+
+/**
+ * 打印发送的消息，以十六进制形式显示
+ * @param message 发送的消息内容
+ */
+void udpCommHelp::printHex(const std::vector <uint8_t> &message) {
+    std::cout << "成功发送 数据：";
+    for (const auto &byte: message) {
+        // 按十六进制格式输出数据
+        std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(byte) << " ";
+    }
+    std::cout << std::dec << std::endl; // 恢复为默认的十进制输出
+}
+
+/**
+ * 初始化客户端套接字，指定目标地址和端口
+ * @param destPort 目标端口号
+ * @param destIP 目标IP地址
+ */
+void udpCommHelp::initClientSock_ZC(int destPort, std::string destIP) {
+    try {
+        // 创建客户端UDP套接字
+        clientSock_ZC = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+        if (clientSock_ZC == -1) {
+            std::cerr << "创建客户端套接字失败，错误：" << strerror(errno) << std::endl;
+            return;
+        }
+
+        // 设置目标服务器的地址信息
+        memset(&serverSockZC, 0, sizeof(serverSockZC));
+        serverSockZC.sin_family = AF_INET;
+        serverSockZC.sin_port = htons(destPort);
+        if (inet_pton(AF_INET, destIP.c_str(), &serverSockZC.sin_addr) <= 0) {
+            std::cerr << "地址转换失败，错误：" << strerror(errno) << std::endl;
+            return;
+        }
+        std::cout << "目标地址初始化成功，IP：" << destIP << ", 端口：" << destPort << std::endl;
+
+        // 标记套接字连接状态
+        isConn_ClientSock_ZC = true;
+        std::cout << "客户端套接字初始化连接成功。" << std::endl;
+    } catch (const std::exception &e) {
+        std::cerr << "**********initClientSock_ZC error: " << e.what() << '\n';
+    }
+}
+
+/**
+ * 初始化UDP服务器，绑定到指定的本地地址和端口
+ * @param ip 本地IP地址
+ * @param port 本地端口号
+ */
+void udpCommHelp::initServerZc(const string &ip, int port) {
+    try {
+        // 创建服务器UDP套接字
+        // 全局变量
+        tempSocket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+        if (tempSocket == -1) {
+            cerr << "创建套接字失败，错误：" << strerror(errno) << endl;
+            return;
+        }
+
+        // 启用套接字选项 SO_REUSEADDR
+        int opt = 1;
+        if (setsockopt(tempSocket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
+            cerr << "设置 SO_REUSEADDR 失败，错误：" << strerror(errno) << endl;
+            close(tempSocket);
+            return;
+        }
+
+        // 准备本地地址结构体
+        struct sockaddr_in localAddr;
+        memset(&localAddr, 0, sizeof(localAddr));
+        localAddr.sin_family = AF_INET;
+        localAddr.sin_port = htons(port);
+        localAddr.sin_addr.s_addr = INADDR_ANY; // 绑定到所有可用接口 ！！！！！！！！！！！
+
+        // 将套接字绑定到本地地址
+        if (::bind(tempSocket, (struct sockaddr *) &localAddr, sizeof(localAddr)) == -1) {
+            cerr << "绑定套接字失败，错误：" << strerror(errno) << endl;
+            close(tempSocket);
+            return;
+        }
+    } catch (const exception &e) {
+        cerr << "**********receiveAndPrintContinuously error: " << e.what() << '\n';
+    }
+}
+
+/**
+ * 反序列化Lidar状态消息
+ * @param buffer 输入的字节数组
+ * @param bufferSize 数组大小
+ * @param message 输出的消息结构体
+ */
+void deserializeLidarStatusMessage(const uint8_t *buffer, size_t bufferSize, LidarStatusMessage &message) {
+    if (bufferSize < sizeof(LidarStatusMessage)) {
+        std::cerr << "Buffer too small for deserialization" << std::endl;
+        return;
+    }
+    // 使用 memcpy 将字节数组内容复制到结构体
+    std::memcpy(&message, buffer, sizeof(LidarStatusMessage));
+}
+
+/**
+ * 处理接收到的数据，根据数据类型执行不同操作
+ * @param receivedBuffer 接收到的数据缓冲区
+ * @param bufferSize 数据缓冲区的大小
+ */
+void udpCommHelp::processReceivedData(const uint8_t *receivedBuffer, size_t bufferSize) {
+    if (bufferSize == sizeof(LidarStatusMessage)) {
+        LidarStatusMessage statusMessage;
+        deserializeLidarStatusMessage(receivedBuffer, bufferSize, statusMessage);
+    } else {
+        std::cerr << "Received buffer size does not match expected size of LidarStatusMessage" << std::endl;
+    }
+}
+
+/**
+ * 从客户端套接字接收数据
+ * @param buff 接收缓冲区
+ * @param buffSize 缓冲区大小
+ * @return 接收到的数据长度，错误时返回 -1
+ */
+ssize_t udpCommHelp::recvData_clientSock_zc(unsigned char *buff, size_t buffSize) {
+    socklen_t addrLen = sizeof(addrFrom);
+    // 使用 recvfrom 函数接收数据
+    return recvfrom(tempSocket, buff, buffSize, 0, (sockaddr * ) & addrFrom, &addrLen);
+}

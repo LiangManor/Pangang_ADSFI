@@ -1,0 +1,39 @@
+appName: PLAN
+description: planning module
+priority: 0    #{0 ... 12} not currently used
+scheduleFrequency: 30
+isDetermineSchedule: false    #{true, false}
+logFile: ./    #日志路径，当logMode配置有指定文件存储时，使用本路径存储日志，日志文件名为${appName}.log
+logMode: 6    #{0, 1, 2, 3, 4, 5, 6}, 0: 固定文件存储，异步日志 1: 打屏，同步日志，适合调试， 2: 指定文件存储，同步日志，适合调试，
+              #3：固定+打屏， 4：固定+指定， 5：打屏+指定， 6：固定+打屏+指定
+logLevel: 2    #{0，1，2，3，4，5, 6}， 0：verbose, 1：debug, 2：info, 3：warn, 4：error, 5：fatal, 6：off
+recvInstanceID:
+    locationInstanceID: 113
+    navigationResultInstanceID: 110
+    fusionObjectArrayInstanceID: 4001
+    chassisReportInstanceID : 1
+    fusionLaneDetectionOutArrayInstanceID : 1205
+    predictionOutArrayInstanceID : 4681
+    tlDetectionOutArrayInstanceID : 1031
+
+sendInstanceID:
+    egoTrajectoryOutInstanceID: 103
+#自定义数据
+projectList: "lidar_slam,location"
+addressIP: "192.168.30.112" #"172.16.19.24"
+addressPort: 5001 #1234
+modeFlag: 0 #0:client 1:server
+
+ServerSock_Lidar_B3:
+    addressIP: "127.0.0.1"
+    addressPort: 5002
+ClientSock_ZC:
+    #destIP: "192.168.30.80"
+    destIP: "192.168.30.201"
+    destPort: 12001
+serverSock_ZC:
+    destIP:  "127.0.0.1"
+    destPort:  10005
+workList:  "[56.499,4.974],[-170.034,-47.506],[-124.141327,5.211986]" #工位点，依次为1，2，3， ......
+lidarIdList:  "3,4,5,6" # 无用
+radarIdList: "71,72" # 无用

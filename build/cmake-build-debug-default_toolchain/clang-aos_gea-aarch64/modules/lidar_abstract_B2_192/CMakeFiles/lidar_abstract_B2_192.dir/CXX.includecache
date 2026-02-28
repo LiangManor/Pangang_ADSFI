@@ -1,0 +1,40 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/lidar_abstract_B2_192/src/lidar_huawei_sock.cpp
+lidar_huawei_sock.h
+/home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/lidar_abstract_B2_192/src/lidar_huawei_sock.h
+netinet/in.h
+-
+arpa/inet.h
+-
+net/if.h
+-
+
+/home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/lidar_abstract_B2_192/src/lidar_huawei_sock.h
+thread
+-
+unistd.h
+-
+iostream
+-
+vector
+-
+stdint.h
+-
+sys/socket.h
+-
+arpa/inet.h
+-
+stdio.h
+-
+string.h
+-
+math.h
+-
+

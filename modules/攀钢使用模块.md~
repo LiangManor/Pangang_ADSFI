@@ -1,0 +1,26 @@
+
+### 攀钢目前使用功能模块
+
+
+
+lidar_abstract_A3
+
+lidar_abstract_A4_innovusion
+
+lidar_abstract_B1
+
+lidar_abstract_B2_innovusion
+
+lidar_slam
+
+location
+
+camera_det
+
+lidar_det_cluster
+
+lidar_tracker
+
+multisensor_fusion
+
+planning

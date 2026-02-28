@@ -1,0 +1,556 @@
+#include "lidar_slam.h"
+
+#include <cmath> // 包含 atan2 和 M_PI
+#include <iostream>
+#include <thread>
+#include <chrono>
+
+using namespace std;
+using namespace Adsfi;
+
+// 用于可视化的配准后的点云
+pcl::PointCloud<pcl::PointXYZ>::Ptr alignedPC(new pcl::PointCloud<pcl::PointXYZ>);
+// 用于可视化的传感器轨迹
+mdc::visual::PointCloud<mdc::visual::PointXYZRGB> lidarHistoryTrajectory;
+mdc::visual::PointCloud<mdc::visual::PointXYZRGB> gnssHistoryTrajectory;
+mdc::visual::PointCloud<mdc::visual::PointXYZRGB> imuHistoryTrajectory;
+float historyYaw;
+// 车辆状态
+vehicleState egoState;
+
+// 记录上一时刻的时间戳
+std::chrono::high_resolution_clock::time_point prevTimeStamp;
+// imu 计算出的速度分量
+float vxImu = 0.0;
+float vyImu = 0.0;
+float vzImu = 0.0;
+int counterLidar = -1;
+int counterImu = -1;
+// 初始化卡尔曼滤波器
+EKF ekfFilter;
+// 初始化每个向量为5个元素
+std::vector<float> timeStamp(5);
+std::vector<float> xPosition(5);
+std::vector<float> yPosition(5);
+int elementNum = 1;
+float score;
+
+
+//旋转矩阵转欧拉角
+Eigen::Vector3f rotationMatrixToEulerAnglesZYX(const Eigen::Matrix3f& R) {
+    float m00 = R(0, 0);
+    float m01 = R(0, 1);
+    float m02 = R(0, 2);
+    float m10 = R(1, 0);
+    float m11 = R(1, 1);
+    float m12 = R(1, 2);
+    float m20 = R(2, 0);
+    float m21 = R(2, 1);
+    float m22 = R(2, 2);
+    float pitch = -std::asin(m12);
+    if (std::abs(m12) < 1.0) {
+        float roll = std::atan2(m21, m22);
+        float yaw = std::atan2(m10, m11);
+        return Eigen::Vector3f(yaw, pitch, roll);
+    }
+    else
+    {
+        return Eigen::Vector3f(0, pitch, 0);
+    }
+}
+
+
+void LidarSlam::Process()
+{
+    auto curLidar = node.GetLidar(1);
+    if (!curLidar.empty())
+    {
+        // 初始化
+        if(!egoState.init)
+        {
+            double lat,lon,heading;
+            auto curLidar = node.GetLidar(1);// 该函数为阻塞式(没有点云数据则会一直挂载在此处)
+            auto out = std::make_shared<HafLocation>();
+            pcl::PointCloud<pcl::PointXYZ>::Ptr currentScanPC(new pcl::PointCloud<pcl::PointXYZ>);
+            pcl::PointXYZ p;
+            // 数据结构转换
+            for (size_t i = 0; i < curLidar.front()->pointCloud.size(); i++)
+            {
+                p.x = curLidar.front()->pointCloud[i].x;
+                p.y = curLidar.front()->pointCloud[i].y;
+                p.z = curLidar.front()->pointCloud[i].z;
+                currentScanPC->push_back(p);
+            }
+			auto curGnss = node.GetGnss(1); // 该函数为阻塞式(没有点云数据则会一直挂载在此处)
+			if (curGnss.empty())//如果ins驱动没有数据，则上报异常
+			{
+				timeval tv;
+				gettimeofday(&tv, nullptr);
+				const uint32_t usScaler      = 1000U;
+				out->header.timestamp.sec    = tv.tv_sec;
+				out->header.timestamp.nsec   = tv.tv_usec * usScaler;
+				// 组合导航异常上报
+				out->header.seq = 10;
+				// rfid 信息
+				this->rfid.getID(this->id,this->intensity);// 获取 rfid 的id号 和 强度值
+				out->pose.pose.orientation.x = (float)this->id;// rfid的ID号
+				out->pose.pose.orientation.y = (float)this->intensity;// rfid的强度值
+				// 定位节点如果正常工作，则进入以下if
+				if (!node.IsStop())
+				{
+					if (node.SendLidarSlam(out) != HAF_SUCCESS)
+					{
+						std::cout<<"send lidar_slam location data failed!"<<std::endl;
+					}
+					else
+					{
+						//HAF_LOG_INFO << "lidar_slam Pub OK";
+					}
+				}
+				std::this_thread::sleep_for(std::chrono::milliseconds(100));//延时100ms
+				return;
+			}
+			else if(this->isManualInit == 0)//如果ins有数据,且为卫星初始化模式
+			{
+				std::cout<<"卫星初始化模式"<<std::endl;
+				out->header.seq      = curGnss.front()->header.seq;//组合导航
+				// 进入下面的 if 程序块表示，表示可以利用RTK着完成初始重定位；getGpsStatus()函数返回值：定位状态: 1 表示可使用gps定位数据   0 表示不可使用gps定位数据
+				if (getGpsStatus(curGnss.front()->positionType))// 如果有RTK信号
+				{
+					lat = curGnss.front()->latitude; //纬度信息
+					lon = curGnss.front()->longitude;//经度信息
+					double x;
+					double y;
+					LatLon2XY(lat,lon,x,y);
+					this->initX = x;
+					this->initY = y;
+					this->initThetaZ = normalizeYaw(curGnss.front()->attitude.z * (3.1415926536/180.0) + this->zAngle);
+					this->rfid.getID(this->id,this->intensity);// 获取 rfid 的id号 和 强度值
+				}
+				// 进入下面的 else if 程序块:表示 当前rtk暂不可用，但是当前进程已经与rfid主机建立udp通讯（该程序块的目的是:即使无法利用rtk进行初始化重定位，但可以借助rfid去初始化重定位）
+				else if(this->rfid.isUsable) // 如果RFID可用
+				{
+					// 如果机车驶入rfid指定上线点,意味着完成初始重定位
+					if( this->rfid.run(lat,lon,heading,this->id,this->intensity) ) // 单位: lat/lon/head的单位为:度,
+					{
+						// plan B:通过 rfid 获取上线点id（即this->id）对应的的x、y、yaw(rad)，不需要提前标定
+						this->initX      = this->olPts.x[this->id];// 米
+						this->initY      = this->olPts.y[this->id];
+						this->initThetaZ = this->olPts.yaw[this->id];// rad
+						std::cout<<"rfid的id = "<<this->id<<" x = "<<this->initX<<" y = "<<this->initY<<" yaw = "<<this->initThetaZ<<std::endl;
+					}
+					// 如果机车没有驶入rfid指定上线点
+					else
+					{
+						std::cout<<"1使用RTK数据不稳定，或请驶入rfid上线点"<<std::endl;
+						timeval tv;
+						gettimeofday(&tv, nullptr);
+						const uint32_t usScaler      = 1000U;
+						out->header.timestamp.sec    = tv.tv_sec;
+						out->header.timestamp.nsec   = tv.tv_usec * usScaler;
+						// rfid 信息
+						out->pose.pose.orientation.x = (float)this->id;// rfid的ID号
+						out->pose.pose.orientation.y = (float)this->intensity;// rfid的强度值
+						if (!node.IsStop())
+						{
+							if (node.SendLidarSlam(out) != HAF_SUCCESS)
+							{
+								std::cout<<"send lidar_slam location data failed!"<<std::endl;
+							}
+							else
+							{
+								//HAF_LOG_INFO << "lidar_slam Pub OK";
+							}
+						}
+						std::this_thread::sleep_for(std::chrono::milliseconds(50));//延时100ms
+						return;
+					}
+				}
+				// 以上两个条件不满足，则等待下一轮循环再进行初始化工作。
+				else// 进入该else程序块表示 当前进程没有与rfid主机建立udp通讯
+				{
+					std::cout<<"2使用RTK数据不稳定，且rfid主机链接不上"<<std::endl;
+					timeval tv;
+					gettimeofday(&tv, nullptr);
+					const uint32_t usScaler      = 1000U;
+					out->header.timestamp.sec    = tv.tv_sec;
+					out->header.timestamp.nsec   = tv.tv_usec * usScaler;
+					// rfid 信息
+					out->pose.pose.orientation.x = (float)this->id;// rfid的ID号
+					out->pose.pose.orientation.y = (float)this->intensity;// rfid的强度值
+					if (!node.IsStop())
+					{
+						if (node.SendLidarSlam(out) != HAF_SUCCESS)
+						{
+							std::cout<<"send lidar_slam location data failed!"<<std::endl;
+						}
+						else
+						{
+							//HAF_LOG_INFO << "lidar_slam Pub OK";
+						}
+					}
+					std::this_thread::sleep_for(std::chrono::milliseconds(100));//延时100ms
+					return;
+				}
+			}
+			else if(this->isManualInit == 1)// 如果ins有数据,且为手动初始化模式
+			{
+			    std::cout<<"手动初始化模式"<<std::endl;
+			}
+			else// 如果ins有数据,且为手动初始化模式
+			{
+				std::cout<<"AN算法初始化模式"<<std::endl;
+			    pcl::PointCloud<pcl::PointXYZ>::Ptr scan_cloud_aligned(new pcl::PointCloud<pcl::PointXYZ>);
+                an.get_init_pose(currentScanPC,
+                                 scan_cloud_aligned,
+								 this->lastLocation);
+                this->initLocation = false;
+
+			}
+            // 初始化时间戳 
+            timeStamp.assign({0.0f, 0.1f, 0.2f, 0.3f, 0.4f});
+            alignedPC = align(currentScanPC, score);//首次点云匹配
+            // 标记车辆已被初始化的状态 
+            egoState.init = true;
+            // 初始化车辆状态（x、y、z、yaw） 与 运动模型控制量(v、yawRate)
+            Eigen::Matrix3f R   = this->lastLocation.block<3, 3>(0, 0);
+            Eigen::Vector3f eulerAngles = rotationMatrixToEulerAnglesZYX(R);
+            egoState.x                  = this->lastLocation(0, 3);
+            egoState.y                  = this->lastLocation(1, 3);
+            egoState.z                  = this->lastLocation(2, 3);
+            egoState.v                  = 0.;
+            egoState.yaw                = eulerAngles(0);
+            egoState.yawRate            = 0.;
+            // 
+            xPosition[0] = this->lastLocation(0, 3);// 用不到
+            yPosition[0] = this->lastLocation(1, 3);
+            // 更新校验码
+            counterLidar = curLidar.front()->seq;
+            // 往下游节点发送定位结果
+            timeval tv;
+            gettimeofday(&tv, nullptr);
+            const uint32_t usScaler      = 1000U;
+            out->header.timestamp.sec    = tv.tv_sec;
+            out->header.timestamp.nsec   = tv.tv_usec * usScaler;
+            // 1端坐标信息
+            out->pose.pose.position.x    = egoState.x;
+            out->pose.pose.position.y    = egoState.y;
+            out->pose.pose.position.z    = egoState.z;
+            // 1端航向角
+            out->pose.pose.orientation.z = eulerAngles(0);
+            // rfid 信息
+			out->pose.pose.orientation.x = (float)this->id;// rfid的ID号
+			out->pose.pose.orientation.y = (float)this->intensity;// rfid的强度值
+            if (!node.IsStop())
+            {
+                if (node.SendLidarSlam(out) != HAF_SUCCESS)
+                {
+                    std::cout<<"send lidar_slam location data failed!"<<std::endl;
+                }
+                else
+                {
+                }
+            }
+            // 该if的目的是：防止重定位定位丢失后，重新进入初始化状态，然后又再次启用新的子线程去与标签机进行udp通讯，导致sock冲突
+            if(!this->threadEnable)
+            {
+                // 初始化重定位已完成，开启独立线程去get rfid的信息
+                pool.push_back(std::thread(&LidarSlam::threadGetRfid, this));
+                this->threadEnable = true;
+            }
+        }
+        // 车辆状态已经进行了重定位初始化
+        else
+        {
+            auto out = std::make_shared<HafLocation>();
+// 获取 rfid 信息
+            out->pose.pose.orientation.x = (float)this->id;//rfid 的id号
+            out->pose.pose.orientation.y = (float)this->intensity;// rfid 的强度值
+// 如果有 lidar 数据, 则更新定位结果
+            if (curLidar.front()->seq != counterLidar)// 比对lidar数据心跳值
+            {
+                auto now = std::chrono::high_resolution_clock::now();// 获取当前时间戳
+                auto curLidar = node.GetLidar(1);
+                pcl::PointCloud<pcl::PointXYZ>::Ptr currentScanPC(new pcl::PointCloud<pcl::PointXYZ>);
+                pcl::PointXYZ p;
+                for (size_t i = 0; i < curLidar.front()->pointCloud.size(); i++)
+                {
+                    p.x = curLidar.front()->pointCloud[i].x;
+                    p.y = curLidar.front()->pointCloud[i].y;
+                    p.z = curLidar.front()->pointCloud[i].z;
+                    currentScanPC->push_back(p);
+                }
+                alignedPC = align(currentScanPC, score);
+                if(std::isinf(score))// 如果被完全遮挡
+                {
+                    egoState.init = false;
+                    this->initLocation = true;
+                    return;
+                }
+                // (更新lidar定位)
+                egoState.x                      = this->lastLocation(0, 3);
+                egoState.y                      = this->lastLocation(1, 3);
+                egoState.z                      = this->lastLocation(2, 3);
+                Eigen::Matrix3f R   = this->lastLocation.block<3, 3>(0, 0);
+                Eigen::Vector3f eulerAngles = rotationMatrixToEulerAnglesZYX(R);
+                egoState.yaw = eulerAngles(0);
+                historyYaw = eulerAngles(0);
+                // 对轨迹进行滤波
+                ekfFilter.run(egoState);
+                // 更新lidar数据心跳值
+                counterLidar = curLidar.front()->seq;
+            	// 上报gnss异常码
+		        auto curGnss = node.GetGnss(1); // 该函数为阻塞式
+		        if (curGnss.front()->header.seq == 1)// 如果ins没数据
+		        {
+		            out->header.seq = 10;
+	            }
+	            else// 如果ins有数据
+	            {
+	                out->header.seq = 0;
+                }
+            }
+// 如果没有 lidar 数据，则直接发送上一帧结果，并判断传感器是否异常
+            else
+            {
+                // 首先判断激光雷达是否异常
+                if(curLidar.front()->pointCloud.size() == 0)
+                {
+                    out->header.seq = 1;
+                    auto curGnss = node.GetGnss(1); // 该函数为阻塞式
+                    if (curGnss.front()->header.seq == 1)// 表示ins异常
+                    {
+                        out->header.seq = 11;// 表示两个都异常
+                    }
+                    else
+                    {
+                        out->header.seq = 1;// 表示只有lidar异常
+                    }
+                }
+                else
+                {
+                    out->header.seq = 0;
+                    auto curGnss = node.GetGnss(1); // 该函数为阻塞式
+                    if (curGnss.front()->header.seq == 1)// 表示ins异常
+                    {
+                        out->header.seq = 10;// 表示只有ins异常
+                    }
+                    else
+                    {
+                        out->header.seq = 0;// 表示都正常
+                    }
+                }
+            }
+            // 往下游节点发送定位结果
+            timeval tv;
+            gettimeofday(&tv, nullptr);
+            const uint32_t usScaler      = 1000U;
+            out->header.timestamp.sec    = tv.tv_sec;
+            out->header.timestamp.nsec   = tv.tv_usec * usScaler;
+            // 1端坐标信息
+            out->pose.pose.position.x    = ekfFilter.x_post_(0,0);//
+            out->pose.pose.position.y    = ekfFilter.x_post_(1,0);//
+            std::cout<<" GainX = "<<ekfFilter.kGain<<std::endl;
+
+//            out->pose.pose.position.x    = this->lastLocation(0, 3);
+//            out->pose.pose.position.y    = this->lastLocation(1, 3);
+            out->pose.pose.position.z    = this->lastLocation(2, 3);
+            // 1端航向角
+            out->pose.pose.orientation.z = historyYaw; //
+            // rfid的ID值和强度值在子线程进行获取，不影响定位算法运行速度
+			// 传感器正常
+            if (!node.IsStop())
+            {
+                if (node.SendLidarSlam(out) != HAF_SUCCESS)
+                {
+                }
+                else
+                {
+                }
+            }
+            
+            if(isVision)
+            {
+                GPSDATA gpsData;
+            	egoState.x = out->pose.pose.position.x;
+            	egoState.y = out->pose.pose.position.y;
+                // 可视化匹配结果
+                mvizView(alignedPC, egoState, gpsData);
+            }
+            return;
+        }
+    }
+}
+
+
+
+
+
+
+
+void LidarSlam::mvizView(pcl::PointCloud<pcl::PointXYZ>::Ptr alignedPC, vehicleState egoState, GPSDATA gpsData)
+{
+/*********************************************************************************
+*      发布 配准后的 点云数据 topic: alignedCloud    frame(坐标系):map         *
+**********************************************************************************/
+    bool isPublish;
+    mdc::visual::PointCloud<mdc::visual::PointXYZRGB> data;
+    data.header.frameId = "map";// ---------点云坐标系
+    const auto now = std::chrono::high_resolution_clock::now().time_since_epoch();
+    uint32_t sec = std::chrono::duration_cast<std::chrono::seconds>(now).count();
+    uint32_t nsec = std::chrono::duration_cast<std::chrono::nanoseconds>(now).count() % 1000000000UL;
+    data.isDense = false;
+    data.header.stamp = mdc::visual::Times { sec, nsec };
+    for (size_t i = 0; i < alignedPC->points.size(); i++)
+    {
+        mdc::visual::PointXYZRGB ptMviz(alignedPC->points[i].x,//x
+                                        alignedPC->points[i].y,//y
+                                        alignedPC->points[i].z,//z
+                                        0, 0, 255);//  b g r
+        data.points.push_back(ptMviz);
+    }
+    isPublish = this->pcPointXYZIRPub.Publish(data);
+    if(isPublish)
+    {
+        //std::cout<<"成功: 向Mviz发布aligned点云"<<std::endl;
+    }
+    else
+    {
+        //std::cout<<"失败: 向Mviz发布aligned点云"<<std::endl;
+    }
+/*********************************************************************************
+*           发布 历史轨迹  topic: lidarTrajectory    frame(坐标系):map                 *
+**********************************************************************************/
+	lidarHistoryTrajectory.header.frameId = "map";// ---------轨迹坐标系
+	lidarHistoryTrajectory.isDense = false;
+	lidarHistoryTrajectory.header.stamp = mdc::visual::Times { sec, nsec };
+    mdc::visual::PointXYZRGB onePt(this->lastLocation(0, 3),//x
+							       this->lastLocation(1, 3),//y
+								                          0,
+							       255, 0, 0);//  b g r
+    lidarHistoryTrajectory.points.push_back(onePt);
+    if(lidarHistoryTrajectory.points.size() >= 500)
+    {
+        lidarHistoryTrajectory.points.resize(0);
+    }
+	isPublish = this->lidarTrajectPub.Publish(lidarHistoryTrajectory);
+	if(isPublish)
+	{
+	    //std::cout<<"----------成功: 向Mviz发布历史轨迹点云"<<std::endl;
+	}
+	else
+	{
+	    //std::cout<<"失败: 向Mviz发布历史轨迹点云"<<std::endl;
+	}
+/*********************************************************************************
+*           发布 imu轨迹  topic: imuTrajectory    frame(坐标系):map               *
+**********************************************************************************/
+	imuHistoryTrajectory.header.frameId = "map";// ---------轨迹坐标系
+	imuHistoryTrajectory.isDense = false;
+	imuHistoryTrajectory.header.stamp = mdc::visual::Times { sec, nsec };
+    mdc::visual::PointXYZRGB onePt2(egoState.x,//x
+							        egoState.y,//y
+									         0,
+							       0, 255, 255);//  b g r  
+	imuHistoryTrajectory.points.push_back(onePt2);
+    if(imuHistoryTrajectory.points.size() >= 500)
+    {
+        imuHistoryTrajectory.points.resize(0);
+    }
+	isPublish = this->imuTrajectPub.Publish(imuHistoryTrajectory);
+	if(isPublish)
+	{
+	    //std::cout<<"----------成功: 向Mviz发布历史轨迹点云"<<std::endl;
+	}
+	else
+	{
+	    //std::cout<<"失败: 向Mviz发布imu历史轨迹点云"<<std::endl;
+	}
+/*********************************************************************************
+*           发布 GNSS轨迹  topic: gnssTrajectory    frame(坐标系):map             *
+**********************************************************************************/
+    gnssHistoryTrajectory.header.frameId = "map";// ---------轨迹坐标系
+    gnssHistoryTrajectory.isDense = false;
+    gnssHistoryTrajectory.header.stamp = mdc::visual::Times { sec, nsec };
+    mdc::visual::PointXYZRGB onePt3(gpsData.x,//x
+							        gpsData.y,//y
+							        0,//z
+							        0, 255, 0);//  b g r  
+    gnssHistoryTrajectory.points.push_back(onePt3);
+    if(gnssHistoryTrajectory.points.size() >= 500)
+    {
+        gnssHistoryTrajectory.points.resize(0);
+    }
+	isPublish = this->gnssTrajectPub.Publish(gnssHistoryTrajectory);
+	if(isPublish)
+	{
+	    //std::cout<<"----------成功: 向Mviz发布历史轨迹点云"<<std::endl;
+	}
+	else
+	{
+	    //std::cout<<"失败: 向Mviz发布gnss历史轨迹点云"<<std::endl;
+	}
+    
+/*********************************************************************************
+*            发布 点云地图  topic: mapCloud    frame(坐标系):map                  *
+**********************************************************************************/
+	if(this->sum == 100) // 10 seconds send 1 frame
+	{
+	    mdc::visual::PointCloud<mdc::visual::PointXYZRGB> data2;
+	    data2.header.frameId = "map";// ---------点云坐标系
+	    data2.isDense = false;
+	    data2.header.stamp = mdc::visual::Times { sec, nsec };
+	    // map
+	    for (size_t i = 0; i < this->mapCloud->points.size(); i++)
+	    {
+		    mdc::visual::PointXYZRGB ptMviz(this->mapCloud->points[i].x,//x
+										    this->mapCloud->points[i].y,//y
+										    this->mapCloud->points[i].z,//z
+										    255, 255, 255);//  b g r
+		    data2.points.push_back(ptMviz);
+	    }
+	    bool isPublishpt2 = this->mapPub.Publish(data2);
+	    if(isPublishpt2)
+	    {
+		    //std::cout<<"----------成功: 向Mviz发布map点云"<<std::endl;
+	    }
+	    else
+	    {
+		    // std::cout<<"失败: 向Mviz发布map点云"<<std::endl;
+	    }
+	    this->sum = 0;
+	}
+	this->sum++;
+    return;
+}
+
+
+// 获取GPS状态函数
+bool LidarSlam::getGpsStatus(uint16_t status)
+{
+    if( (status == 0x01) || (status == 0x02) || (status == 0x03) || (status == 0x04) )
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+
+// 空实现函数
+void LidarSlam::ImuPredCurFrame(vehicleState & state){}
+void LidarSlam::calibrationMode(){}
+void LidarSlam::verifyCalibration(){}
+void LidarSlam::fitLinearCurve(std::vector<float>& x_data, // 时间戳
+                               std::vector<float>& y_data, // 
+                               float& a, 
+                               float& b){}
+
+
+
+
+
+
+

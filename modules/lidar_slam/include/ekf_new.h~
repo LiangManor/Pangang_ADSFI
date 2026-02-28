@@ -1,0 +1,80 @@
+#include "Eigen/Dense"
+#include <vector>
+#include <string>
+
+double pi = 3.14159265358979323846f;
+using namespace std; 
+
+//定义小车状态
+typedef struct vehicleState {
+    // 估计的5个车辆状态
+    float x       = 0.;//米
+    float y       = 0.;
+    float z       = 0.;
+    float v       = 0.;//米每秒
+    float yaw     = 0.;//弧度
+    float yawRate = 0.;//弧度每秒
+    // 前后时间差
+    float dt      = 0.; // 秒（imu提供）
+    // 是否有 lidar 定位结果
+    bool  lidarLocation  = false;
+    float lidarLocationX = 0.;
+    float lidarLocationY = 0.;// lidar 定位结果
+    float lidarLocationYaw = 0.;
+    // 是否有 imu 结果
+    bool  isImuNewData  = false;
+    // 车辆状态是否初始化
+    bool  init = false;
+}vehicleState;
+
+
+class FUSION
+{
+public:
+    void run       (vehicleState & state);
+    void initialize(vehicleState & state);
+
+
+public:
+     FUSION();
+    ~FUSION(){}
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

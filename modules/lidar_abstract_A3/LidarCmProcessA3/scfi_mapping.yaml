@@ -1,0 +1,42 @@
+identifier:
+  "MAPPING"
+description: "Mapping module"
+diag_agent:
+  sendInstanceID:
+  recvInstanceID:
+    DiagComClient:
+        instanceId: [1,2,11]
+        portName: ["DiagComClientRPort","DiagComClientRPort","DiagComClientRPort"]
+liblidar_a_cm:
+  sendInstanceID:
+    LidarServiceInterface:
+        instanceId: [3,6,4,5,7]
+        portName: ["LidarCmToAppPPort","LidarCmToAppPPort","LidarCmToAppPPort","LidarCmToAppPPort","LidarCmToAppPPort"]
+    DataFlowServiceInterface:
+        instanceId: [6]
+        portName: ["LidarDataFlowPPort"]
+    TimeDelayServiceInterface:
+        instanceId: [6]
+        portName: ["LidarTimeDelayPPort"]
+  recvInstanceID:
+    MntDelayServiceInterface:
+        instanceId: [1]
+        portName: ["LidarMntRPort"]
+    ConfigServerServiceInterface:
+        instanceId: [1]
+        portName: ["LidarCfgClientRPort"]
+    NrmCenterServiceInterface:
+        instanceId: [1]
+        portName: ["LidarNrmcRPort"]
+    DevmCenterServiceInterface:
+        instanceId: [1,101]
+        portName: ["LidarDevmRPort","LidarDevmRPort"]
+    ActCompensationGacServiceInterface:
+        instanceId: [1]
+        portName: ["LidarActCompensationGacRPort"]
+fm_lib:
+  sendInstanceID:
+  recvInstanceID:
+    FmReportEventService:
+        instanceId: [1444]
+        portName: ["reportEventRPort"]

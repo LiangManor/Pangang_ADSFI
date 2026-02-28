@@ -1,0 +1,603 @@
+/* *
+ * Description:  Define multisensor_fusion.h
+ * Copyright (c) Huawei Technologies Co., Ltd. 2019-2021. All rights reserved.
+ * */
+
+#ifndef SAMPLE_MULTISENSOR_FUSION_H
+#define SAMPLE_MULTISENSOR_FUSION_H
+
+#include "adsf/planning_base.h"
+#include "core/core.h"
+#include <yaml-cpp/yaml.h>
+#include <vector>
+#include <sstream>
+#include <thread>
+#include "udpCommHelp.h"
+#include <ctime>
+#include <sys/time.h>
+
+#include <iostream>
+#include <cstring>
+#include <arpa/inet.h>
+#include <sys/socket.h>
+#include <unistd.h>
+
+
+
+
+class MultisensorFusion {
+public:
+    //发送组播数据(mdc内部数据通讯)
+    void mdcBroadcastData();
+    //获得感知融合数据
+    void getPreFusion();
+    //获得定位数据
+    void RecvLocation();
+    //发送数据到车控
+    void getFusionSend();
+
+    explicit MultisensorFusion(std::string configFile); //: node(configFile)
+    ~MultisensorFusion();
+    //初始化当前进程的node节点
+    Adsfi::HafStatus Init() 
+    {
+        return node.Init();
+    };
+
+    //停止node节点
+    void Stop() {
+        node.Stop();
+        return;
+    };
+
+    bool IsError() const {
+        return errorStatus;
+    }
+
+    //获取车控发送来的数据
+    void getZcData();
+    //进程管理
+    void Process();
+    // 求解另一端的坐标
+    void getAnotherXY(const float tailX,const float tailY,const float tailYaw, float & headX, float & headY)//unit: rad
+    {
+        // 判断象限
+        int num = 0;
+        if( (0. <= tailYaw) && (tailYaw < (3.1415926/2)) ) num = 1;                // 第1象限
+        else if ( (3.1415926/2 <= tailYaw) && (tailYaw < (3.1415926)) ) num = 2;   // 第2象限
+        else if ( (-3.1415926  <= tailYaw) && (tailYaw < (-3.1415926/2)) ) num = 3;// 第3象限
+        else if ( (-3.1415926/2  <= tailYaw) && (tailYaw < 0.) )num = 4;           // 第4象限
+        // 计算坐标
+        if (num == 1) 
+        {
+            headY = tailY - std::abs(10.755*sin(tailYaw));
+            headX = tailX - std::abs(10.755*cos(tailYaw));
+        }
+        else if(num == 2)
+        {
+            headY = tailY - std::abs(10.755*sin(tailYaw));
+            headX = tailX + std::abs(10.755*cos(tailYaw));
+        }
+        else if(num == 3)
+        {
+            headY = tailY + std::abs(10.755*sin(tailYaw));
+            headX = tailX + std::abs(10.755*cos(tailYaw));
+        }
+        else if(num == 4)
+        {
+            headY = tailY + std::abs(10.755*sin(tailYaw));
+            headX = tailX - std::abs(10.755*cos(tailYaw));
+        }
+    }
+    float getAnotherYaw(const float yaw_)
+    {
+    	float anotherYaw = yaw_ + 3.1415926;
+        // 调整到[-π, π)范围内
+    	anotherYaw = fmod(anotherYaw + 3.1415926, 2 * 3.1415926);
+        if (anotherYaw < 0)
+        {
+        	anotherYaw += 2 * 3.1415926;  // 调整为正数
+        }
+        anotherYaw -= 3.1415926;
+        return anotherYaw;
+    }
+
+private:
+
+    bool errorStatus{false};
+
+    Adsfi::PlanningBase node;
+    uint32_t seq = 1U;
+    std::vector <std::thread> pool;
+    bool isThreadRunning = true;
+    udpCommHelp udpHelp;
+
+};
+
+
+
+/**
+ * 雷达状态信息实体
+*/
+struct LidarStatusMessage {
+    uint32_t messageId;               // 消息ID
+    uint16_t messageType;             // 消息类型
+    uint16_t length;                  // 消息长度
+    uint8_t messageLidar_type;//雷达位置
+    uint8_t ethPhyErrorState;         // 以太网收发器模块故障状态
+    uint8_t socCtrlErrorState;        // SOC控制器模块故障状态
+    uint8_t receiveModuleErrorState;  // 接收模块故障状态
+    uint8_t sendModuleErrorState;     // 发射模块故障状态
+    uint8_t electricMotorErrorState;  // 电机模块故障状态
+    uint8_t highTemperatureErrorState;//温度过温告警状态0：温度无故障 1：温度一般故障 2：温度严重故障
+    uint8_t lowTemperatureErrorState;//电压过高告警状态 0：电压无告警1：电压一般告警2：电压严重告警
+    uint8_t highVoltageErrorState;//电压过高告警状态 0：电压无告警1：电压一般告警2：电压严重告警
+    uint8_t lowVoltageErrorState;//电压过低告警状态0：电压无告警1：电压一般告警2：电压严重告警
+};
+
+
+
+/**
+ * slam雷达数据
+ */
+class Slam {
+public:
+
+    // 心跳:0为否,1为是
+    uint8_t hb;
+    //版本号
+    uint8_t version;
+    // 车头x
+    uint64_t headX;
+    // 车头y
+    uint64_t headY;
+    // 车头z
+    uint64_t headZ;
+    // 车头t
+    uint64_t headT;
+    // 车尾x
+    uint64_t tailX;
+    // 车尾y
+    uint64_t tailY;
+    // 车尾z
+    uint16_t tailZ;
+    // 车尾t
+    uint64_t tailT;
+    // RFID强度值
+    uint8_t rfid_rssi;
+    // 方向
+    uint8_t direction;
+    // 距工位点距离
+    uint16_t station_distance;
+    // 工位点信息（填入中车发过来的工位点--------------------------------------------------------------）
+    uint8_t station_info;
+    // RFID的id
+    uint8_t rfid_tag_id;
+
+
+    // 生成16进制字符串的方法
+    std::string toHexString() const {
+        std::stringstream ss;
+        ss << std::hex << std::uppercase << std::setfill('0');
+
+        // 心跳
+        ss << std::setw(2) << static_cast<int>(hb) << " ";
+        //版本号
+        ss << std::setw(2) << static_cast<int>(version) << " ";
+        // 车头x
+        for (int i = 7; i >= 0; --i) {
+            ss << std::setw(2) << ((headX >> (i * 8)) & 0xFF) << " ";
+        }
+        // 车头y
+        for (int i = 7; i >= 0; --i) {
+            ss << std::setw(2) << ((headY >> (i * 8)) & 0xFF) << " ";
+        }
+        // 车头z
+        for (int i = 7; i >= 0; --i) {
+            ss << std::setw(2) << ((headZ >> (i * 8)) & 0xFF) << " ";
+        }
+        // 车头t
+        for (int i = 7; i >= 0; --i) {
+            ss << std::setw(2) << ((headT >> (i * 8)) & 0xFF) << " ";
+        }
+        // 车尾x
+        for (int i = 7; i >= 0; --i) {
+            ss << std::setw(2) << ((tailX >> (i * 8)) & 0xFF) << " ";
+        }
+        // 车尾y
+        for (int i = 7; i >= 0; --i) {
+            ss << std::setw(2) << ((tailY >> (i * 8)) & 0xFF) << " ";
+        }
+        // 车尾z
+        for (int i = 7; i >= 0; --i) {
+            ss << std::setw(2) << ((tailZ >> (i * 8)) & 0xFF) << " ";
+        }
+        // 车尾t
+        for (int i = 7; i >= 0; --i) {
+            ss << std::setw(2) << ((tailT >> (i * 8)) & 0xFF) << " ";
+        }
+        // RFID强度值
+        ss << std::setw(2) << static_cast<int>(rfid_rssi) << " ";
+        // 方向
+        ss << std::setw(2) << static_cast<int>(direction) << " ";
+        // 距工位点距离
+        ss << std::setw(2) << ((station_distance >> 8) & 0xFF) << " "
+           << std::setw(2) << (station_distance & 0xFF) << " ";
+        // 工位点信息
+        ss << std::setw(2) << static_cast<int>(station_info) << " ";
+
+        // RFID的强度
+        ss << std::setw(2) << static_cast<int>(rfid_tag_id) << " ";
+
+        std::string hexString = ss.str();
+        std::vector <uint8_t> bytes;
+
+        // 将16进制字符串转换成字节数组
+        std::istringstream iss(hexString);
+        std::string byteStr;
+        while (iss >> byteStr) {
+            bytes.push_back(std::stoul(byteStr, nullptr, 16));
+        }
+
+        // 补足00
+        while (bytes.size() < 100) {
+            bytes.push_back(0x00);
+        }
+
+        // 将字节数组转换回16进制字符串
+        std::stringstream result;
+        for (const auto &byte: bytes) {
+            result << std::setw(2) << std::setfill('0') << std::hex << std::uppercase << static_cast<int>(byte) << " ";
+        }
+
+        return result.str();
+    }
+};
+
+
+/**
+ * 感知数据
+ */
+
+class Obstacle {
+public:
+    // 障碍物类型
+    uint8_t Obstacle_Type;
+    // 距障碍物距离
+    uint32_t Obstacle_Distance;
+    // 目标种类置信度(1到10)
+    uint32_t confidence;
+    // 目标物在图像中的中心坐标x(像素)
+    uint32_t rect_center_x;
+    // 目标物在图像中的中心坐标y(像素)
+    uint32_t rect_center_y;
+    // 目标物在图像中的宽度(像素)
+    uint32_t rect_size_x;
+    // 目标物在图像中的高度(像素)
+    uint32_t rect_size_y;
+    // 目标物在毫米波雷达坐标系下x方向位置(米)
+    uint32_t abs_rect_size_x;
+    // 目标物在毫米波雷达坐标系下y方向位置(米)
+    uint32_t abs_rect_size_y;
+    // 目标物在毫米波雷达坐标系下x方向速度(米/秒)
+    uint32_t velocity_x;
+    // 目标物在毫米波雷达坐标系下y方向速度(米/秒)
+    uint32_t velocity_y;
+
+    // 将所有成员变量转换为16进制字符串的方法
+    std::string toHexString() const {
+        std::stringstream ss;
+
+        // 转换 uint8_t 类型的变量
+        ss << std::setw(2) << std::setfill('0') << std::hex << static_cast<int>(Obstacle_Type) << " ";
+
+        // 转换 uint32_t 类型的变量
+        for (auto value: {Obstacle_Distance, confidence, rect_center_x, rect_center_y, rect_size_x, rect_size_y,
+                          abs_rect_size_x, abs_rect_size_y, velocity_x, velocity_y}) {
+            for (int i = 3; i >= 0; --i) {
+                uint8_t byte = (value >> (i * 8)) & 0xFF;
+                ss << std::setw(2) << std::setfill('0') << std::hex << static_cast<int>(byte) << " ";
+            }
+        }
+
+        // 获取当前字符串
+        std::string hexString = ss.str();
+
+        // 计算当前字符串的字节数
+        size_t currentBytes = hexString.length() / 3; // 每个字节占3个字符（两个16进制字符加一个空格）
+
+        // 补充00字节，直到达到80个字节
+        while (currentBytes < 80) {
+            hexString += "00 ";
+            currentBytes++;
+        }
+
+        return hexString;
+    }
+};
+
+/**
+ * 传感器故障
+ */
+class SensorFault {
+public:
+    // 告警等级
+    uint8_t level;
+    // b1雷达故障
+    bool b1;
+    // b2雷达故障
+    bool b2;
+    // a3雷达故障
+    bool a3;
+    // a4雷达故障
+    bool a4;
+    // 组合惯导
+    bool gps;
+    // 毫米波雷达1
+    bool milli_wave_radar1;
+    // 毫米波雷达2
+    bool milli_wave_radar2;
+    // 相机1
+    bool camera1;
+    // 相机2
+    bool camera2;
+    // 相机3
+    bool camera3;
+    // 相机4
+    bool camera4;
+
+    // 压缩成 16 进制字符串
+    std::string toHexString() const {
+        uint16_t data = 0;
+
+        // 压缩成 16 bits
+        data |= (b1 & 0x1) << 0;
+        data |= (b2 & 0x1) << 1;
+        data |= (a3 & 0x1) << 2;
+        data |= (a4 & 0x1) << 3;
+        data |= (gps & 0x1) << 4;
+        data |= (milli_wave_radar1 & 0x1) << 5;
+        data |= (milli_wave_radar2 & 0x1) << 6;
+        data |= (camera1 & 0x1) << 7;
+        data |= (camera2 & 0x1) << 8;
+        data |= (camera3 & 0x1) << 9;
+        data |= (camera4 & 0x1) << 10;
+
+        std::vector <uint8_t> result(3);
+        result[0] = level;                // level 单独占用一个字节
+        result[1] = data & 0xFF;          // 低 8 bits (之前是 result[2])
+        result[2] = (data >> 8) & 0xFF;   // 高 8 bits (之前是 result[1])
+
+
+        // 将每个字节转换为 16 进制字符串
+        std::stringstream ss;
+        for (auto byte: result) {
+            ss << std::hex << std::setw(2) << std::setfill('0') << (int) byte << " ";
+        }
+
+        return ss.str();
+    }
+};
+
+/**
+ * 雷达具体异常故障
+ */
+class RadarFault {
+public:
+    //以太网收发器模块故障
+    bool ethernet;
+    //soc控制器故障
+    bool soc;
+    //接收模块故障
+    bool receiver;
+    //发射模块故障
+    bool transmitter;
+    //电机模块故障
+    bool motor;
+    //温度过温异常
+    uint8_t temperature;
+    //温度低温异常
+    uint8_t low_temperature;
+    //电压过高异常
+    uint8_t voltage;
+    //电压过低异常
+    uint8_t low_voltage;
+
+    // 压缩成 16 进制字符串
+    std::string toHexString() const {
+        uint32_t data = 0;
+
+        // 压缩bool变量，5个bool变量压缩到前5位
+        data |= (ethernet & 0x1) << 4;
+        data |= (soc & 0x1) << 3;
+        data |= (receiver & 0x1) << 2;
+        data |= (transmitter & 0x1) << 1;
+        data |= (motor & 0x1);
+
+        // 5个bool变量占1字节，第2字节开始是温度、电压等数值
+        std::vector <uint8_t> result(2);
+        result[0] = data & 0xFF;            // 前 8 bits，5个bool
+        result[1] = temperature;            // temperature
+        result[2] = low_temperature;        // low_temperature
+        result[3] = voltage;                // voltage
+        result[4] = low_voltage;            // low_voltage
+
+        // 将每个字节转换为 16 进制字符串
+        std::stringstream ss;
+        for (auto byte: result) {
+            ss << std::hex << std::setw(2) << std::setfill('0') << (int) byte << " ";
+        }
+
+        return ss.str();
+    }
+};
+
+
+class Fusions {
+    // 
+    Slam slam;
+    Obstacle ob;
+    SensorFault sensorFault;
+    RadarFault radarFault1;
+    RadarFault radarFault2;
+    RadarFault radarFault3;
+    RadarFault radarFault4;
+public:
+    void setSlam(const Slam &s) {
+        slam = s;
+    }
+
+    void setOb(const Obstacle &obj) {
+        ob = obj;
+    }
+
+    void setSen(const SensorFault &sen) {
+        sensorFault = sen;
+    }
+
+    void setRadarFault1(const RadarFault &ra) {
+        radarFault1 = ra;
+    }
+
+    void setRadarFault2(const RadarFault &ra) {
+        radarFault2 = ra;
+    }
+
+    void setRadarFault3(const RadarFault &ra) {
+        radarFault3 = ra;
+    }
+
+    void setRadarFault4(const RadarFault &ra) {
+        radarFault4 = ra;
+    }
+
+
+    // 拼装所有 RadarFault 对象的 16 进制字符串
+    std::string toHexString() const {
+        std::stringstream ss;
+        ss << slam.toHexString();
+        ss << ob.toHexString();
+        ss << sensorFault.toHexString();
+        ss << radarFault1.toHexString();
+        ss << radarFault2.toHexString();
+        ss << radarFault3.toHexString();
+        ss << radarFault4.toHexString();
+        return ss.str();
+    }
+
+};
+
+
+typedef struct {
+    uint8_t Station_ID;    // 工位点编号
+    uint8_t Station_Status; // 工位点状态
+} StationStruct;
+
+// vcu_to_mdc 的结构化数据
+class ZcData {
+public:
+    ZcData()
+    {
+        this->All_Station.resize(20);
+    }
+    ~ZcData(){};
+public:
+    // 14 个字节
+    uint8_t HB;
+    uint8_t RED_Alarm;
+    uint8_t Yellow_Alarm;
+    uint8_t Coup_Status;
+    uint8_t Station;// 目标工位点（已弃用）
+    uint8_t Direction;
+    uint16_t LocoSpd;
+    uint32_t LocoTime;
+    uint8_t Run_Mode;
+    uint8_t Station_Num;
+    // 40 个字节
+    std::vector<StationStruct> All_Station;
+    
+    /*
+    void setData(const std::vector<unsigned char> &data) 
+    {
+        if (data.size() >= 12) // 确保数据长度足够
+        {  
+            HB = data[0];
+            RED_Alarm = data[1];
+            Yellow_Alarm = data[2];
+            Coup_Status = data[3];
+            Station = data[4];
+            if (data[5] == 170) {
+                Direction = 2;
+            } else if (data[5] == 85) {
+                Direction = 1;
+            } else { Direction = 0; }
+
+            LocoSpd = (data[6] << 8) | data[7];  // 16位整数
+            LocoTime = (data[8] << 24) | (data[9] << 16) | (data[10] << 8) | data[11];  // 32位整数
+            Run_Mode = data[12];
+        }
+    }
+    */
+    
+    void setData(const std::vector<unsigned char> &data) 
+    {
+        std::cout<<"接收到的字节数 = "<<data.size()<<std::endl;
+        if (data.size() >= 50) // 确保数据长度足够
+        {
+            // VCU心跳
+            this->HB = data[0];
+            // 机车红色报警标志
+            this->RED_Alarm = data[1];
+            // 机车黄色报警标志
+            this->Yellow_Alarm = data[2];
+            // 机车挂钩状态
+            this->Coup_Status = data[3];
+            // 工位点目标信息
+            this->Station = data[4];
+            // 方向
+            if (data[5] == 85) 
+            {
+                this->Direction = 1;
+            } 
+            else if (data[5] == 170) 
+            {
+                this->Direction = 2;
+            } 
+            else
+            { 
+                this->Direction = 0;
+            }
+            // 机车速度
+            this->LocoSpd = (data[6] << 8) | data[7];
+            // 机车时间
+            this->LocoTime = (data[8] << 24) | (data[9] << 16) | (data[10] << 8) | data[11];
+            // 机车模式
+            this->Run_Mode = data[12];
+            // 工位点数量
+            this->Station_Num = data[13];
+            // 工位点ID与状态
+            for(int i = 1; i <= this->Station_Num; i++)
+            {
+                this->All_Station[i-1].Station_ID     = data[13 + 2*i - 1];
+                this->All_Station[i-1].Station_Status = data[13 + 2*i];
+            }
+        }
+    }
+};
+
+struct Pair {
+    float_t x;
+    float_t y;
+
+    void setX(const float_t &x1) {
+        x = x1;
+    }
+
+    void setY(const float_t &y1) {
+        y = y1;
+    }
+
+};
+
+
+#endif

@@ -1,0 +1,211 @@
+#include <iostream>
+#include <string>
+#include <cstring>
+#include <arpa/inet.h>
+#include <sys/socket.h>
+#include <unistd.h>
+#include <ifaddrs.h>
+#include <netinet/in.h>
+#include <vector>
+
+using namespace std;
+
+
+
+// ----------------------该udp类用于mdc内部方向通讯
+/**
+ * UdpMulticastSender 类用于通过 UDP 协议发送组播消息。
+ * 支持指定组播地址、端口号和使用的网络接口。
+ */
+
+class UdpMulticastSender {
+public:
+    /**
+     * 构造函数，初始化组播发送器。
+     * @param multicastAddress 组播地址，例如 "239.255.255.250"。
+     * @param port 组播端口号。
+     * @param interfaceName 使用的网络接口名称，例如 "eth0"。
+     */
+    UdpMulticastSender(const std::string &multicastAddress, uint16_t port, const std::string &interfaceName)
+            : multicastAddress(multicastAddress), port(port) {
+        // 创建UDP套接字
+        sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+        if (sockfd < 0) {
+            perror("Socket creation failed");
+            exit(EXIT_FAILURE);
+        }
+
+        // 设置组播地址和端口
+        memset(&multicastAddr, 0, sizeof(multicastAddr));
+        multicastAddr.sin_family = AF_INET;
+        multicastAddr.sin_port = htons(port);
+        if (inet_pton(AF_INET, multicastAddress.c_str(), &multicastAddr.sin_addr) <= 0) {
+            perror("Invalid multicast address");
+            close(sockfd);
+            exit(EXIT_FAILURE);
+        }
+
+        // 获取指定网卡的 IP 地址
+        struct in_addr localInterface;
+        if (!getInterfaceAddress(interfaceName, localInterface)) {
+            std::cerr << "Failed to get IP address for interface " << interfaceName << std::endl;
+            close(sockfd);
+            exit(EXIT_FAILURE);
+        }
+
+        // 设置组播TTL (Time to Live)，限制组播消息的传播范围
+        int ttl = 1; // 仅限本地网络
+        if (setsockopt(sockfd, IPPROTO_IP, IP_MULTICAST_TTL, &ttl, sizeof(ttl)) < 0) {
+            perror("Setting multicast TTL failed");
+            close(sockfd);
+            exit(EXIT_FAILURE);
+        }
+
+        // 指定网卡的 IP 地址作为组播接口
+        if (setsockopt(sockfd, IPPROTO_IP, IP_MULTICAST_IF, &localInterface, sizeof(localInterface)) < 0) {
+            perror("Setting multicast interface failed");
+            close(sockfd);
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    /**
+     * 析构函数，关闭套接字。
+     */
+    ~UdpMulticastSender() {
+        close(sockfd);
+    }
+
+    /**
+     * 发送一个整数消息到组播地址。
+     * @param message 整数消息。
+     */
+    void sendMessage(int message) {
+        // 检查套接字是否有效
+        if (sockfd < 0) {
+            std::cerr << "无效的套接字!" << std::endl;
+            return;
+        }
+
+        // 打印组播地址和端口
+        char str[INET_ADDRSTRLEN];
+        inet_ntop(AF_INET, &multicastAddr.sin_addr, str, INET_ADDRSTRLEN);
+        uint8_t messageBytes[sizeof(int)];
+        std::memcpy(messageBytes, &message, sizeof(int));
+
+        // 发送消息到组播地址
+        ssize_t sentBytes = sendto(sockfd, messageBytes, sizeof(int), 0,
+                                   (struct sockaddr *) &multicastAddr, sizeof(multicastAddr));
+
+        if (sentBytes < 0) {
+            perror("发送消息失败");
+        } else {
+            std::cout << "发送消息: " << message << std::endl;
+        }
+    }
+
+private:
+    int sockfd;                       // 套接字描述符
+    struct sockaddr_in multicastAddr; // 组播地址
+    std::string multicastAddress;    // 组播IP
+    uint16_t port;                   // 组播端口
+
+    /**
+     * 获取指定接口的 IP 地址。
+     * @param interfaceName 接口名称。
+     * @param addr 返回的接口IP地址。
+     * @return 如果成功返回 true，否则返回 false。
+     */
+    bool getInterfaceAddress(const std::string &interfaceName, struct in_addr &addr) {
+        struct ifaddrs *ifaddr;
+        if (getifaddrs(&ifaddr) == -1) {
+            perror("getifaddrs failed");
+            return false;
+        }
+
+        for (struct ifaddrs *ifa = ifaddr; ifa != nullptr; ifa = ifa->ifa_next) {
+            if (ifa->ifa_addr == nullptr) continue;
+
+            if (ifa->ifa_addr->sa_family == AF_INET && interfaceName == ifa->ifa_name) {
+                struct sockaddr_in *sa = (struct sockaddr_in *) ifa->ifa_addr;
+                addr = sa->sin_addr;
+                freeifaddrs(ifaddr);
+                return true;
+            }
+        }
+
+        freeifaddrs(ifaddr);
+        return false;
+    }
+};
+
+
+
+
+
+
+// ----------------------该udp类用于mdc内部方向通讯
+
+
+/**
+ * udpCommHelp 类用于处理UDP通信，包括发送和接收消息。
+ */
+class udpCommHelp {
+public:
+    /**
+     * 发送消息。
+     * @param message 待发送的字节数组。
+     */
+    void sendMsg(const std::vector <uint8_t> &message);
+
+    /**
+     * 打印消息内容为十六进制格式。
+     * @param message 待打印的消息内容。
+     */
+    void printHex(const std::vector <uint8_t> &message);
+
+    /**
+     * 析构函数，释放资源。
+     */
+    ~udpCommHelp();
+
+    /**
+     * 初始化服务端套接字，绑定到指定IP和端口。
+     * @param localPort 本地端口。
+     * @param localIP 本地IP地址。
+     */
+    void initServerSock_Lidar_B3(int localPort, std::string localIP);
+
+    /**
+     * 初始化客户端套接字，连接到指定的服务器。
+     * @param destPort 目标端口。
+     * @param destIP 目标IP地址。
+     */
+    void initClientSock_ZC(int destPort, std::string destIP);
+
+    /**
+     * 初始化服务器套接字，用于ZC模块。
+     * @param ip 本地IP。
+     * @param port 本地端口。
+     */
+    void initServerZc(const string &ip, int port);
+
+    /**
+     * 处理接收到的数据。
+     * @param receivedBuffer 数据缓冲区。
+     * @param bufferSize 缓冲区大小。
+     */
+    void processReceivedData(const uint8_t *receivedBuffer, size_t bufferSize);
+
+    /**
+     * 从客户端套接字接收数据。
+     * @param data 数据缓冲区。
+     * @param buffSize 缓冲区大小。
+     * @return 接收到的字节数。
+     */
+    ssize_t recvData_clientSock_zc(unsigned char *data, size_t buffSize);
+
+private:
+    int tempSocket;               // 临时套接字
+    sockaddr_in addrFrom;         // 远程地址
+};

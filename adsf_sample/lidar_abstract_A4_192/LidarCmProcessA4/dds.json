@@ -1,0 +1,470 @@
+{
+  "applicationName": "/HuaweiMDC/PlatformApplication/LidarCmCenterApplication/SwComponent/liblidar_a_cm/LidarCmProcess",
+  "services": [
+    {
+      "service": "/HuaweiMDC/MdcPlatformServices/PlatformServiceInterface/FmServiceInterface/FmReportEventService",
+      "serviceId": 1089,
+      "events": [],
+      "fields": [],
+      "methods": [
+        {
+          "method": "ReportCheckPoint",
+          "id": 3322,
+          "isFireAndForget": false,
+          "requestTopicName": "RequestReportCheckPointDdsRpc",
+          "replyTopicName": "ReplyReportCheckPointDdsRpc",
+          "requestDataType": [
+            "/HuaweiMDC/StdCppDataType/String"
+          ],
+          "replyDataType": [
+            "/HuaweiMDC/StdCppBasicDataType/int32_t"
+          ],
+          "methodOutputName": "/HuaweiMDC/MdcPlatformServices/PlatformServiceInterface/FmServiceInterface/FmReportEventService/ReportCheckPointOutput"
+        },
+        {
+          "method": "ReportFault",
+          "id": 14388,
+          "isFireAndForget": false,
+          "requestTopicName": "RequestReportFaultDdsRpc",
+          "replyTopicName": "ReplyReportFaultDdsRpc",
+          "requestDataType": [
+            "/HuaweiMDC/MdcPlatformServices/PlatformServiceInterface/DataTypes/FmFaultData"
+          ],
+          "replyDataType": [
+            "/HuaweiMDC/StdCppDataType/Int32"
+          ],
+          "methodOutputName": "/HuaweiMDC/MdcPlatformServices/PlatformServiceInterface/FmServiceInterface/FmReportEventService/ReportFaultOutput"
+        },
+        {
+          "method": "ReportProcState",
+          "id": 24315,
+          "isFireAndForget": false,
+          "requestTopicName": "RequestReportProcStateDdsRpc",
+          "replyTopicName": "ReplyReportProcStateDdsRpc",
+          "requestDataType": [
+            "/HuaweiMDC/StdCppDataType/String",
+            "/HuaweiMDC/StdCppBasicDataType/uint8_t"
+          ],
+          "replyDataType": [
+            "/HuaweiMDC/StdCppBasicDataType/uint32_t",
+            "/HuaweiMDC/StdCppBasicDataType/int32_t"
+          ],
+          "methodOutputName": "/HuaweiMDC/MdcPlatformServices/PlatformServiceInterface/FmServiceInterface/FmReportEventService/ReportProcStateOutput"
+        }
+      ],
+      "instances": [
+        {
+          "shortName": "/HuaweiMDC/PlatformApplication/LidarCmCenterApplication/Service/DP/Consumer/LidarFmReport/LidarFmReportServiceInstance",
+          "instance": "1444",
+          "vlan": "Host0DpEthernetCommConnector",
+          "domainId": 14,
+          "network": "192.168.10.6",
+          "isClient": true,
+          "qosProfile": "default_qos.xml",
+          "events": [],
+          "fields": [],
+          "methods": [
+            {
+              "id": 14388,
+              "methodQosProfile": "default_qos.xml",
+              "dataIds": []
+            },
+            {
+              "id": 3322,
+              "methodQosProfile": "default_qos.xml",
+              "dataIds": []
+            },
+            {
+              "id": 24315,
+              "methodQosProfile": "default_qos.xml",
+              "dataIds": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "service": "/HuaweiMDC/PlatformServiceInterface/ActCompensationGacServiceInterface/ActCompensationGacServiceInterface",
+      "serviceId": 2828,
+      "events": [
+        {
+          "event": "mdcEvent",
+          "id": 10488,
+          "isDpRawData": false,
+          "dataType": "/HuaweiMDC/PlatformServiceInterface/ActCompensationGacMsgDataType/ActCompensationGacMsg",
+          "topicName": "ActCompensationGacEncodedDdsEvent"
+        }
+      ],
+      "fields": [],
+      "methods": [],
+      "instances": [
+        {
+          "shortName": "/HuaweiMDC/PlatformApplication/LidarCmCenterApplication/Service/DP/Consumer/ActCompensationDdsRequiredServiceInstance",
+          "instance": "1",
+          "vlan": "Host0DpEthernetCommConnector",
+          "domainId": 0,
+          "network": "192.168.10.6",
+          "isClient": true,
+          "qosProfile": "/var/domainqos.xml",
+          "events": [
+            {
+              "id": 10488,
+              "qosProfile": "/var/eventsqos.xml",
+              "dataIds": []
+            }
+          ],
+          "fields": [],
+          "methods": []
+        }
+      ]
+    },
+    {
+      "service": "/HuaweiMDC/PlatformServiceInterface/DataFlowServiceInterface/DataFlowServiceInterface",
+      "serviceId": 3586,
+      "events": [
+        {
+          "event": "mdcEvent",
+          "id": 10488,
+          "isDpRawData": false,
+          "dataType": "/HuaweiMDC/PlatformServiceInterface/DataFlowMsgDataType/DataFlowDataType",
+          "topicName": "DataFlowDdsEvent"
+        }
+      ],
+      "fields": [],
+      "methods": [],
+      "instances": [
+        {
+          "shortName": "/HuaweiMDC/PlatformApplication/LidarCmCenterApplication/Service/DP/Provider/LidarDataFlowProvidedDdsServiceInstance",
+          "instance": "6",
+          "vlan": "Host0DpEthernetCommConnector",
+          "domainId": 0,
+          "network": "192.168.10.6",
+          "isClient": false,
+          "qosProfile": "/var/domainqos.xml",
+          "events": [
+            {
+              "id": 10488,
+              "qosProfile": "/var/eventsqos.xml",
+              "dataIds": []
+            }
+          ],
+          "fields": [],
+          "methods": []
+        }
+      ]
+    },
+    {
+      "service": "/HuaweiMDC/PlatformServiceInterface/LidarServiceInterface/LidarServiceInterface",
+      "serviceId": 2304,
+      "events": [
+        {
+          "event": "mdcEvent",
+          "id": 10488,
+          "isDpRawData": false,
+          "dataType": "/HuaweiMDC/PlatformServiceInterface/LidarMsgDataType/LidarPointCloud",
+          "topicName": "LidarReportEncodedDdsEvent"
+        }
+      ],
+      "fields": [],
+      "methods": [],
+      "instances": [
+        {
+          "shortName": "/HuaweiMDC/PlatformApplication/LidarCmCenterApplication/Service/DP/Provider/LidarCmToAppProvidedDdsServiceInstanceFront",
+          "instance": "3",
+          "vlan": "Host0DpEthernetCommConnector",
+          "domainId": 0,
+          "network": "192.168.10.6",
+          "isClient": false,
+          "qosProfile": "/var/domainqos.xml",
+          "events": [
+            {
+              "id": 10488,
+              "qosProfile": "customized_qos.xml",
+              "dataIds": []
+            }
+          ],
+          "fields": [],
+          "methods": []
+        },
+        {
+          "shortName": "/HuaweiMDC/PlatformApplication/LidarCmCenterApplication/Service/DP/Provider/LidarCmToAppProvidedDdsServiceInstanceLeft",
+          "instance": "6",
+          "vlan": "Host0DpEthernetCommConnector",
+          "domainId": 0,
+          "network": "192.168.10.6",
+          "isClient": false,
+          "qosProfile": "/var/domainqos.xml",
+          "events": [
+            {
+              "id": 10488,
+              "qosProfile": "customized_qos.xml",
+              "dataIds": []
+            }
+          ],
+          "fields": [],
+          "methods": []
+        },
+        {
+          "shortName": "/HuaweiMDC/PlatformApplication/LidarCmCenterApplication/Service/DP/Provider/LidarCmToAppProvidedDdsServiceInstanceRear",
+          "instance": "4",
+          "vlan": "Host0DpEthernetCommConnector",
+          "domainId": 0,
+          "network": "192.168.10.6",
+          "isClient": false,
+          "qosProfile": "/var/domainqos.xml",
+          "events": [
+            {
+              "id": 10488,
+              "qosProfile": "customized_qos.xml",
+              "dataIds": []
+            }
+          ],
+          "fields": [],
+          "methods": []
+        },
+        {
+          "shortName": "/HuaweiMDC/PlatformApplication/LidarCmCenterApplication/Service/DP/Provider/LidarCmToAppProvidedDdsServiceInstanceRight",
+          "instance": "5",
+          "vlan": "Host0DpEthernetCommConnector",
+          "domainId": 0,
+          "network": "192.168.10.6",
+          "isClient": false,
+          "qosProfile": "/var/domainqos.xml",
+          "events": [
+            {
+              "id": 10488,
+              "qosProfile": "customized_qos.xml",
+              "dataIds": []
+            }
+          ],
+          "fields": [],
+          "methods": []
+        },
+        {
+          "shortName": "/HuaweiMDC/PlatformApplication/LidarCmCenterApplication/Service/DP/Provider/LidarCmToAppProvidedDdsServiceInstanceRoof",
+          "instance": "7",
+          "vlan": "Host0DpEthernetCommConnector",
+          "domainId": 0,
+          "network": "192.168.10.6",
+          "isClient": false,
+          "qosProfile": "/var/domainqos.xml",
+          "events": [
+            {
+              "id": 10488,
+              "qosProfile": "customized_qos.xml",
+              "dataIds": []
+            }
+          ],
+          "fields": [],
+          "methods": []
+        }
+      ]
+    },
+    {
+      "service": "/HuaweiMDC/PlatformServiceInterface/MntAgentServiceInterface/MntDelayServiceInterface",
+      "serviceId": 3776,
+      "events": [
+        {
+          "event": "MntDelayEvent",
+          "id": 43958,
+          "isDpRawData": false,
+          "dataType": "/HuaweiMDC/PlatformServiceInterface/MntAgentMsgDataTypes/DelayDataType/DelayEventDataType",
+          "topicName": "MntDelayDdsEvent"
+        }
+      ],
+      "fields": [],
+      "methods": [],
+      "instances": [
+        {
+          "shortName": "/HuaweiMDC/PlatformApplication/MntAgentApplication/Service/Consumer/MntDelayRequiredServiceInstance",
+          "instance": "1",
+          "vlan": "Host0DpEthernetCommConnector",
+          "domainId": 11,
+          "network": "192.168.10.6",
+          "isClient": true,
+          "qosProfile": "/var/domainqos.xml",
+          "events": [
+            {
+              "id": 43958,
+              "qosProfile": "/var/eventsqos.xml",
+              "dataIds": []
+            }
+          ],
+          "fields": [],
+          "methods": []
+        }
+      ]
+    },
+    {
+      "service": "/HuaweiMDC/PlatformServiceInterface/TimeDelayServiceInterface/TimeDelayServiceInterface",
+      "serviceId": 3587,
+      "events": [
+        {
+          "event": "mdcEvent",
+          "id": 10488,
+          "isDpRawData": false,
+          "dataType": "/HuaweiMDC/PlatformServiceInterface/TimeDelayDataType/TimeDelayDataType",
+          "topicName": "TimeDelayDdsEvent"
+        }
+      ],
+      "fields": [],
+      "methods": [],
+      "instances": [
+        {
+          "shortName": "/HuaweiMDC/PlatformApplication/LidarCmCenterApplication/Service/DP/Provider/LidarTimeDelayProvidedDdsServiceInstance",
+          "instance": "6",
+          "vlan": "Host0DpEthernetCommConnector",
+          "domainId": 0,
+          "network": "192.168.10.6",
+          "isClient": false,
+          "qosProfile": "/var/domainqos.xml",
+          "events": [
+            {
+              "id": 10488,
+              "qosProfile": "/var/eventsqos.xml",
+              "dataIds": []
+            }
+          ],
+          "fields": [],
+          "methods": []
+        }
+      ]
+    },
+    {
+      "service": "/HuaweiMDC/PlatformServices/DiagComClient",
+      "serviceId": 101,
+      "events": [
+        {
+          "event": "RequestTrigger",
+          "id": 52019,
+          "isDpRawData": false,
+          "dataType": "/HuaweiMDC/DiagDataType/RequestTriggerType",
+          "topicName": "TopicNameOfRequestTriggerDeployment"
+        }
+      ],
+      "fields": [],
+      "methods": [
+        {
+          "method": "GetRequest",
+          "id": 62768,
+          "isFireAndForget": false,
+          "requestTopicName": "RequestOfRpcOfGetRequestDeployment",
+          "replyTopicName": "ReplyOfRpcOfGetRequestDeployment",
+          "requestDataType": [
+            "/HuaweiMDC/StdCppDataType/String",
+            "/HuaweiMDC/StdCppDataType/UInt64"
+          ],
+          "replyDataType": [
+            "/HuaweiMDC/StdCppDataType/Boolean",
+            "/HuaweiMDC/PlatformServices/DiagMsgDataType/DataTypes/ByteArray"
+          ],
+          "methodOutputName": "/HuaweiMDC/PlatformServices/DiagComClient/GetRequestOutput"
+        },
+        {
+          "method": "SendResponse",
+          "id": 17402,
+          "isFireAndForget": false,
+          "requestTopicName": "RequestOfRpcOfSendResponseDeployment",
+          "replyTopicName": "ReplyOfRpcOfSendResponseDeployment",
+          "requestDataType": [
+            "/HuaweiMDC/StdCppDataType/String",
+            "/HuaweiMDC/StdCppDataType/UInt64",
+            "/HuaweiMDC/StdCppDataType/Boolean",
+            "/HuaweiMDC/PlatformServices/DiagMsgDataType/DataTypes/ByteVector"
+          ],
+          "replyDataType": [],
+          "methodOutputName": "/HuaweiMDC/PlatformServices/DiagComClient/SendResponseOutput"
+        }
+      ],
+      "instances": [
+        {
+          "shortName": "/HuaweiMDC/PlatformApplication/DiagAgentApplication/Service/Consumer/DiagComClient/DidIOControlInstance",
+          "instance": "11",
+          "vlan": "Host0DpEthernetCommConnector",
+          "domainId": 1,
+          "network": "192.168.10.6",
+          "isClient": true,
+          "qosProfile": "default_qos.xml",
+          "events": [
+            {
+              "id": 52019,
+              "qosProfile": "default_qos.xml",
+              "dataIds": []
+            }
+          ],
+          "fields": [],
+          "methods": [
+            {
+              "id": 62768,
+              "methodQosProfile": "default_qos.xml",
+              "dataIds": []
+            },
+            {
+              "id": 17402,
+              "methodQosProfile": "default_qos.xml",
+              "dataIds": []
+            }
+          ]
+        },
+        {
+          "shortName": "/HuaweiMDC/PlatformApplication/DiagAgentApplication/Service/Consumer/DiagComClient/DidReadInstance",
+          "instance": "1",
+          "vlan": "Host0DpEthernetCommConnector",
+          "domainId": 1,
+          "network": "192.168.10.6",
+          "isClient": true,
+          "qosProfile": "default_qos.xml",
+          "events": [
+            {
+              "id": 52019,
+              "qosProfile": "default_qos.xml",
+              "dataIds": []
+            }
+          ],
+          "fields": [],
+          "methods": [
+            {
+              "id": 62768,
+              "methodQosProfile": "default_qos.xml",
+              "dataIds": []
+            },
+            {
+              "id": 17402,
+              "methodQosProfile": "default_qos.xml",
+              "dataIds": []
+            }
+          ]
+        },
+        {
+          "shortName": "/HuaweiMDC/PlatformApplication/DiagAgentApplication/Service/Consumer/DiagComClient/DidWriteInstance",
+          "instance": "2",
+          "vlan": "Host0DpEthernetCommConnector",
+          "domainId": 1,
+          "network": "192.168.10.6",
+          "isClient": true,
+          "qosProfile": "default_qos.xml",
+          "events": [
+            {
+              "id": 52019,
+              "qosProfile": "default_qos.xml",
+              "dataIds": []
+            }
+          ],
+          "fields": [],
+          "methods": [
+            {
+              "id": 62768,
+              "methodQosProfile": "default_qos.xml",
+              "dataIds": []
+            },
+            {
+              "id": 17402,
+              "methodQosProfile": "default_qos.xml",
+              "dataIds": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<?fileVersion 4.0.0?><cproject storage_type_id="org.eclipse.cdt.core.XmlProjectDescriptionStorage">
+	<storageModule moduleId="org.eclipse.cdt.core.settings">
+		<cconfiguration id="org.eclipse.cdt.core.default.config.1575291668">
+			<storageModule buildSystemId="org.eclipse.cdt.core.defaultConfigDataProvider" id="org.eclipse.cdt.core.default.config.1575291668" moduleId="org.eclipse.cdt.core.settings" name="Configuration">
+				<externalSettings/>
+				<extensions/>
+			</storageModule>
+			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
+		</cconfiguration>
+	</storageModule>
+	<storageModule moduleId="org.eclipse.cdt.core.pathentry">
+		<pathentry excluding="**/build/**" kind="out" path="build"/>
+	</storageModule>
+	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
+	<storageModule att_arch="aarch64" attr_os="aos_gea" attr_path="/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler" attr_type="clang" moduleId="com.huawei.mdc.devstudio.sdk.configuration"/>
+	<storageModule moduleId="com.huawei.mdc.devstudio.toolchains.configuration">
+		<content-type-mapping c_compiler="" cmake="/usr/bin/cmake" cpp_compiler="" gcov="" linker="" make="/usr/bin/make" toolchain_name="Default_Toolchain"/>
+	</storageModule>
+	<storageModule moduleId="com.huawei.mdc.devstudio.cmake.configuration">
+		<content-type-mapping binary_path="" build_options="" build_type="Debug" cmake_name="Default_CMake" cmake_options="" install_options="" isSelected="true" source_path="" toolchain="Default_Toolchain"/>
+	</storageModule>
+</cproject>

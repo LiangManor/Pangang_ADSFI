@@ -1,0 +1,130 @@
+//socke通讯添加的头文件
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <time.h>
+#include <poll.h>
+#include <fcntl.h>
+#include <string>
+
+#include <sys/socket.h>  
+
+#include <netinet/in.h>  
+
+
+#include <unistd.h>  
+
+#include <cstring>  
+
+
+using namespace std;
+
+class UdpCom {
+    public:
+        int serverSock;
+        int clientSock;
+        int modeFlag;//0表示server模式，1表示client模式
+        struct sockaddr_in destAddr;
+
+        sockaddr_in addrFrom;
+        socklen_t lens = sizeof(addrFrom);
+    public:
+        void initUdpServer(int localPort, string localIP)
+        {
+            //创建UDP的socket
+            this->serverSock = socket(AF_INET, SOCK_DGRAM, 0);
+            if (this->serverSock == -1)
+            {
+                std::cout<<("socket 创建失败")<<std::endl;
+                return;
+            }
+            std::cout<<("socket 创建成功")<<std::endl;
+            //为 serverSock 绑定通讯地址
+            sockaddr_in sockAddr_difop;
+            memset(&sockAddr_difop, 0, sizeof(sockAddr_difop));
+            sockAddr_difop.sin_family = AF_INET;
+            sockAddr_difop.sin_port = htons(localPort);//本地端口号
+            sockAddr_difop.sin_addr.s_addr = inet_addr(localIP.c_str());//本地IP
+/*            int retVal_difop = bind(this->serverSock, (struct sockaddr *) &sockAddr_difop, sizeof(sockaddr));*/
+/*            if(retVal_difop == -1){*/
+/*                std::cout<<("IP/port 绑定失败")<<std::endl;*/
+/*                return;*/
+/*            }*/
+            
+    if (bind(serverSock, (struct sockaddr *)&sockAddr_difop, sizeof(sockAddr_difop)) < 0) {  
+
+        // 错误处理  
+
+        close(serverSock);  
+
+        return -1;  
+
+    }  
+            
+            
+            
+            std::cout<<("IP/port 绑定成功")<<std::endl;
+            struct pollfd fds[1];
+            fds[0].fd = this->serverSock;
+            fds[0].events = POLLIN;
+            static const int POLL_TIMEOUT=1000;
+            do{
+                int retval = poll(fds, 1, POLL_TIMEOUT);
+                if(retval < 0) continue;
+                else if(retval == 0) 
+                {
+                    std::cout << "server端无人链接" << std::endl;
+                    continue;
+                }
+            }while ((fds[0].revents & POLLIN) == 0);
+            std::cout << "server端有人链接" << std::endl;
+
+            this->modeFlag = 0;
+            return;
+        }
+
+        void initUdpClient(int destPort, string destIP)
+        {
+            // 创建 UDP 套接字
+            if ((this->clientSock = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
+                std::cout<<("socket 创建失败")<<std::endl;
+                return ;
+            }
+            // 设置服务器地址和端口
+            this->destAddr.sin_family = AF_INET;
+            this->destAddr.sin_port = htons(destPort);
+            this->destAddr.sin_addr.s_addr = inet_addr(destIP.c_str());
+
+            this->modeFlag = 1;
+            return;
+        }
+        
+        ssize_t recvData(unsigned char * buff, size_t buffSize)
+        {
+        	ssize_t num;
+            if(this->modeFlag == 0)
+            {
+                num =  recvfrom(this->serverSock, buff, buffSize, 0, (sockaddr *) & this->addrFrom, & this->lens);
+            }
+            else if(this->modeFlag == 1)
+            {
+                num =  recvfrom(this->clientSock, buff,buffSize, 0, (sockaddr *) & this->addrFrom, & this->lens);
+            }  
+            return num;
+        }
+
+        template <typename T> ssize_t sendData(const T &data)
+        {
+        	ssize_t num;
+            if(this->modeFlag == 1)
+            {
+            	num = sendto(this->clientSock, (const char*)&data, sizeof(data), 0, (const struct sockaddr *) &this->destAddr, sizeof(this->destAddr));
+            }
+            return num;
+        }
+        
+};
+
+
+
+
+

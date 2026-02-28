@@ -1,0 +1,63 @@
+appName: LidarSlam
+description: LidarSlam module is a slam module
+priority: 0    #{0 ... 12} not currently used
+scheduleFrequency: 30
+isDetermineSchedule: false    #{true, false}
+logFile: ./    #logPath, Does not support dynamic modification
+logMode: 6    #{0, 1, 2}, 0: 指定文件存储， 1: 固定文件存储， 2: 指定+固定文件存储
+              #3：remote日志+console日志 4：remote日志+本地日志 5：console日志+本地日志 6：remote日志+console日志+本地日志
+logLevel: 6    #{0，1，2，3，4，5, 6}， 0：verbose, 1：debug, 2：info, 3：warn, 4：error, 5：fatal, 6：off
+recvInstanceID:
+    gnssInputInstanceID: 1 
+    lidarInputInstanceID: 5 # A3(3) A4(4) B1(5) B2(6)
+    imageInputInstanceID: 21
+    imuInputInstanceID: 1
+    locationRInputInstanceID: 113
+sendInstanceID:
+    locationPResultInstanceID: 115
+
+
+#------------一级设置:【工作模式】
+# 0: 表示标定模式(标定模式逻辑:会将第一个经纬度写入/home/sshuser/map/latLon.txt，之后剩下的的经纬度信息写入/home/sshuser/map/path.txt)
+# 1: 表示验证标定结果模式
+# 2： 表示普通模式 
+workingMode: 2
+#地图路径，Lidar 与 GPS 标定数据路径, 大地坐标系原地经纬度路径，rfid文件路径
+mapPath: /home/sshuser/map/map.bin 
+filePath: /home/sshuser/map/path.txt         
+latLonOriginPath: /home/sshuser/map/latLon.txt # gps定位原点
+rfidPath: /home/sshuser/map/rfid.txt           # lat lon heading (x,y,yaw,第一行填0，0，0)，因为rfid标签从1开始，
+isManualInit: 1 #1 表示人为初始化 0 表示不用人为初始化
+initX: -54.2714 #初始x坐标(米)
+initY: -216.864 #初始y坐标
+initZ: 1.5  #初始z坐标(如果用建图的lidar定位，该值一般设为0)
+initThetaX: 0.0 #初始x轴旋转角(rad)
+initThetaY: 0.0 #初始y轴旋转角
+initThetaZ: 1.35227 #初始z轴旋转角
+#------------二级设置:【定位算法初始化位姿的方法】
+#  0 表示不使用RTK 
+#  1 表示使用RTK,一般默认为1（使用RTK后，程序才可以具备自动初始化位姿 以及 重定位的能力） 
+useRTK: 1 
+# 如果useRTK设置为1，则需要设置以下3个标定参数【gps坐标系 投影到 参考的点云地图坐标 的平移/旋转变化量】
+xParam: 1.9 # (米)
+yParam: 10.0
+zAngle: 160.4 # (度)
+#点云地图 和 东北天坐标系标定后，修改下面的原点经纬度(小数点后七位精确到厘米)值
+longitudeOfOrigin: 114.38161683 #经度
+latitudeOfOrigin: 22.72253669   #纬度
+#------------三级设置:【ndt 定位器配置，已经调整好，除了修改线程数，其他的参数不建议改动】
+voxelGridSize: 1.2 #(对当前帧进行滤波)滤波器体素边长（注:每一帧点云经过的下采样的体素参数 应该与全局地图经过下采样的参数保持一致）（米）
+voxelGridSize2: 1.2 #(对地图进行滤波)滤波器体素边长（注:每一帧点云经过的下采样的体素参数 应该与全局地图经过下采样的参数保持一致）
+ndtGridResolution: 2.5 #ndt的网格分辨率（米）
+precision: 0.01 #终止迭代的精度条件
+step: 0.4 #ndt的grid移动步长（米）
+iterations: 25 #迭代次数 40
+threadNum: 6 #线程数
+isVision: 1 # 1表示进行可视化  0表示不进行可视化
+
+
+
+
+
+
+

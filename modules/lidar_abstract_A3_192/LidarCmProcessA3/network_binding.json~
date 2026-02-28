@@ -1,0 +1,129 @@
+{
+  "instanceSpecifiers": [
+    {
+      "instanceSpecifier": "liblidar_a_cm/liblidar_a_cm/",
+      "service": "/HuaweiMDC/PlatformServices/DiagComClient",
+      "instanceIdentifiers": [
+        {
+          "protocol": "DDS",
+          "instanceIdentifier": "1",
+          "shortName": "/HuaweiMDC/PlatformApplication/DiagAgentApplication/Service/Consumer/DiagComClient/DidReadInstance"
+        },
+        {
+          "protocol": "DDS",
+          "instanceIdentifier": "2",
+          "shortName": "/HuaweiMDC/PlatformApplication/DiagAgentApplication/Service/Consumer/DiagComClient/DidWriteInstance"
+        },
+        {
+          "protocol": "DDS",
+          "instanceIdentifier": "11",
+          "shortName": "/HuaweiMDC/PlatformApplication/DiagAgentApplication/Service/Consumer/DiagComClient/DidIOControlInstance"
+        }
+      ]
+    },
+    {
+      "instanceSpecifier": "liblidar_a_cm/liblidar_a_cm/",
+      "service": "/HuaweiMDC/MdcPlatformServices/PlatformServiceInterface/FmServiceInterface/FmReportEventService",
+      "instanceIdentifiers": [
+        {
+          "protocol": "DDS",
+          "instanceIdentifier": "1444",
+          "shortName": "/HuaweiMDC/PlatformApplication/LidarCmCenterApplication/Service/DP/Consumer/LidarFmReport/LidarFmReportServiceInstance"
+        }
+      ]
+    },
+    {
+      "instanceSpecifier": "liblidar_a_cm/liblidar_a_cm/LidarActCompensationGacRPort",
+      "service": "/HuaweiMDC/PlatformServiceInterface/ActCompensationGacServiceInterface/ActCompensationGacServiceInterface",
+      "instanceIdentifiers": [
+        {
+          "protocol": "DDS",
+          "instanceIdentifier": "1",
+          "shortName": "/HuaweiMDC/PlatformApplication/LidarCmCenterApplication/Service/DP/Consumer/ActCompensationDdsRequiredServiceInstance"
+        }
+      ]
+    },
+    {
+      "instanceSpecifier": "liblidar_a_cm/liblidar_a_cm/LidarCfgClientRPort",
+      "service": "/HuaweiMDC/MdcPlatformServices/ConfigServerServiceInterface/ConfigServerServiceInterface",
+      "instanceIdentifiers": [
+        {
+          "protocol": "SOMEIP",
+          "instanceIdentifier": "1",
+          "shortName": "/HuaweiMDC/PlatformApplication/LidarCmCenterApplication/Service/DP/Consumer/LidarCfgServerRequiredServiceInstance"
+        }
+      ]
+    },
+    {
+      "instanceSpecifier": "liblidar_a_cm/liblidar_a_cm/LidarCmToAppPPort",
+      "service": "/HuaweiMDC/PlatformServiceInterface/LidarServiceInterface/LidarServiceInterface",
+      "instanceIdentifiers": [
+        {
+          "protocol": "DDS",
+          "instanceIdentifier": "3",
+          "shortName": "/HuaweiMDC/PlatformApplication/LidarCmCenterApplication/Service/DP/Provider/LidarCmToAppProvidedDdsServiceInstanceFront"
+        }
+      ]
+    },
+    {
+      "instanceSpecifier": "liblidar_a_cm/liblidar_a_cm/LidarDataFlowPPort",
+      "service": "/HuaweiMDC/PlatformServiceInterface/DataFlowServiceInterface/DataFlowServiceInterface",
+      "instanceIdentifiers": [
+        {
+          "protocol": "DDS",
+          "instanceIdentifier": "6",
+          "shortName": "/HuaweiMDC/PlatformApplication/LidarCmCenterApplication/Service/DP/Provider/LidarDataFlowProvidedDdsServiceInstance"
+        }
+      ]
+    },
+    {
+      "instanceSpecifier": "liblidar_a_cm/liblidar_a_cm/LidarDevmRPort",
+      "service": "/HuaweiMDC/PlatformServiceInterface/DevmCenterServiceInterface/DevmCenterServiceInterface",
+      "instanceIdentifiers": [
+        {
+          "protocol": "SOMEIP",
+          "instanceIdentifier": "1",
+          "shortName": "/HuaweiMDC/PlatformApplication/LidarCmCenterApplication/Service/DP/Consumer/LidarDevmAppFromCenterRequiredASomeipServiceInstance"
+        },
+        {
+          "protocol": "SOMEIP",
+          "instanceIdentifier": "101",
+          "shortName": "/HuaweiMDC/PlatformApplication/LidarCmCenterApplication/Service/DP/Consumer/LidarDevmAppFromCenterRequiredBSomeipServiceInstance"
+        }
+      ]
+    },
+    {
+      "instanceSpecifier": "liblidar_a_cm/liblidar_a_cm/LidarMntRPort",
+      "service": "/HuaweiMDC/PlatformServiceInterface/MntAgentServiceInterface/MntDelayServiceInterface",
+      "instanceIdentifiers": [
+        {
+          "protocol": "DDS",
+          "instanceIdentifier": "1",
+          "shortName": "/HuaweiMDC/PlatformApplication/MntAgentApplication/Service/Consumer/MntDelayRequiredServiceInstance"
+        }
+      ]
+    },
+    {
+      "instanceSpecifier": "liblidar_a_cm/liblidar_a_cm/LidarNrmcRPort",
+      "service": "/HuaweiMDC/MdcPlatformServices/NrmcServiceInterface/NrmCenterServiceInterface",
+      "instanceIdentifiers": [
+        {
+          "protocol": "SOMEIP",
+          "instanceIdentifier": "1",
+          "shortName": "/HuaweiMDC/PlatformApplication/LidarCmCenterApplication/Service/DP/Consumer/LidarFromNrmcSomeipServiceInstance"
+        }
+      ]
+    },
+    {
+      "instanceSpecifier": "liblidar_a_cm/liblidar_a_cm/LidarTimeDelayPPort",
+      "service": "/HuaweiMDC/PlatformServiceInterface/TimeDelayServiceInterface/TimeDelayServiceInterface",
+      "instanceIdentifiers": [
+        {
+          "protocol": "DDS",
+          "instanceIdentifier": "6",
+          "shortName": "/HuaweiMDC/PlatformApplication/LidarCmCenterApplication/Service/DP/Provider/LidarTimeDelayProvidedDdsServiceInstance"
+        }
+      ]
+    }
+  ]
+}

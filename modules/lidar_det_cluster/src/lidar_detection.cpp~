@@ -1,0 +1,521 @@
+/*
+ * Copyright (c) Huawei Technologies Co., Ltd. 2020-2022. All rights reserved.
+ * Description:  lidar_det demo
+ */
+#include "lidar_detection.h"
+#include "dbscan_inwinic.h"
+#include "tracker.h"
+#include "weed_removal.h"
+
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
+#include <pcl/common/transforms.h>
+#include <Eigen/Core>
+#include <Eigen/Geometry>
+#include <publisher.h>  //点云Mviz可视化
+
+using namespace std;
+using namespace Adsfi;
+#pragma pack(1)
+    struct LidarPointFieldLite {
+        int16_t x;
+        int16_t y;
+        int16_t z;
+        int32_t time;
+        uint8_t intensity;
+        uint16_t ring;
+    };
+    struct LidarPointField {
+        float32_t x;
+        float32_t y;
+        float32_t z;
+        int32_t time;
+        float32_t distance;
+        float32_t pitch;
+        float32_t yaw;
+        uint16_t intensity;
+        uint16_t ring;
+    };
+#pragma pack()
+
+void PrintFirstPoint(const std::shared_ptr<ara::lidar::LidarPointCloud> &lidarData)
+{}
+
+void PrintFirstPointLite(const std::shared_ptr<ara::lidar::LidarPointCloud> &lidarData)
+{}
+
+void PrintPointsInfo(const std::shared_ptr<ara::lidar::LidarPointCloud> &lidarData)
+{}
+
+LidarDetection::~LidarDetection()
+{
+    for (auto &iter : pool) {
+        if (iter.joinable()) {
+            iter.join();
+        }
+    }
+}
+
+
+struct QuaternionInwinic
+{
+   double w, x, y, z;
+};
+
+QuaternionInwinic ToQuaternionInwinic(double yaw, double pitch, double roll) // yaw (Z), pitch (Y), roll (X)
+{
+   double cy = cos(yaw * 0.5);
+   double sy = sin(yaw * 0.5);
+   double cp = cos(pitch * 0.5);
+   double sp = sin(pitch * 0.5);
+   double cr = cos(roll * 0.5);
+   double sr = sin(roll * 0.5);
+   QuaternionInwinic q;
+   q.w = cy * cp * cr + sy * sp * sr;
+   q.x = cy * cp * sr - sy * sp * cr;
+   q.y = sy * cp * sr + cy * sp * cr;
+   q.z = sy * cp * cr - cy * sp * sr;
+   return q;
+}
+mdc::visual::Publisher pcPointXYZIRPub {}; //点云
+mdc::visual::Publisher objPublisher {};    //聚类结果发布者
+
+
+
+void LidarDetection::Process()
+{   
+    pool.push_back(std::thread(&LidarDetection::SubLidar, this));  // 点云检测子线程
+    pool.push_back(std::thread(&LidarDetection::SubLocation, this));// 获取定位结果子线程
+    return;
+}
+
+void LidarDetection::getDirect()
+{
+    while(1)
+    {
+//        std::cout<<"model = "<<this->receiver.receiveMessage()<<std::endl;
+        this->model = this->receiver.receiveMessage();
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    }
+}
+
+bool LidarDetection::drivingDiretion(int model, int lidarID)
+{
+    if(model == 1)
+    {
+        if(lidarID == 4)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+    else if(model == 2)
+    {
+        if(lidarID == 6)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+}
+
+void LidarDetection::SubLidar()
+{
+    bool result     = mdc::visual::Connect();
+    pcPointXYZIRPub = mdc::visual::Publisher::Advertise<mdc::visual::PointCloud2>(ara::core::String("lidar_seg_cloud"));// 点云的话题
+    objPublisher    = mdc::visual::Publisher::Advertise<mdc::visual::MarkerArray>(ara::core::String("lidar_obj"));// 聚类框的话题
+    // 开启单独线程 getDirect() 去获取行驶方向
+    pool.push_back(std::thread(&LidarDetection::getDirect, this));
+    TRACKER tracker;
+    while (!node.IsStop()) 
+    {
+    	// 获取当前行驶方向的lidarID
+//    	uint32_t lidarID = getLidarID(this->model);
+//    	if(lidarID == 0) // 表示不进行检测
+//    	{
+//			auto out = std::make_shared<Haf3dDetectionOutArray<float>>();
+//			out->frameID        = std::to_string(0);
+//			out->seq            = 0;
+//			if (node.SendObject(out) != HAF_SUCCESS)
+//			{
+//				continue;
+//			}
+//    		continue;
+//    	}
+    	
+    	// 只拿对应方向的lidar数据A4:4  B2:6
+		std::shared_ptr<LidarFrame<PointXYZIRT> > lidarData;
+//		if (node.GetLidar(lidarData, lidarID) != HAF_SUCCESS)
+		if (node.GetLidar(lidarData, 4) != HAF_SUCCESS) // A4
+//		if (node.GetLidar(lidarData, 6) != HAF_SUCCESS) // B2
+		{
+			Stop();
+			return;
+		}
+		if (lidarData == nullptr)
+		{
+			continue;
+		}
+		// 先判断传感器是否出故障，如果出故障则直接上报，跳过以下步骤。
+		if(lidarData->pointCloud.size() == 0)
+		{
+			auto out = std::make_shared<Haf3dDetectionOutArray<float>>();
+			out->frameID        = std::to_string(this->model);// 传感器id-----------------------
+			out->seq            = 1;// 1表示异常 -------------------------------
+			if (node.SendObject(out) != HAF_SUCCESS)
+			{
+				HAF_LOG_ERROR << "Send Object failed!";
+				Stop();
+				return;
+			}
+			continue;
+		}
+		// ------------------------------------------- 获取原始数据 ---------------------------------------------- //
+		pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
+		PointT p;
+		for (size_t i = 0; i < lidarData->pointCloud.size(); i++)
+		{
+			p.x = lidarData->pointCloud[i].x;
+			p.y = lidarData->pointCloud[i].y;
+			p.z = lidarData->pointCloud[i].z;
+			cloud->push_back(p);
+		}
+		// ------------------------------------------- 提取感兴趣区域 ---------------------------------------------- //
+        pcl::PointCloud<pcl::PointXYZ>::Ptr cloudROI(new pcl::PointCloud<pcl::PointXYZ>);
+        for(int i = 0; i < cloud->points.size();i++)
+        {
+            if     (std::abs(cloud->points[i].y) >= 1.3) // 左右
+            {
+                continue;
+            }
+            else if(std::abs(cloud->points[i].x) >= 100.0) // 前后
+            {
+                continue;
+            }
+            else if(std::abs(cloud->points[i].z) >= 3.5) // 上下
+            {
+                continue;
+            }
+            else 
+            {
+                cloudROI->points.push_back(cloud->points[i]);
+            }
+        }
+        // ------------------------------------------- 对ROI区域地面分割 ---------------------------------------------- //
+        pcl::PointCloud<pcl::PointXYZ>::Ptr ground(new pcl::PointCloud<pcl::PointXYZ>);
+        pcl::PointCloud<pcl::PointXYZ>::Ptr noGround(new pcl::PointCloud<pcl::PointXYZ>);
+        for(int i = 0; i < cloudROI->points.size();i++)
+        {
+            if(cloudROI->points[i].z <= (-0.5))
+            {
+                ground->points.push_back(cloudROI->points[i]);
+            }
+            else
+            {
+                noGround->points.push_back(cloudROI->points[i]);
+            }
+        }
+        // ------------------------------------------- 对非地面点进行分割 ---------------------------------------------- //
+        pcl::PointCloud<pcl::PointXYZ>::Ptr noFilt(new pcl::PointCloud<pcl::PointXYZ>);
+        pcl::PointCloud<pcl::PointXYZ>::Ptr filt(new pcl::PointCloud<pcl::PointXYZ>);
+        for(int i = 0; i < noGround->points.size();i++)
+        {
+            if(noGround->points[i].z <= (-0.5 + 0.25))
+            {
+                noFilt->points.push_back(noGround->points[i]);
+            }
+            else
+            {
+                filt->points.push_back(noGround->points[i]);
+            }
+        }
+        pcl::VoxelGrid<pcl::PointXYZ> voxel;
+        voxel.setInputCloud(filt);
+        voxel.setLeafSize(0.15,0.15,0.1);
+        voxel.filter(*filt);//获取滤波后的点云：cloudFiltered
+        // ------------------------------------------- 对非地面点noFilt进行深度分割 ---------------------------------------------- //
+        pcl::PointCloud<pcl::PointXYZ>::Ptr noFilt_0_10 (new pcl::PointCloud<pcl::PointXYZ>);
+        pcl::PointCloud<pcl::PointXYZ>::Ptr noFilt_10_30(new pcl::PointCloud<pcl::PointXYZ>);
+        pcl::PointCloud<pcl::PointXYZ>::Ptr noFilt_30_x (new pcl::PointCloud<pcl::PointXYZ>);
+        for(int i = 0; i < noFilt->points.size();i++)
+        {
+            if(noFilt->points[i].x <= 10)
+            {
+                noFilt_0_10->points.push_back(noFilt->points[i]);
+            }
+            else if((10 < noFilt->points[i].x) && (noFilt->points[i].x <= 30))
+            {
+                noFilt_10_30->points.push_back(noFilt->points[i]);
+            }
+            else
+            {
+                noFilt_30_x->points.push_back(noFilt->points[i]);
+            }
+        }
+        // ------------------------------------------- 近处(30m以内)杂草去除 ---------------------------------------------- //
+        // 1. 0~10m
+        WEEDREMOVAL weedRemoval;
+        weedRemoval.ang_res_h = 0.2;
+        weedRemoval.ang_res_v = 0.2;
+        pcl::PointCloud<pcl::PointXYZ>::Ptr noFilt_0_10_weedRemoval(new pcl::PointCloud<pcl::PointXYZ>);
+        weedRemoval.weedRemoval(noFilt_0_10,noFilt_0_10_weedRemoval);
+        weedRemoval.ang_res_h = 0.1;
+        weedRemoval.ang_res_v = 0.1;
+        pcl::PointCloud<pcl::PointXYZ>::Ptr noFilt_10_30_weedRemoval(new pcl::PointCloud<pcl::PointXYZ>);
+        weedRemoval.weedRemoval(noFilt_10_30,noFilt_10_30_weedRemoval);
+
+        // ------------------------------------------- 对非地面点filt进行深度分割 ---------------------------------------------- //
+        pcl::PointCloud<pcl::PointXYZ>::Ptr filt_0_30(new pcl::PointCloud<pcl::PointXYZ>);
+        pcl::PointCloud<pcl::PointXYZ>::Ptr filt_30_x(new pcl::PointCloud<pcl::PointXYZ>);
+        for(int i = 0; i < filt->points.size();i++)
+        {
+            if(filt->points[i].x <= 30)
+            {
+                filt_0_30->points.push_back(filt->points[i]);
+            }
+            else
+            {
+                filt_30_x->points.push_back(filt->points[i]);
+            }
+        }
+        // ------------------------------------------- 点云拼接 ---------------------------------------------- //
+        pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_0_30(new pcl::PointCloud<pcl::PointXYZ>);
+        pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_30_x(new pcl::PointCloud<pcl::PointXYZ>);
+        *cloud_0_30 = *filt_0_30 + *noFilt_0_10_weedRemoval + *noFilt_10_30_weedRemoval;
+        *cloud_30_x = *filt_30_x + *noFilt_30_x;
+        pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_(new pcl::PointCloud<pcl::PointXYZ>);
+        *cloud_ = *cloud_0_30 + *cloud_30_x;
+        // ------------------------------------------- 目标检测 ---------------------------------------------- //
+        KDTREEDBSCAN dbscanCluster_0_30, dbscanCluster_30_x;
+        dbscanCluster_0_30.setParam(.1, .15, 3, 10, 1000);// 参数1:xGate_  参数2:yGate_   参数3:minPoints_   参数4: 
+        dbscanCluster_30_x.setParam(.15, .15, 3, 10, 1000);
+        dbscanCluster_0_30.clustering(cloud_0_30);
+        dbscanCluster_30_x.clustering(cloud_30_x);
+		dbscanCluster_0_30.BoundingBox();
+		dbscanCluster_30_x.BoundingBox();
+        // ------------------------------------------- 目标跟踪 ---------------------------------------------- //
+        std::vector<BoundingBox> lidarDets;
+		for(int i = 0; i < dbscanCluster_0_30.obj.size(); i++)
+		{
+		    BoundingBox oneBox;
+            oneBox.center.x  = dbscanCluster_0_30.obj[i].center.x;
+            oneBox.center.y  = dbscanCluster_0_30.obj[i].center.y;
+            oneBox.center.z  = dbscanCluster_0_30.obj[i].center.z;
+            oneBox.l         = dbscanCluster_0_30.obj[i].length;
+            oneBox.w         = dbscanCluster_0_30.obj[i].width;
+            oneBox.h         = dbscanCluster_0_30.obj[i].height;
+            oneBox.yaw       = dbscanCluster_0_30.obj[i].yaw;
+            oneBox.realType  = "1";// 默认给0
+            lidarDets.push_back(oneBox);
+        }
+		for(int i = 0; i < dbscanCluster_30_x.obj.size(); i++)
+		{
+		    BoundingBox oneBox;
+            oneBox.center.x  = dbscanCluster_30_x.obj[i].center.x;
+            oneBox.center.y  = dbscanCluster_30_x.obj[i].center.y;
+            oneBox.center.z  = dbscanCluster_30_x.obj[i].center.z;
+            oneBox.l         = dbscanCluster_30_x.obj[i].length;
+            oneBox.w         = dbscanCluster_30_x.obj[i].width;
+            oneBox.h         = dbscanCluster_30_x.obj[i].height;
+            oneBox.yaw       = dbscanCluster_30_x.obj[i].yaw;
+            oneBox.realType  = "1";// 默认给0
+            lidarDets.push_back(oneBox);
+        }
+        std::vector<BoundingBox> track_result;
+        float timestamp_1 = -1.;// 没用到
+        tracker.track(lidarDets, track_result,timestamp_1);
+		//  2.3 聚类结果可视化
+		mdc::visual::MarkerArray vizMarkerArray;// 聚类物队列
+		float minDis = 999.0;
+		int label = 0;
+		if(track_result.size() == 0)
+		{
+			auto out = std::make_shared<Haf3dDetectionOutArray<float>>();
+			out->frameID        = std::to_string(this->model);
+			out->seq            = 0;
+			node.SendObject(out) ;
+			// 可视化
+			if(this->mvizVision)
+			{
+				//往Mviz发送滤波后的ROI区域
+				mdc::visual::PointCloud<mdc::visual::PointXYZRGB> data;// 发往mviz的数据流
+				data.header.frameId = "map";// ---------点云坐标
+				data.isDense = false;
+				const auto now = std::chrono::high_resolution_clock::now().time_since_epoch();
+				uint32_t sec = std::chrono::duration_cast<std::chrono::seconds>(now).count();
+				uint32_t nsec = std::chrono::duration_cast<std::chrono::nanoseconds>(now).count() % 1000000000UL;
+				data.header.stamp = mdc::visual::Times { sec, nsec };
+				for (size_t i = 0; i < cloudROI->points.size(); i++)
+				{
+					PointT pt;
+					pt.x = cloudROI->points[i].x;
+					pt.y = cloudROI->points[i].y;
+					pt.z = cloudROI->points[i].z;
+					mdc::visual::PointXYZRGB ptMviz(pt.x, pt.y, pt.z, 255, 255, 255);// x y z b g r
+					data.points.push_back(ptMviz);
+				}
+				pcPointXYZIRPub.Publish(data);
+				//往Mviz发送聚类结果
+				// 坐标系名称：map   话题：/lidar_obj
+				objPublisher.Publish(vizMarkerArray);
+			}
+		    continue;
+		}
+		for(int i = 0; i < track_result.size(); i++)
+		{
+			mdc::visual::Marker oneObj;
+			oneObj.lifetime = Times(0,100000000);
+			//设置物体的坐标系
+			oneObj.header.frameId = "map";// 聚类框的坐标系
+			//设置物体形状
+			oneObj.type = mdc::visual::MarkerType::CUBE;
+			//设置物体的ID
+			oneObj.id   = i;
+			//设置物体的大小
+			oneObj.scale.x = track_result[i].l;//长
+			oneObj.scale.y = track_result[i].w;//宽
+			oneObj.scale.z = track_result[i].h;//高
+			//物体的颜色
+			oneObj.color.r = 0;//radar红色
+			oneObj.color.g = 1;
+			oneObj.color.b = 0;
+			//设置透明程度  0：透明    1：不透明
+			oneObj.color.a = 0.5;
+			//物体的坐标(物体中心为质点)
+			oneObj.pose.position.x =  track_result[i].center.x;//3DBox的质心坐标xyz
+			oneObj.pose.position.y =  track_result[i].center.y;
+			oneObj.pose.position.z =  track_result[i].center.z;
+
+			float tempDis = std::sqrt(  oneObj.pose.position.x * oneObj.pose.position.x
+									  + oneObj.pose.position.y * oneObj.pose.position.y
+									  + oneObj.pose.position.z * oneObj.pose.position.z);
+			if(tempDis <= minDis)
+			{
+				minDis = tempDis;
+				label = i;
+			}
+			//物体的坐标(四元素)
+			QuaternionInwinic q = ToQuaternionInwinic( track_result[i].yaw, 0.0, 0.0);
+			oneObj.pose.orientation.x = q.x;
+			oneObj.pose.orientation.y = q.y;
+			oneObj.pose.orientation.z = q.z;
+			oneObj.pose.orientation.w = q.w;
+			//压入一个检测目标
+			vizMarkerArray.markers.emplace_back(oneObj);
+		}
+		// 最近的障碍物为红色，其他的为绿色
+		vizMarkerArray.markers[label].color.r = 1;
+		vizMarkerArray.markers[label].color.g = 0;
+		vizMarkerArray.markers[label].color.b = 0;
+
+		// 往下游节点发送数据
+		auto out = std::make_shared<Haf3dDetectionOutArray<float>>();
+		out->frameID        = std::to_string(this->model);// 传感器id-----------------------
+		out->seq            = 0;// 0表示正常 -------------------------------
+		// 最近障碍物放在最前边
+		Haf3dDetectionOut<float32_t> out3d;
+		out3d.cls = 1;// 类别
+		out3d.rect.center.x = vizMarkerArray.markers[label].pose.position.x;// 坐标
+		out3d.rect.center.y = vizMarkerArray.markers[label].pose.position.y;
+		out3d.rect.center.z = vizMarkerArray.markers[label].pose.position.z;
+		out3d.rect.size.x   = vizMarkerArray.markers[label].scale.x;// 尺寸
+		out3d.rect.size.y   = vizMarkerArray.markers[label].scale.y;
+		out3d.rect.size.z   = vizMarkerArray.markers[label].scale.z;
+		out->detectionOut3d.push_back(out3d);
+		// 再填入其他障碍物
+		for(int i = 0; i < vizMarkerArray.markers.size(); i++)
+		{
+			if( i == label ) continue; // 该障碍物已经填入队列，所以跳过
+			Haf3dDetectionOut<float32_t> out3d;
+			out3d.cls = 1;
+			out3d.rect.center.x = vizMarkerArray.markers[i].pose.position.x;// 坐标
+			out3d.rect.center.y = vizMarkerArray.markers[i].pose.position.y;
+			out3d.rect.center.z = vizMarkerArray.markers[i].pose.position.z;
+			out3d.rect.size.x   = vizMarkerArray.markers[i].scale.x;// 尺寸
+			out3d.rect.size.y   = vizMarkerArray.markers[i].scale.y;
+			out3d.rect.size.z   = vizMarkerArray.markers[i].scale.z;
+			out->detectionOut3d.push_back(out3d);
+		}
+		if (node.SendObject(out) != HAF_SUCCESS)
+		{
+			HAF_LOG_ERROR << "Send Object failed!";
+			Stop();
+			return;
+		}
+		// 可视化
+		if(this->mvizVision)
+		{
+			//往Mviz发送滤波后的ROI区域
+			mdc::visual::PointCloud<mdc::visual::PointXYZRGB> data;// 发往mviz的数据流
+			data.header.frameId = "map";// ---------点云坐标
+			data.isDense = false;
+			const auto now = std::chrono::high_resolution_clock::now().time_since_epoch();
+			uint32_t sec = std::chrono::duration_cast<std::chrono::seconds>(now).count();
+			uint32_t nsec = std::chrono::duration_cast<std::chrono::nanoseconds>(now).count() % 1000000000UL;
+			data.header.stamp = mdc::visual::Times { sec, nsec };
+			for (size_t i = 0; i < cloudROI->points.size(); i++)
+			{
+				PointT pt;
+				pt.x = cloudROI->points[i].x;
+				pt.y = cloudROI->points[i].y;
+				pt.z = cloudROI->points[i].z;
+				mdc::visual::PointXYZRGB ptMviz(pt.x, pt.y, pt.z, 255, 255, 255);// x y z b g r
+				data.points.push_back(ptMviz);
+			}
+			pcPointXYZIRPub.Publish(data);
+			//往Mviz发送聚类结果
+			// 坐标系名称：map   话题：/lidar_obj
+			objPublisher.Publish(vizMarkerArray);
+		}
+    }
+    return;
+}
+
+void LidarDetection::SubLidarReArrange()
+{}
+
+void LidarDetection::SubLocation()
+{
+    while (!node.IsStop()) 
+    {
+        std::shared_ptr<HafLocation> location;
+        if (node.GetLocation(location) != HAF_SUCCESS) 
+        {
+            Stop();
+            return;
+        }
+        this->curX = location->pose.pose.position.x;
+        this->curY = location->pose.pose.position.y;
+        this->curZ = location->pose.pose.position.z;
+        std::cout << "Location x: " << this->curX<<std::endl;
+        std::cout << "Location y: " << this->curY<<std::endl;
+        std::cout << "Location z: " << this->curZ<<std::endl;
+    }
+    return;
+}
+
+void LidarDetection::PubObjects()
+{}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

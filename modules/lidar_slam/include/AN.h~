@@ -1,0 +1,289 @@
+#ifndef AN_H  // 头文件保护宏，必须是唯一的，通常用头文件名的大写加下划线
+#define AN_H
+#include <Eigen/Core>
+#include <Eigen/Geometry>
+#include <iostream>
+#include <pcl/point_types.h>
+#include <pcl/point_cloud.h>
+#include <pcl/registration/ndt.h>
+#include <pcl/registration/gicp.h>
+#include <pcl/filters/voxel_grid.h>
+#include <chrono> 
+#include <pcl/kdtree/kdtree_flann.h>  // 新增KdTree头文件
+#include <pclomp/ndt_omp.h>
+#include <pclomp/gicp_omp.h>
+using namespace std;
+
+struct PointAN {
+    double x, y;
+    PointAN(double x_, double y_) : x(x_), y(y_) {}
+};
+
+struct AnchorBox {
+    float center_x;
+    float center_y;
+    float center_z;
+    float width;
+    float height;
+    int point_count;
+    bool is_valid; // 新增有效性标志
+};
+
+class AN
+{
+    public:
+        std::vector<PointAN> polygon;
+        pcl::PointCloud<pcl::PointXYZ>::Ptr target_cloud;
+        pcl::PointCloud<pcl::PointXYZ>::Ptr anchor_boxes_select_center;
+        pclomp::NormalDistributionsTransform<pcl::PointXYZ, pcl::PointXYZ>::Ptr ndt_omp;
+        pcl::VoxelGrid<pcl::PointXYZ> voxel_filter;
+        std::vector<AnchorBox> anchor_boxes;
+        
+    
+    public:
+    AN(const pcl::PointCloud<pcl::PointXYZ>::Ptr& target_cloud_)
+    {
+        // 设定边界区域
+        this->polygon.emplace_back(-330.140015, 61.570629);//1
+        this->polygon.emplace_back(-261.436035, 54.352020);//2
+        this->polygon.emplace_back(-160.829941,42.151520);//3
+        this->polygon.emplace_back(-103.315002, 50.939499);//4
+        this->polygon.emplace_back(-30.479593, 36.559738);//5
+        this->polygon.emplace_back( 49.673317, 40.855820);//6
+        this->polygon.emplace_back( 45.108658, -29.782118);//7
+        this->polygon.emplace_back(-30.210262, -19.532328);//8
+        this->polygon.emplace_back(-147.305038, 14.785653);//9
+        this->polygon.emplace_back(-332.976227, 39.542896);//10
+        // 初始化智能指针
+        this->target_cloud = pcl::PointCloud<pcl::PointXYZ>::Ptr(new pcl::PointCloud<pcl::PointXYZ>());
+        this->anchor_boxes_select_center = pcl::PointCloud<pcl::PointXYZ>::Ptr(new pcl::PointCloud<pcl::PointXYZ>());
+        this->ndt_omp      = pclomp::NormalDistributionsTransform<pcl::PointXYZ, pcl::PointXYZ>::Ptr(new pclomp::NormalDistributionsTransform<pcl::PointXYZ, pcl::PointXYZ>());
+        // 初始化点云配准器
+        this->ndt_omp->setResolution(5);//设置NDT网格结构的分辨率（必须大于0.1）目前最优值：5
+        this->ndt_omp->setTransformationEpsilon (0.0001);//设置求解精度   目前最优值：0.0001
+        this->ndt_omp->setStepSize (0.5);//为 More-Thuente 线搜索设置最大步长，太小容易陷入局部最优解  目前最优值：0.5
+        this->ndt_omp->setMaximumIterations (20);//设置匹配迭代的最大次数 目前最优值：20
+        this->ndt_omp->setNumThreads(6);//------------------------设置线程数 目前最优值：10
+        this->ndt_omp->setNeighborhoodSearchMethod(pclomp::DIRECT7);
+        // 设定全局地图
+        set_target_cloud(target_cloud_);
+        // 生成锚框
+        anchor_generate();
+        // 标记无效锚框
+        check_anchor_occupancy(10);
+        
+    }
+    ~AN(){};
+    // 设定全局地图（该地图必须是原始地图，没经过滤波的）
+    void set_target_cloud(const pcl::PointCloud<pcl::PointXYZ>::Ptr& target_cloud_)
+    {
+        *this->target_cloud = *target_cloud_;
+        // 初始化点云滤波器
+        this->voxel_filter.setLeafSize(1.5f, 1.5f, 1.5f);
+        this->voxel_filter.setInputCloud(this->target_cloud);
+        this->voxel_filter.filter(*this->target_cloud);
+        this->ndt_omp->setInputTarget(this->target_cloud);//设置地图
+    }
+    // 生成锚框
+    void anchor_generate()
+    {
+        // 计算点云边界
+        float min_x = std::numeric_limits<float>::max();
+        float max_x = -std::numeric_limits<float>::max();
+        float min_y = std::numeric_limits<float>::max();
+        float max_y = -std::numeric_limits<float>::max();
+        for (const auto& point : *this->target_cloud) {
+            min_x = std::min(min_x, point.x);
+            max_x = std::max(max_x, point.x);
+            min_y = std::min(min_y, point.y);
+            max_y = std::max(max_y, point.y);
+        }
+        // 生成锚框
+        float region_width = 10; // 长10米
+        float region_height = 10;// 宽10米
+        int num_x_splits = (max_x - min_x) / region_width;
+        int num_y_splits = (max_y - min_y) / region_height;
+        for (int i = 0; i < num_x_splits; ++i) {
+            for (int j = 0; j < num_y_splits; ++j) {
+                AnchorBox box;
+                box.center_x = min_x + (i + 0.5f) * region_width;
+                box.center_y = min_y + (j + 0.5f) * region_height;
+                box.center_z = -1.68076;
+                box.width = region_width;
+                box.height = region_height;
+                box.point_count = 0;
+                box.is_valid = false;
+                this->anchor_boxes.push_back(box);
+            }
+        }
+    }
+    // 检查锚框内点云（带有效性判断）
+    void check_anchor_occupancy(
+        int min_points_threshold) // 有效锚框的最小点数阈值
+    {
+        pcl::KdTreeFLANN<pcl::PointXYZ> kdtree;
+        kdtree.setInputCloud(this->target_cloud);
+        
+        for (auto& box : this->anchor_boxes) {
+            std::vector<int> point_indices;
+            std::vector<float> distances;
+            pcl::PointXYZ center(box.center_x, box.center_y, box.center_z);
+            
+            // 搜索半径取锚框对角线的一半
+            float radius = sqrt(box.width*box.width + box.height*box.height)/2;
+            if (kdtree.radiusSearch(center, radius, point_indices, distances) > 0) {
+                // 精确检查是否在矩形框内
+                box.point_count = 0;
+                for (const auto& idx : point_indices) {
+                    const auto& p = this->target_cloud->points[idx];
+                    if (p.x >= box.center_x - box.width/2 && 
+                        p.x <= box.center_x + box.width/2 &&
+                        p.y >= box.center_y - box.height/2 && 
+                        p.y <= box.center_y + box.height/2) {
+                        box.point_count++;
+                    }
+                }
+                box.is_valid = (box.point_count >= min_points_threshold);
+            } 
+            else 
+            {
+                box.point_count = 0;
+                box.is_valid = false;
+            }
+        }
+    }
+    //旋转矩阵转欧拉角
+    Eigen::Vector3f rotationMatrixToEulerAnglesZYX(const Eigen::Matrix3f& R) {  
+        float m00 = R(0, 0);  
+        float m01 = R(0, 1);  
+        float m02 = R(0, 2);  
+        float m10 = R(1, 0);  
+        float m11 = R(1, 1);  
+        float m12 = R(1, 2);  
+        float m20 = R(2, 0);  
+        float m21 = R(2, 1);  
+        float m22 = R(2, 2);  
+        float pitch = -std::asin(m12);  
+        if (std::abs(m12) < 1.0) {  
+            float roll = std::atan2(m21, m22);  
+            float yaw = std::atan2(m10, m11);  
+            return Eigen::Vector3f(yaw, pitch, roll);  
+        } 
+        else 
+        {  
+            return Eigen::Vector3f(0, pitch, 0);  
+        }  
+    }
+    pcl::PointCloud<pcl::PointXYZ>::Ptr align(pcl::Registration<pcl::PointXYZ, pcl::PointXYZ>::Ptr registration, 
+                                              const pcl::PointCloud<pcl::PointXYZ>::Ptr& scan_cloud ,
+                                              float x,
+                                              float y,
+                                              float z,
+                                              float roll,
+                                              float pitch,
+                                              float yaw) {
+       
+       registration->setInputSource(scan_cloud);
+       pcl::PointCloud<pcl::PointXYZ>::Ptr aligned(new pcl::PointCloud<pcl::PointXYZ>());
+    //    匹配算法数值初始化
+          Eigen::Translation3f init_translation(x, y, z);
+          Eigen::AngleAxisf init_rotation_x(roll, Eigen::Vector3f::UnitX());//roll
+          Eigen::AngleAxisf init_rotation_y(pitch, Eigen::Vector3f::UnitY());//pitch
+          Eigen::AngleAxisf init_rotation_z(yaw, Eigen::Vector3f::UnitZ());//yaw
+          Eigen::Matrix4f init_guess = (init_translation * init_rotation_z * init_rotation_y * init_rotation_x).matrix();
+          registration->align(*aligned, init_guess);
+          return aligned;
+    }
+    // 判断点是否在多边形内
+    bool isPointInPolygon(const Point &point, const vector<Point> &polygon) {
+        int n = polygon.size();
+        if (n < 3) return false; // 不是多边形
+        
+        bool inside = false;
+        
+        // 射线法
+        for (int i = 0, j = n - 1; i < n; j = i++) {
+            const Point &p1 = polygon[i];
+            const Point &p2 = polygon[j];
+            
+            // 检查点是否在多边形的顶点上
+            if ((point.x == p1.x && point.y == p1.y) || (point.x == p2.x && point.y == p2.y)) {
+                return true;
+            }
+            
+            // 检查点是否在边的水平射线上
+            if ((p1.y > point.y) != (p2.y > point.y)) {
+                // 计算交点的x坐标
+                double intersectX = (p2.x - p1.x) * (point.y - p1.y) / (p2.y - p1.y) + p1.x;
+                
+                // 如果点在边上
+                if (abs(point.x - intersectX) < numeric_limits<double>::epsilon()) {
+                    return true;
+                }
+                
+                // 如果交点在点的右侧
+                if (point.x < intersectX) {
+                    inside = !inside;
+                }
+            }
+        }
+        return inside;
+    }
+    void get_init_pose(pcl::PointCloud<pcl::PointXYZ>::Ptr scan_cloud,
+                       pcl::PointCloud<pcl::PointXYZ>::Ptr& scan_cloud_aligned,
+                       Eigen::Matrix4f& RT)
+    {
+        this->voxel_filter.setInputCloud(scan_cloud);
+        this->voxel_filter.filter(*scan_cloud);
+        float minScore = 9999.;
+        float x;
+        float y;
+        float z;
+        pcl::PointCloud<pcl::PointXYZ>::Ptr alignedBest(new pcl::PointCloud<pcl::PointXYZ>());
+        Eigen::Matrix4f bestLocation;
+        for (size_t i = 0; i < this->anchor_boxes.size(); ++i)
+        {
+            // 判断anchor是否在规定区域内
+            const auto& box = this->anchor_boxes[i];
+            PointAN testPoint(box.center_x, box.center_y);
+            if (!isPointInPolygon(testPoint, this->polygon)) 
+            {
+                continue;
+            }
+            if (box.is_valid) // 判断毛框内的点是否达到阈值
+            {
+                pcl::PointCloud<pcl::PointXYZ>::Ptr aligned(new pcl::PointCloud<pcl::PointXYZ>());
+                aligned = align(ndt_omp, scan_cloud,box.center_x,box.center_y, -1.4,0,0,0);//返回转化后的点云
+                //保存当前定位结果
+                float score  = ndt_omp->getFitnessScore ();
+                Eigen::Matrix4f lastLocation = ndt_omp->getFinalTransformation();
+                if(score < 10) 
+                {
+                    if(minScore > score)
+                    {
+                        minScore = score;
+                        scan_cloud_aligned->points.clear();
+                        *scan_cloud_aligned = *aligned;
+                        RT = lastLocation;
+                        x = box.center_x;
+                        y = box.center_y;
+                        z = box.center_z;
+                    }
+                }
+            }
+            pcl::PointXYZ pt;
+            pt.x = box.center_x ;
+            pt.y = box.center_y ;
+            pt.z = -1.68076;
+            this->anchor_boxes_select_center->points.push_back(pt);
+        }
+    }
+};
+
+
+
+
+
+
+
+#endif // AN_H

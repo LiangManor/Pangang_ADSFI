@@ -1,0 +1,24 @@
+
+appName: CamD  # 日志打印ID，4个字符以内
+description: Camera 2D detection module  # 日志打印描述
+priority: 0    # {0 ... 12} not currently used
+scheduleFrequency: 30  # 保留未使用
+isDetermineSchedule: false  # {true, false}
+logFile: ./    # 日志路径，当logMode配置有指定文件存储时，使用本路径存储日志，日志文件名为${appName}.log
+logMode: 6    #{0, 1, 2, 3, 4, 5, 6}, 0: 固定文件存储，异步日志 1: 打屏，同步日志，适合调试， 2: 指定文件存储，同步日志，适合调试，
+              #3：固定+打屏， 4：固定+指定， 5：打屏+指定， 6：固定+打屏+指定
+logLevel: 2    #{0，1，2，3，4，5, 6}， 0：verbose, 1：debug, 2：info, 3：warn, 4：error, 5：fatal, 6：off
+recvQueueSize: 2  # 保留，未使用
+isObjectSend: true
+recvInstanceID:
+    cameraInstanceID: [21, 25, 29, 33]  # 接收的相机的AP instance id，取值范围 21-35
+sendInstanceID:
+    detectionOutInstanceID: 1001 # 发送的检测结果的AP instance id，取值范围 1001-1015
+
+imageWidth : 1920  # 接收的相机尺寸，宽
+imageHeight : 1080  # 接收的相机尺寸，高
+
+instanceID1: 21   # 1端相机ID
+instanceID2: 33   # 2端相机ID
+
+model : 1  #当前打开的使能摄像头 model = 1 : instace = 21;      model = 2 : instace = 33;

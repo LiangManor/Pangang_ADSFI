@@ -1,0 +1,1 @@
+/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/clang++ -fPIC  -fopenmp=libomp -O2 -DNDEBUG  -shared -Wl,-soname,libcpu_bbs3d.so -o libcpu_bbs3d.so CMakeFiles/cpu_bbs3d.dir/src/bbs3d.cpp.o CMakeFiles/cpu_bbs3d.dir/src/voxelmaps.cpp.o 

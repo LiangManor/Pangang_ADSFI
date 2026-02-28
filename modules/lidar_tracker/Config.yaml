@@ -1,0 +1,18 @@
+
+appName: LOT
+description: Lidar Obstacle Tracking Alg
+priority: 0    #{0 ... 12} 当前未使用
+scheduleFrequency: 10 #当前未使用
+isDetermineSchedule: false    #{true, false}
+logFile: ./    #日志路径，当logMode配置有指定文件存储时，使用本路径存储日志，日志文件名为${appName}.log
+logMode: 6    #{0, 1, 2, 3, 4, 5, 6}, 0: 固定文件存储，异步日志 1: 打屏，同步日志，适合调试， 2: 指定文件存储，同步日志，适合调试，
+              #3：固定+打屏， 4：固定+指定， 5：打屏+指定， 6：固定+打屏+指定
+logLevel: 2    #{0，1，2，3，4，5, 6}， 0：verbose, 1：debug, 2：info, 3：warn, 4：error, 5：fatal, 6：off
+isLidarActivate: true
+isLocationActivate: true
+recvInstanceID: 
+    lidarInstanceID: [5, 6, 7]     # {3 ... 7}
+    objectInstanceID: 2005 # {2001 ... 2005}
+    locationInstanceID: 113   # location instance id
+sendInstanceID: 
+    trackingOutInstanceIdx: 2105 # {2101 ... 2105}

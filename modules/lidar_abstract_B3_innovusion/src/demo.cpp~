@@ -1,0 +1,72 @@
+
+#include "innovusion.h"
+
+
+
+int main() 
+{
+  LidarOption lidar_option;
+  CallbackProcessor processor;
+  // 读取实时的雷达数据,函数返回值为雷达句柄。后续关于雷达操作均使用该值
+  int handle = inno_lidar_open_live("live",  // name of lidar instance
+                                lidar_option.lidar_ip.c_str(), 
+                                lidar_option.lidar_port, 
+                                INNO_LIDAR_PROTOCOL_PCS_UDP,
+                                lidar_option.lidar_udp_port);
+
+  inno_lidar_set_attribute_string(handle, "force_xyz_pointcloud", "1");
+
+  int ret = inno_lidar_set_callbacks(
+    handle,
+    // 消息回调函数，接收雷达运行时的调试/错误消息
+    [](const int lidar_handle, void *ctx, const uint32_t from_remote, const enum InnoMessageLevel level,
+       const enum InnoMessageCode code, const char *error_message) {
+      return reinterpret_cast<CallbackProcessor *>(ctx)->process_message(level, code, error_message);
+    },
+    // 数据回调函数，接收点云数据
+    [](const int lidar_handle, void *ctx, const InnoDataPacket *pkt) -> int {
+      inno_log_verify(pkt, "pkt");
+      return reinterpret_cast<CallbackProcessor *>(ctx)->process_data(lidar_handle, *pkt);
+    },
+     // 状态回调函数，接收雷达操作状态信息
+    [](const int lidar_handle, void *ctx, const InnoStatusPacket *pkt) -> int {
+      inno_log_verify(pkt, "pkt");
+      return reinterpret_cast<CallbackProcessor *>(ctx)->process_status(*pkt);
+    },
+    // 默认获取主机时间回调
+    NULL, &processor);
+
+// 记录数据回调
+      while(inno_lidar_start(handle) == -1) // 开始读取数据
+      {
+        std::cout<<"----------- 图达通启动失败:start failed ---------------"<<std::endl;
+        sleep(2);
+      }
+      std::cout<<"----------- 图达通启动成功:start success ---------------"<<std::endl;
+
+
+//    pcl::visualization::PCLVisualizer viewer("viewer");
+  // 等待数据处理完成
+  while (!processor.is_done()) 
+  {
+    if(!processor.enable)
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        continue;
+    }
+//    viewer.removeAllPointClouds();
+//    // 设置点云颜色，可以选择不同的颜色映射
+//    viewer.addPointCloud<pcl::PointXYZI>(processor.cloud, "cloud");
+//    viewer.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "cloud");
+//    viewer.spinOnce(1);
+//    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+  }
+
+  ret = inno_lidar_stop(handle);//停止读取数据
+  inno_log_verify(ret == 0, "stop failed %d", ret);
+
+  ret = inno_lidar_close(handle);// 停止与雷达的连接
+  inno_log_verify(ret == 0, "close failed %d", ret);
+
+  return 0;
+}

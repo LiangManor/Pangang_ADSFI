@@ -1,0 +1,301 @@
+The target system is: Linux -  - arm
+The host system is: Linux - 5.15.0-139-generic - x86_64
+Compiling the C compiler identification source file "CMakeCCompilerId.c" succeeded.
+Compiler: /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/clang 
+Build flags: 
+Id flags:  
+
+The output was:
+0
+
+
+Compilation of the C compiler identification source "CMakeCCompilerId.c" produced "a.out"
+
+The C compiler identification is Clang, found in "/home/inwinic/Wll_project/CRRC/PanG/ADSFI/build/cmake-build-debug-default_toolchain/clang-aos_gea-aarch64/CMakeFiles/3.16.5/CompilerIdC/a.out"
+
+Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" succeeded.
+Compiler: /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/clang++ 
+Build flags: 
+Id flags:  
+
+The output was:
+0
+
+
+Compilation of the CXX compiler identification source "CMakeCXXCompilerId.cpp" produced "a.out"
+
+The CXX compiler identification is Clang, found in "/home/inwinic/Wll_project/CRRC/PanG/ADSFI/build/cmake-build-debug-default_toolchain/clang-aos_gea-aarch64/CMakeFiles/3.16.5/CompilerIdCXX/a.out"
+
+Determining if the C compiler works passed with the following output:
+Change Dir: /home/inwinic/Wll_project/CRRC/PanG/ADSFI/build/cmake-build-debug-default_toolchain/clang-aos_gea-aarch64/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make cmTC_76937/fast && /usr/bin/make -f CMakeFiles/cmTC_76937.dir/build.make CMakeFiles/cmTC_76937.dir/build
+make[1]: Entering directory '/home/inwinic/Wll_project/CRRC/PanG/ADSFI/build/cmake-build-debug-default_toolchain/clang-aos_gea-aarch64/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_76937.dir/testCCompiler.c.o
+/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/clang    -o CMakeFiles/cmTC_76937.dir/testCCompiler.c.o   -c /home/inwinic/Wll_project/CRRC/PanG/ADSFI/build/cmake-build-debug-default_toolchain/clang-aos_gea-aarch64/CMakeFiles/CMakeTmp/testCCompiler.c
+Linking C executable cmTC_76937
+/home/inwinic/MDC610/ShoftWare/cmake-3.16.5-Linux-x86_64/bin/cmake -E cmake_link_script CMakeFiles/cmTC_76937.dir/link.txt --verbose=1
+/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/clang      CMakeFiles/cmTC_76937.dir/testCCompiler.c.o  -o cmTC_76937 
+make[1]: Leaving directory '/home/inwinic/Wll_project/CRRC/PanG/ADSFI/build/cmake-build-debug-default_toolchain/clang-aos_gea-aarch64/CMakeFiles/CMakeTmp'
+
+
+
+Detecting C compiler ABI info compiled with the following output:
+Change Dir: /home/inwinic/Wll_project/CRRC/PanG/ADSFI/build/cmake-build-debug-default_toolchain/clang-aos_gea-aarch64/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make cmTC_22f1c/fast && /usr/bin/make -f CMakeFiles/cmTC_22f1c.dir/build.make CMakeFiles/cmTC_22f1c.dir/build
+make[1]: Entering directory '/home/inwinic/Wll_project/CRRC/PanG/ADSFI/build/cmake-build-debug-default_toolchain/clang-aos_gea-aarch64/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_22f1c.dir/CMakeCCompilerABI.c.o
+/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/clang   -v -o CMakeFiles/cmTC_22f1c.dir/CMakeCCompilerABI.c.o   -c /home/inwinic/MDC610/ShoftWare/cmake-3.16.5-Linux-x86_64/share/cmake-3.16/Modules/CMakeCCompilerABI.c
+iAOS BiSheng CPU 3.0.0.B017 clang version 12.0.1 (3ea00368d9e9)
+Target: aarch64-unknown-linux-gnu
+Thread model: posix
+InstalledDir: /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin
+ (in-process)
+ "/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/clang-12" -cc1 -triple aarch64-unknown-linux-gnu -emit-obj -mrelax-all --mrelax-relocations -disable-free -disable-llvm-verifier -discard-value-names -main-file-name CMakeCCompilerABI.c -mrelocation-model static -mllvm -pass-remarks= -mllvm -pass-remarks-missed= -mllvm -pass-remarks-analysis= -mframe-pointer=non-leaf -fmath-errno -fno-rounding-math -mconstructor-aliases -munwind-tables -target-cpu generic -target-feature +neon -target-abi aapcs -mllvm -float-load-perfect=0 -fallow-half-arguments-and-returns -fno-split-dwarf-inlining -debugger-tuning=gdb -v -resource-dir /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/lib64/clang/12.0.1 -isysroot /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot -internal-isystem /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/usr/local/include -internal-isystem /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/lib64/clang/12.0.1/include -internal-externc-isystem /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/include -internal-externc-isystem /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/usr/include -fdebug-compilation-dir /home/inwinic/Wll_project/CRRC/PanG/ADSFI/build/cmake-build-debug-default_toolchain/clang-aos_gea-aarch64/CMakeFiles/CMakeTmp -ferror-limit 19 -fno-signed-char -fgnuc-version=4.2.1 -faddrsig -o CMakeFiles/cmTC_22f1c.dir/CMakeCCompilerABI.c.o -x c /home/inwinic/MDC610/ShoftWare/cmake-3.16.5-Linux-x86_64/share/cmake-3.16/Modules/CMakeCCompilerABI.c
+clang -cc1 version 12.0.1 based upon LLVM 12.0.1 default target aarch64-unknown-linux-gnu
+ignoring nonexistent directory "/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/include"
+#include "..." search starts here:
+#include <...> search starts here:
+ /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/usr/local/include
+ /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/lib64/clang/12.0.1/include
+ /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/usr/include
+End of search list.
+Linking C executable cmTC_22f1c
+/home/inwinic/MDC610/ShoftWare/cmake-3.16.5-Linux-x86_64/bin/cmake -E cmake_link_script CMakeFiles/cmTC_22f1c.dir/link.txt --verbose=1
+/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/clang     -v CMakeFiles/cmTC_22f1c.dir/CMakeCCompilerABI.c.o  -o cmTC_22f1c 
+iAOS BiSheng CPU 3.0.0.B017 clang version 12.0.1 (3ea00368d9e9)
+Target: aarch64-unknown-linux-gnu
+Thread model: posix
+InstalledDir: /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin
+ "/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/ld.lld" --sysroot=/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot -EL -z relro --hash-style=gnu --eh-frame-hdr -m aarch64linux -dynamic-linker /lib/ld-linux-aarch64.so.1 -o cmTC_22f1c /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/lib/../lib64/crt1.o /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/lib/../lib64/crti.o /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/lib64/clang/12.0.1/lib/linux/clang_rt.crtbegin-aarch64.o -L/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/lib/../lib64 -L/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/usr/lib/../lib64 -L/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/lib -L/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/usr/lib CMakeFiles/cmTC_22f1c.dir/CMakeCCompilerABI.c.o /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/lib64/clang/12.0.1/lib/linux/libclang_rt.builtins-aarch64.a -lc /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/lib64/clang/12.0.1/lib/linux/libclang_rt.builtins-aarch64.a /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/lib64/clang/12.0.1/lib/linux/clang_rt.crtend-aarch64.o /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/lib/../lib64/crtn.o
+make[1]: Leaving directory '/home/inwinic/Wll_project/CRRC/PanG/ADSFI/build/cmake-build-debug-default_toolchain/clang-aos_gea-aarch64/CMakeFiles/CMakeTmp'
+
+
+
+Parsed C implicit include dir info from above output: rv=done
+  found start of include info
+  found start of implicit include info
+    add: [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/usr/local/include]
+    add: [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/lib64/clang/12.0.1/include]
+    add: [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/usr/include]
+  end of search list found
+  collapse include dir [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/usr/local/include] ==> [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/sysroot/usr/local/include]
+  collapse include dir [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/lib64/clang/12.0.1/include] ==> [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/lib64/clang/12.0.1/include]
+  collapse include dir [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/usr/include] ==> [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/sysroot/usr/include]
+  implicit include dirs: [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/sysroot/usr/local/include;/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/lib64/clang/12.0.1/include;/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/sysroot/usr/include]
+
+
+Parsed C implicit link information from above output:
+  link line regex: [^( *|.*[/\])(ld\.lld|CMAKE_LINK_STARTFILE-NOTFOUND|([^/\]+-)?ld|collect2)[^/\]*( |$)]
+  ignore line: [Change Dir: /home/inwinic/Wll_project/CRRC/PanG/ADSFI/build/cmake-build-debug-default_toolchain/clang-aos_gea-aarch64/CMakeFiles/CMakeTmp]
+  ignore line: []
+  ignore line: [Run Build Command(s):/usr/bin/make cmTC_22f1c/fast && /usr/bin/make -f CMakeFiles/cmTC_22f1c.dir/build.make CMakeFiles/cmTC_22f1c.dir/build]
+  ignore line: [make[1]: Entering directory '/home/inwinic/Wll_project/CRRC/PanG/ADSFI/build/cmake-build-debug-default_toolchain/clang-aos_gea-aarch64/CMakeFiles/CMakeTmp']
+  ignore line: [Building C object CMakeFiles/cmTC_22f1c.dir/CMakeCCompilerABI.c.o]
+  ignore line: [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/clang   -v -o CMakeFiles/cmTC_22f1c.dir/CMakeCCompilerABI.c.o   -c /home/inwinic/MDC610/ShoftWare/cmake-3.16.5-Linux-x86_64/share/cmake-3.16/Modules/CMakeCCompilerABI.c]
+  ignore line: [iAOS BiSheng CPU 3.0.0.B017 clang version 12.0.1 (3ea00368d9e9)]
+  ignore line: [Target: aarch64-unknown-linux-gnu]
+  ignore line: [Thread model: posix]
+  ignore line: [InstalledDir: /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin]
+  ignore line: [ (in-process)]
+  ignore line: [ "/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/clang-12" -cc1 -triple aarch64-unknown-linux-gnu -emit-obj -mrelax-all --mrelax-relocations -disable-free -disable-llvm-verifier -discard-value-names -main-file-name CMakeCCompilerABI.c -mrelocation-model static -mllvm -pass-remarks= -mllvm -pass-remarks-missed= -mllvm -pass-remarks-analysis= -mframe-pointer=non-leaf -fmath-errno -fno-rounding-math -mconstructor-aliases -munwind-tables -target-cpu generic -target-feature +neon -target-abi aapcs -mllvm -float-load-perfect=0 -fallow-half-arguments-and-returns -fno-split-dwarf-inlining -debugger-tuning=gdb -v -resource-dir /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/lib64/clang/12.0.1 -isysroot /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot -internal-isystem /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/usr/local/include -internal-isystem /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/lib64/clang/12.0.1/include -internal-externc-isystem /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/include -internal-externc-isystem /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/usr/include -fdebug-compilation-dir /home/inwinic/Wll_project/CRRC/PanG/ADSFI/build/cmake-build-debug-default_toolchain/clang-aos_gea-aarch64/CMakeFiles/CMakeTmp -ferror-limit 19 -fno-signed-char -fgnuc-version=4.2.1 -faddrsig -o CMakeFiles/cmTC_22f1c.dir/CMakeCCompilerABI.c.o -x c /home/inwinic/MDC610/ShoftWare/cmake-3.16.5-Linux-x86_64/share/cmake-3.16/Modules/CMakeCCompilerABI.c]
+  ignore line: [clang -cc1 version 12.0.1 based upon LLVM 12.0.1 default target aarch64-unknown-linux-gnu]
+  ignore line: [ignoring nonexistent directory "/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/include"]
+  ignore line: [#include "..." search starts here:]
+  ignore line: [#include <...> search starts here:]
+  ignore line: [ /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/usr/local/include]
+  ignore line: [ /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/lib64/clang/12.0.1/include]
+  ignore line: [ /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/usr/include]
+  ignore line: [End of search list.]
+  ignore line: [Linking C executable cmTC_22f1c]
+  ignore line: [/home/inwinic/MDC610/ShoftWare/cmake-3.16.5-Linux-x86_64/bin/cmake -E cmake_link_script CMakeFiles/cmTC_22f1c.dir/link.txt --verbose=1]
+  ignore line: [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/clang     -v CMakeFiles/cmTC_22f1c.dir/CMakeCCompilerABI.c.o  -o cmTC_22f1c ]
+  ignore line: [iAOS BiSheng CPU 3.0.0.B017 clang version 12.0.1 (3ea00368d9e9)]
+  ignore line: [Target: aarch64-unknown-linux-gnu]
+  ignore line: [Thread model: posix]
+  ignore line: [InstalledDir: /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin]
+  link line: [ "/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/ld.lld" --sysroot=/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot -EL -z relro --hash-style=gnu --eh-frame-hdr -m aarch64linux -dynamic-linker /lib/ld-linux-aarch64.so.1 -o cmTC_22f1c /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/lib/../lib64/crt1.o /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/lib/../lib64/crti.o /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/lib64/clang/12.0.1/lib/linux/clang_rt.crtbegin-aarch64.o -L/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/lib/../lib64 -L/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/usr/lib/../lib64 -L/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/lib -L/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/usr/lib CMakeFiles/cmTC_22f1c.dir/CMakeCCompilerABI.c.o /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/lib64/clang/12.0.1/lib/linux/libclang_rt.builtins-aarch64.a -lc /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/lib64/clang/12.0.1/lib/linux/libclang_rt.builtins-aarch64.a /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/lib64/clang/12.0.1/lib/linux/clang_rt.crtend-aarch64.o /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/lib/../lib64/crtn.o]
+    arg [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/ld.lld] ==> ignore
+    arg [--sysroot=/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot] ==> ignore
+    arg [-EL] ==> ignore
+    arg [-zrelro] ==> ignore
+    arg [--hash-style=gnu] ==> ignore
+    arg [--eh-frame-hdr] ==> ignore
+    arg [-m] ==> ignore
+    arg [aarch64linux] ==> ignore
+    arg [-dynamic-linker] ==> ignore
+    arg [/lib/ld-linux-aarch64.so.1] ==> ignore
+    arg [-o] ==> ignore
+    arg [cmTC_22f1c] ==> ignore
+    arg [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/lib/../lib64/crt1.o] ==> ignore
+    arg [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/lib/../lib64/crti.o] ==> ignore
+    arg [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/lib64/clang/12.0.1/lib/linux/clang_rt.crtbegin-aarch64.o] ==> ignore
+    arg [-L/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/lib/../lib64] ==> dir [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/lib/../lib64]
+    arg [-L/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/usr/lib/../lib64] ==> dir [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/usr/lib/../lib64]
+    arg [-L/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/lib] ==> dir [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/lib]
+    arg [-L/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/usr/lib] ==> dir [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/usr/lib]
+    arg [CMakeFiles/cmTC_22f1c.dir/CMakeCCompilerABI.c.o] ==> ignore
+    arg [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/lib64/clang/12.0.1/lib/linux/libclang_rt.builtins-aarch64.a] ==> lib [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/lib64/clang/12.0.1/lib/linux/libclang_rt.builtins-aarch64.a]
+    arg [-lc] ==> lib [c]
+    arg [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/lib64/clang/12.0.1/lib/linux/libclang_rt.builtins-aarch64.a] ==> lib [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/lib64/clang/12.0.1/lib/linux/libclang_rt.builtins-aarch64.a]
+    arg [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/lib64/clang/12.0.1/lib/linux/clang_rt.crtend-aarch64.o] ==> ignore
+    arg [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/lib/../lib64/crtn.o] ==> ignore
+  remove lib [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/lib64/clang/12.0.1/lib/linux/libclang_rt.builtins-aarch64.a]
+  remove lib [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/lib64/clang/12.0.1/lib/linux/libclang_rt.builtins-aarch64.a]
+  collapse library dir [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/lib/../lib64] ==> [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/sysroot/lib64]
+  collapse library dir [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/usr/lib/../lib64] ==> [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/sysroot/usr/lib64]
+  collapse library dir [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/lib] ==> [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/sysroot/lib]
+  collapse library dir [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/usr/lib] ==> [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/sysroot/usr/lib]
+  implicit libs: [c]
+  implicit dirs: [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/sysroot/lib64;/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/sysroot/usr/lib64;/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/sysroot/lib;/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/sysroot/usr/lib]
+  implicit fwks: []
+
+
+Determining if the CXX compiler works passed with the following output:
+Change Dir: /home/inwinic/Wll_project/CRRC/PanG/ADSFI/build/cmake-build-debug-default_toolchain/clang-aos_gea-aarch64/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make cmTC_c9468/fast && /usr/bin/make -f CMakeFiles/cmTC_c9468.dir/build.make CMakeFiles/cmTC_c9468.dir/build
+make[1]: Entering directory '/home/inwinic/Wll_project/CRRC/PanG/ADSFI/build/cmake-build-debug-default_toolchain/clang-aos_gea-aarch64/CMakeFiles/CMakeTmp'
+Building CXX object CMakeFiles/cmTC_c9468.dir/testCXXCompiler.cxx.o
+/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/clang++     -o CMakeFiles/cmTC_c9468.dir/testCXXCompiler.cxx.o -c /home/inwinic/Wll_project/CRRC/PanG/ADSFI/build/cmake-build-debug-default_toolchain/clang-aos_gea-aarch64/CMakeFiles/CMakeTmp/testCXXCompiler.cxx
+Linking CXX executable cmTC_c9468
+/home/inwinic/MDC610/ShoftWare/cmake-3.16.5-Linux-x86_64/bin/cmake -E cmake_link_script CMakeFiles/cmTC_c9468.dir/link.txt --verbose=1
+/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/clang++       CMakeFiles/cmTC_c9468.dir/testCXXCompiler.cxx.o  -o cmTC_c9468 
+make[1]: Leaving directory '/home/inwinic/Wll_project/CRRC/PanG/ADSFI/build/cmake-build-debug-default_toolchain/clang-aos_gea-aarch64/CMakeFiles/CMakeTmp'
+
+
+
+Detecting CXX compiler ABI info compiled with the following output:
+Change Dir: /home/inwinic/Wll_project/CRRC/PanG/ADSFI/build/cmake-build-debug-default_toolchain/clang-aos_gea-aarch64/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make cmTC_3e54a/fast && /usr/bin/make -f CMakeFiles/cmTC_3e54a.dir/build.make CMakeFiles/cmTC_3e54a.dir/build
+make[1]: Entering directory '/home/inwinic/Wll_project/CRRC/PanG/ADSFI/build/cmake-build-debug-default_toolchain/clang-aos_gea-aarch64/CMakeFiles/CMakeTmp'
+Building CXX object CMakeFiles/cmTC_3e54a.dir/CMakeCXXCompilerABI.cpp.o
+/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/clang++    -v -o CMakeFiles/cmTC_3e54a.dir/CMakeCXXCompilerABI.cpp.o -c /home/inwinic/MDC610/ShoftWare/cmake-3.16.5-Linux-x86_64/share/cmake-3.16/Modules/CMakeCXXCompilerABI.cpp
+iAOS BiSheng CPU 3.0.0.B017 clang version 12.0.1 (3ea00368d9e9)
+Target: aarch64-unknown-linux-gnu
+Thread model: posix
+InstalledDir: /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin
+ (in-process)
+ "/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/clang-12" -cc1 -triple aarch64-unknown-linux-gnu -emit-obj -mrelax-all --mrelax-relocations -disable-free -disable-llvm-verifier -discard-value-names -main-file-name CMakeCXXCompilerABI.cpp -mrelocation-model static -mllvm -pass-remarks= -mllvm -pass-remarks-missed= -mllvm -pass-remarks-analysis= -mframe-pointer=non-leaf -fmath-errno -fno-rounding-math -mconstructor-aliases -munwind-tables -target-cpu generic -target-feature +neon -target-abi aapcs -mllvm -float-load-perfect=0 -fallow-half-arguments-and-returns -fno-split-dwarf-inlining -debugger-tuning=gdb -v -resource-dir /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/lib64/clang/12.0.1 -isysroot /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot -internal-isystem /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/usr/include/c++/v1 -internal-isystem /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/usr/local/include -internal-isystem /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/lib64/clang/12.0.1/include -internal-externc-isystem /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/include -internal-externc-isystem /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/usr/include -fdeprecated-macro -fdebug-compilation-dir /home/inwinic/Wll_project/CRRC/PanG/ADSFI/build/cmake-build-debug-default_toolchain/clang-aos_gea-aarch64/CMakeFiles/CMakeTmp -ferror-limit 19 -fno-signed-char -fgnuc-version=4.2.1 -fcxx-exceptions -fexceptions -mllvm -delete-infinite-loops=true -faddrsig -o CMakeFiles/cmTC_3e54a.dir/CMakeCXXCompilerABI.cpp.o -x c++ /home/inwinic/MDC610/ShoftWare/cmake-3.16.5-Linux-x86_64/share/cmake-3.16/Modules/CMakeCXXCompilerABI.cpp
+clang -cc1 version 12.0.1 based upon LLVM 12.0.1 default target aarch64-unknown-linux-gnu
+ignoring nonexistent directory "/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/include"
+#include "..." search starts here:
+#include <...> search starts here:
+ /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/usr/include/c++/v1
+ /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/usr/local/include
+ /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/lib64/clang/12.0.1/include
+ /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/usr/include
+End of search list.
+Linking CXX executable cmTC_3e54a
+/home/inwinic/MDC610/ShoftWare/cmake-3.16.5-Linux-x86_64/bin/cmake -E cmake_link_script CMakeFiles/cmTC_3e54a.dir/link.txt --verbose=1
+/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/clang++      -v CMakeFiles/cmTC_3e54a.dir/CMakeCXXCompilerABI.cpp.o  -o cmTC_3e54a 
+iAOS BiSheng CPU 3.0.0.B017 clang version 12.0.1 (3ea00368d9e9)
+Target: aarch64-unknown-linux-gnu
+Thread model: posix
+InstalledDir: /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin
+ "/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/ld.lld" --sysroot=/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot -EL -z relro --hash-style=gnu --eh-frame-hdr -m aarch64linux -dynamic-linker /lib/ld-linux-aarch64.so.1 -o cmTC_3e54a /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/lib/../lib64/crt1.o /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/lib/../lib64/crti.o /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/lib64/clang/12.0.1/lib/linux/clang_rt.crtbegin-aarch64.o -L/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/lib/../lib64 -L/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/usr/lib/../lib64 -L/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/lib -L/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/usr/lib CMakeFiles/cmTC_3e54a.dir/CMakeCXXCompilerABI.cpp.o -lc++ -lunwind -lm /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/lib64/clang/12.0.1/lib/linux/libclang_rt.builtins-aarch64.a -lc /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/lib64/clang/12.0.1/lib/linux/libclang_rt.builtins-aarch64.a /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/lib64/clang/12.0.1/lib/linux/clang_rt.crtend-aarch64.o /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/lib/../lib64/crtn.o
+make[1]: Leaving directory '/home/inwinic/Wll_project/CRRC/PanG/ADSFI/build/cmake-build-debug-default_toolchain/clang-aos_gea-aarch64/CMakeFiles/CMakeTmp'
+
+
+
+Parsed CXX implicit include dir info from above output: rv=done
+  found start of include info
+  found start of implicit include info
+    add: [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/usr/include/c++/v1]
+    add: [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/usr/local/include]
+    add: [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/lib64/clang/12.0.1/include]
+    add: [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/usr/include]
+  end of search list found
+  collapse include dir [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/usr/include/c++/v1] ==> [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/sysroot/usr/include/c++/v1]
+  collapse include dir [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/usr/local/include] ==> [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/sysroot/usr/local/include]
+  collapse include dir [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/lib64/clang/12.0.1/include] ==> [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/lib64/clang/12.0.1/include]
+  collapse include dir [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/usr/include] ==> [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/sysroot/usr/include]
+  implicit include dirs: [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/sysroot/usr/include/c++/v1;/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/sysroot/usr/local/include;/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/lib64/clang/12.0.1/include;/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/sysroot/usr/include]
+
+
+Parsed CXX implicit link information from above output:
+  link line regex: [^( *|.*[/\])(ld\.lld|CMAKE_LINK_STARTFILE-NOTFOUND|([^/\]+-)?ld|collect2)[^/\]*( |$)]
+  ignore line: [Change Dir: /home/inwinic/Wll_project/CRRC/PanG/ADSFI/build/cmake-build-debug-default_toolchain/clang-aos_gea-aarch64/CMakeFiles/CMakeTmp]
+  ignore line: []
+  ignore line: [Run Build Command(s):/usr/bin/make cmTC_3e54a/fast && /usr/bin/make -f CMakeFiles/cmTC_3e54a.dir/build.make CMakeFiles/cmTC_3e54a.dir/build]
+  ignore line: [make[1]: Entering directory '/home/inwinic/Wll_project/CRRC/PanG/ADSFI/build/cmake-build-debug-default_toolchain/clang-aos_gea-aarch64/CMakeFiles/CMakeTmp']
+  ignore line: [Building CXX object CMakeFiles/cmTC_3e54a.dir/CMakeCXXCompilerABI.cpp.o]
+  ignore line: [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/clang++    -v -o CMakeFiles/cmTC_3e54a.dir/CMakeCXXCompilerABI.cpp.o -c /home/inwinic/MDC610/ShoftWare/cmake-3.16.5-Linux-x86_64/share/cmake-3.16/Modules/CMakeCXXCompilerABI.cpp]
+  ignore line: [iAOS BiSheng CPU 3.0.0.B017 clang version 12.0.1 (3ea00368d9e9)]
+  ignore line: [Target: aarch64-unknown-linux-gnu]
+  ignore line: [Thread model: posix]
+  ignore line: [InstalledDir: /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin]
+  ignore line: [ (in-process)]
+  ignore line: [ "/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/clang-12" -cc1 -triple aarch64-unknown-linux-gnu -emit-obj -mrelax-all --mrelax-relocations -disable-free -disable-llvm-verifier -discard-value-names -main-file-name CMakeCXXCompilerABI.cpp -mrelocation-model static -mllvm -pass-remarks= -mllvm -pass-remarks-missed= -mllvm -pass-remarks-analysis= -mframe-pointer=non-leaf -fmath-errno -fno-rounding-math -mconstructor-aliases -munwind-tables -target-cpu generic -target-feature +neon -target-abi aapcs -mllvm -float-load-perfect=0 -fallow-half-arguments-and-returns -fno-split-dwarf-inlining -debugger-tuning=gdb -v -resource-dir /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/lib64/clang/12.0.1 -isysroot /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot -internal-isystem /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/usr/include/c++/v1 -internal-isystem /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/usr/local/include -internal-isystem /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/lib64/clang/12.0.1/include -internal-externc-isystem /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/include -internal-externc-isystem /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/usr/include -fdeprecated-macro -fdebug-compilation-dir /home/inwinic/Wll_project/CRRC/PanG/ADSFI/build/cmake-build-debug-default_toolchain/clang-aos_gea-aarch64/CMakeFiles/CMakeTmp -ferror-limit 19 -fno-signed-char -fgnuc-version=4.2.1 -fcxx-exceptions -fexceptions -mllvm -delete-infinite-loops=true -faddrsig -o CMakeFiles/cmTC_3e54a.dir/CMakeCXXCompilerABI.cpp.o -x c++ /home/inwinic/MDC610/ShoftWare/cmake-3.16.5-Linux-x86_64/share/cmake-3.16/Modules/CMakeCXXCompilerABI.cpp]
+  ignore line: [clang -cc1 version 12.0.1 based upon LLVM 12.0.1 default target aarch64-unknown-linux-gnu]
+  ignore line: [ignoring nonexistent directory "/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/include"]
+  ignore line: [#include "..." search starts here:]
+  ignore line: [#include <...> search starts here:]
+  ignore line: [ /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/usr/include/c++/v1]
+  ignore line: [ /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/usr/local/include]
+  ignore line: [ /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/lib64/clang/12.0.1/include]
+  ignore line: [ /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/usr/include]
+  ignore line: [End of search list.]
+  ignore line: [Linking CXX executable cmTC_3e54a]
+  ignore line: [/home/inwinic/MDC610/ShoftWare/cmake-3.16.5-Linux-x86_64/bin/cmake -E cmake_link_script CMakeFiles/cmTC_3e54a.dir/link.txt --verbose=1]
+  ignore line: [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/clang++      -v CMakeFiles/cmTC_3e54a.dir/CMakeCXXCompilerABI.cpp.o  -o cmTC_3e54a ]
+  ignore line: [iAOS BiSheng CPU 3.0.0.B017 clang version 12.0.1 (3ea00368d9e9)]
+  ignore line: [Target: aarch64-unknown-linux-gnu]
+  ignore line: [Thread model: posix]
+  ignore line: [InstalledDir: /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin]
+  link line: [ "/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/ld.lld" --sysroot=/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot -EL -z relro --hash-style=gnu --eh-frame-hdr -m aarch64linux -dynamic-linker /lib/ld-linux-aarch64.so.1 -o cmTC_3e54a /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/lib/../lib64/crt1.o /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/lib/../lib64/crti.o /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/lib64/clang/12.0.1/lib/linux/clang_rt.crtbegin-aarch64.o -L/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/lib/../lib64 -L/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/usr/lib/../lib64 -L/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/lib -L/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/usr/lib CMakeFiles/cmTC_3e54a.dir/CMakeCXXCompilerABI.cpp.o -lc++ -lunwind -lm /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/lib64/clang/12.0.1/lib/linux/libclang_rt.builtins-aarch64.a -lc /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/lib64/clang/12.0.1/lib/linux/libclang_rt.builtins-aarch64.a /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/lib64/clang/12.0.1/lib/linux/clang_rt.crtend-aarch64.o /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/lib/../lib64/crtn.o]
+    arg [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/ld.lld] ==> ignore
+    arg [--sysroot=/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot] ==> ignore
+    arg [-EL] ==> ignore
+    arg [-zrelro] ==> ignore
+    arg [--hash-style=gnu] ==> ignore
+    arg [--eh-frame-hdr] ==> ignore
+    arg [-m] ==> ignore
+    arg [aarch64linux] ==> ignore
+    arg [-dynamic-linker] ==> ignore
+    arg [/lib/ld-linux-aarch64.so.1] ==> ignore
+    arg [-o] ==> ignore
+    arg [cmTC_3e54a] ==> ignore
+    arg [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/lib/../lib64/crt1.o] ==> ignore
+    arg [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/lib/../lib64/crti.o] ==> ignore
+    arg [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/lib64/clang/12.0.1/lib/linux/clang_rt.crtbegin-aarch64.o] ==> ignore
+    arg [-L/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/lib/../lib64] ==> dir [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/lib/../lib64]
+    arg [-L/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/usr/lib/../lib64] ==> dir [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/usr/lib/../lib64]
+    arg [-L/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/lib] ==> dir [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/lib]
+    arg [-L/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/usr/lib] ==> dir [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/usr/lib]
+    arg [CMakeFiles/cmTC_3e54a.dir/CMakeCXXCompilerABI.cpp.o] ==> ignore
+    arg [-lc++] ==> lib [c++]
+    arg [-lunwind] ==> lib [unwind]
+    arg [-lm] ==> lib [m]
+    arg [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/lib64/clang/12.0.1/lib/linux/libclang_rt.builtins-aarch64.a] ==> lib [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/lib64/clang/12.0.1/lib/linux/libclang_rt.builtins-aarch64.a]
+    arg [-lc] ==> lib [c]
+    arg [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/lib64/clang/12.0.1/lib/linux/libclang_rt.builtins-aarch64.a] ==> lib [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/lib64/clang/12.0.1/lib/linux/libclang_rt.builtins-aarch64.a]
+    arg [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/lib64/clang/12.0.1/lib/linux/clang_rt.crtend-aarch64.o] ==> ignore
+    arg [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/lib/../lib64/crtn.o] ==> ignore
+  remove lib [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/lib64/clang/12.0.1/lib/linux/libclang_rt.builtins-aarch64.a]
+  remove lib [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/lib64/clang/12.0.1/lib/linux/libclang_rt.builtins-aarch64.a]
+  collapse library dir [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/lib/../lib64] ==> [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/sysroot/lib64]
+  collapse library dir [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/usr/lib/../lib64] ==> [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/sysroot/usr/lib64]
+  collapse library dir [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/lib] ==> [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/sysroot/lib]
+  collapse library dir [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/../sysroot/usr/lib] ==> [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/sysroot/usr/lib]
+  implicit libs: [c++;unwind;m;c]
+  implicit dirs: [/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/sysroot/lib64;/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/sysroot/usr/lib64;/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/sysroot/lib;/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/sysroot/usr/lib]
+  implicit fwks: []
+
+
+Determining if the include file pthread.h exists passed with the following output:
+Change Dir: /home/inwinic/Wll_project/CRRC/PanG/ADSFI/build/cmake-build-debug-default_toolchain/clang-aos_gea-aarch64/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make cmTC_97018/fast && /usr/bin/make -f CMakeFiles/cmTC_97018.dir/build.make CMakeFiles/cmTC_97018.dir/build
+make[1]: Entering directory '/home/inwinic/Wll_project/CRRC/PanG/ADSFI/build/cmake-build-debug-default_toolchain/clang-aos_gea-aarch64/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_97018.dir/CheckIncludeFile.c.o
+/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/clang    -o CMakeFiles/cmTC_97018.dir/CheckIncludeFile.c.o   -c /home/inwinic/Wll_project/CRRC/PanG/ADSFI/build/cmake-build-debug-default_toolchain/clang-aos_gea-aarch64/CMakeFiles/CMakeTmp/CheckIncludeFile.c
+Linking C executable cmTC_97018
+/home/inwinic/MDC610/ShoftWare/cmake-3.16.5-Linux-x86_64/bin/cmake -E cmake_link_script CMakeFiles/cmTC_97018.dir/link.txt --verbose=1
+/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/clang      CMakeFiles/cmTC_97018.dir/CheckIncludeFile.c.o  -o cmTC_97018 
+make[1]: Leaving directory '/home/inwinic/Wll_project/CRRC/PanG/ADSFI/build/cmake-build-debug-default_toolchain/clang-aos_gea-aarch64/CMakeFiles/CMakeTmp'
+
+
+
