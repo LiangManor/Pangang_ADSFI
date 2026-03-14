@@ -150,8 +150,8 @@ void LidarReceiveMsopThread() {
 			{
 				if (UPPER_BANK != raw->blocks[block].header)
 				{
-				  std::cout << "---------------" << raw->blocks[block].header <<std::endl;
-				  std::cout << "header error" << std::endl;
+				//   std::cout << "---------------" << raw->blocks[block].header <<std::endl;
+				//   std::cout << "header error" << std::endl;
 				  break;
 				}
 				
