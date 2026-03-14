@@ -20,16 +20,6 @@ core/core.h
 adsf/lidar_tracker_base.h
 /home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/lidar_tracker/src/adsf/lidar_tracker_base.h
 
-/home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/lidar_tracker/src/main.cpp
-iostream
--
-csignal
--
-lidar_tracker.h
-/home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/lidar_tracker/src/lidar_tracker.h
-core/core.h
-/home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/lidar_tracker/src/core/core.h
-
 /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/sysroot/usr/include/adsfi/adb/include/core/basic_types.h
 cstdint
 -

@@ -112,10 +112,6 @@ stdlib.h
 inttypes.h
 -
 
-/home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/lidar_abstract_B2_innovusion/src/LidarServiceInterface.cpp
-ara/lidar/lidarserviceinterface_common.h
--
-
 /home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/lidar_abstract_B2_innovusion/src/innovusion.h
 getopt.h
 -

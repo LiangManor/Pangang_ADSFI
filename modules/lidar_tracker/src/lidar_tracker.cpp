@@ -34,30 +34,30 @@ void LidarObstacleTracking::Process()
     	out->seq         = data->seq;//iter->types;   // 激光雷达异常标志位：0正常,1异常
     	if((int)out->seq == 1)
     	{
-    	    std::cout<<"ID:"<<out->frameID<<"  异常:"<<(int)out->seq<<std::endl;
+    	    // std::cout<<"ID:"<<out->frameID<<"  异常:"<<(int)out->seq<<std::endl;
     	}
     	else
     	{
-    	    std::cout<<"ID:"<<out->frameID<<"  正常:"<<(int)out->seq<<std::endl;
+    	    // std::cout<<"ID:"<<out->frameID<<"  正常:"<<(int)out->seq<<std::endl;
     	}
         Haf3dDetectionOut<float32_t> out3d;
         list<Haf3dDetectionOut<float32_t>>::iterator iter;
-        std::cout<<"障碍物个数 = "<<data->detectionOut3d.size()<<std::endl;
+        // std::cout<<"障碍物个数 = "<<data->detectionOut3d.size()<<std::endl;
         for (iter = data->detectionOut3d.begin(); iter != data->detectionOut3d.end(); iter++)
         {
         	out3d.cls           = iter->cls;     // 类别
-        	std::cout<<" cls = "<<(int)out3d.cls;
+        	// std::cout<<" cls = "<<(int)out3d.cls;
         	out3d.rect.center.x = iter->rect.center.x;// 坐标
-        	std::cout<<" x = "<<out3d.rect.center.x;
+        	// std::cout<<" x = "<<out3d.rect.center.x;
 			out3d.rect.center.y = iter->rect.center.y;
-			std::cout<<" y = "<<out3d.rect.center.y<<std::endl;
+			// std::cout<<" y = "<<out3d.rect.center.y<<std::endl;
 			out3d.rect.center.z = iter->rect.center.z;
 	        out3d.rect.size.x   = iter->rect.size.x;// 长宽高
 	        out3d.rect.size.y   = iter->rect.size.y;
 	        out3d.rect.size.z   = iter->rect.size.z;
 	        out->detectionOut3d.push_back(out3d);
         }
-        std::cout<<"-------------"<<std::endl;
+        // std::cout<<"-------------"<<std::endl;
         if (node.SendResult(out) != HAF_SUCCESS)
         {
             HAF_LOG_ERROR << "Send tracking results failed";

@@ -14,7 +14,7 @@ sig_atomic_t g_stopFlag = 0;
 void INTSigHandler(int32_t num)
 {
     g_stopFlag = 1;
-    std::cout << "  Signal Interactive attention" << num << "received." << std::endl;
+    // std::cout << "  Signal Interactive attention" << num << "received." << std::endl;
     return;
 }
 }
@@ -25,7 +25,7 @@ int main()
     auto ldt = std::make_unique<LidarDetection>("Config.yaml", IS_LIDAR_REARRANGE);
     HafStatus ret = ldt->Init();
     if (ret != HAF_SUCCESS) {
-        std::cout << "Lidar detection sample init failed!" << std::endl;
+        // std::cout << "Lidar detection sample init failed!" << std::endl;
         return -1;
     }
     ldt->Process();

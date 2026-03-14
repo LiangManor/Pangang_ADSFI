@@ -114,6 +114,7 @@ int main()
 
     inno_lidar_set_attribute_string(handle, "force_xyz_pointcloud", "1");
 
+    inno_lidar_set_log_level(INNO_LOG_LEVEL_FATAL); // 设置日志级别，0表示不输出所有级别的日志
     int ret = inno_lidar_set_callbacks(
                                        handle,
                                         // 消息回调函数，接收雷达运行时的调试/错误消息
@@ -137,10 +138,10 @@ int main()
     // 记录数据回调
     while(inno_lidar_start(handle) == -1) // 开始读取数据
     {
-        std::cout<<"----------- 图达通启动失败:start failed ---------------"<<std::endl;
+        // std::cout<<"----------- 图达通启动失败:start failed ---------------"<<std::endl;
         sleep(2);
     }
-    std::cout<<"----------- 图达通启动成功:start success ---------------"<<std::endl;
+    // std::cout<<"----------- 图达通启动成功:start success ---------------"<<std::endl;
 	bool result = mdc::visual::Connect();
 	ara::log::InitLogging("DEAS", "CM_DDS_EVENT_ASYNC_SERVER_SAMPLE", ara::log::LogLevel::kVerbose,(ara::log::LogMode::kConsole | ara::log::LogMode::kRemote));
 	ara::exec::ExecutionClient execClient;
@@ -157,7 +158,7 @@ int main()
     yAngle   = params.y_angle;
     zAngle   = params.z_angle;
     isVision = params.isVision;
-    std::cout<<"debug  ------------ xAngle = "<<xAngle<<"yAngle = "<<yAngle<<"zAngle = "<<zAngle<<"isVision = "<<isVision<<std::endl;
+    // std::cout<<"debug  ------------ xAngle = "<<xAngle<<"yAngle = "<<yAngle<<"zAngle = "<<zAngle<<"isVision = "<<isVision<<std::endl;
     // 等待数据处理完成
     while (!processor.is_done()) 
     {

@@ -12,7 +12,7 @@ namespace {
     {
         (void)num;
         g_stopFlag = 1;
-        std::cout << "  Signal Interactive attention received." << std::endl;
+        // std::cout << "  Signal Interactive attention received." << std::endl;
         return;
     }
 }
@@ -23,7 +23,7 @@ int main()
     auto location = std::make_unique<Location>("Config.yaml");
     HafStatus ret = location->Init();
     if (ret != HAF_SUCCESS) {
-        std::cout << "location init failed!" << std::endl;
+        // std::cout << "location init failed!" << std::endl;
         return -1;
     }
     const uint32_t sleepTime = 10000U;

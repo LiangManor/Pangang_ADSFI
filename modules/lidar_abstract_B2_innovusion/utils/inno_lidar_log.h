@@ -63,7 +63,20 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-  enum InnoLogLevel {
+  // enum InnoLogLevel {
+  //   INNO_LOG_LEVEL_FATAL = -1,
+  //   INNO_LOG_LEVEL_CRITICAL = -1,
+  //   INNO_LOG_LEVEL_ERROR = -1,
+  //   INNO_LOG_LEVEL_TEMP = -1,
+  //   INNO_LOG_LEVEL_WARNING = -1,
+  //   INNO_LOG_LEVEL_DEBUG = -1,
+  //   INNO_LOG_LEVEL_INFO = -1,
+  //   INNO_LOG_LEVEL_TRACE = -1,
+  //   INNO_LOG_LEVEL_DETAIL = -1,
+  //   INNO_LOG_LEVEL_MAX = -1,
+  // };
+
+    enum InnoLogLevel {
     INNO_LOG_LEVEL_FATAL = 0,
     INNO_LOG_LEVEL_CRITICAL = 1,
     INNO_LOG_LEVEL_ERROR = 2,

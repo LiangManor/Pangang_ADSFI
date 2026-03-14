@@ -134,7 +134,7 @@ bool PointProcessing::loadTransformFromYaml(const std::string &filePath)
             }
         }
 
-        std::cout << "Loaded calibration for car " << carId << " successfully." << std::endl;
+        // std::cout << "Loaded calibration for car " << carId << " successfully." << std::endl;
 
         return true;
     }

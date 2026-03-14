@@ -174,7 +174,7 @@ bool ImageNnInference::YUV422UYVY_2_NV12(Adsfi::ImageData& inputImage, Adsfi::Im
     hi_s32 convert_color_sign = hi_mpi_vpc_convert_color_to_yuv420 (channelId, &INyuv422, &OUTyuv420, &task_id, -1);
     if (convert_color_sign != 0) {
         HAF_LOG_ERROR << "Apply for DVPP memory failed. convert_color_sign.";
-        std::cout << "------------------------------convert_color_sign_error: " << std::hex << convert_color_sign << std::endl;
+        // std::cout << "------------------------------convert_color_sign_error: " << std::hex << convert_color_sign << std::endl;
     }
 
     uint32_t taskIDResult = task_id;

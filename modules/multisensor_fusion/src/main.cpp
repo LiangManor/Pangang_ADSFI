@@ -14,7 +14,7 @@ void INTSigHandler(int32_t num)
 {
     (void)num;
     g_stopFlag = 1;
-    std::cout << "  Signal Interactive attention received." << std::endl;
+    // std::cout << "  Signal Interactive attention received." << std::endl;
     return;
 }
 }
@@ -31,7 +31,7 @@ int32_t main()
     while (!g_stopFlag && !msf->IsError()) {
         std::this_thread::sleep_for(std::chrono::seconds(1));
     }
-    std::cout<<"This is main.cpp msf-> Stop !"<< msf->IsError() << "::"<< g_stopFlag <<std::endl;
+    // std::cout<<"This is main.cpp msf-> Stop !"<< msf->IsError() << "::"<< g_stopFlag <<std::endl;
     msf->Stop();
     return 0;
 }

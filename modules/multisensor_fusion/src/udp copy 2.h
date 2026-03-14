@@ -229,7 +229,7 @@ int main() {
         while (running) {
             auto v = recv1.receiveMessage();
             if (v.size() >= 3) {
-                std::cout << "[R1] got: " << v[0] << "," << v[1] << "," << v[2] << std::endl;
+                // std::cout << "[R1] got: " << v[0] << "," << v[1] << "," << v[2] << std::endl;
             }
         }
     });
@@ -239,7 +239,7 @@ int main() {
         while (running) {
             auto v = recv2.receiveMessage();
             if (v.size() >= 3) {
-                std::cout << "[R2] got: " << v[0] << "," << v[1] << "," << v[2] << std::endl;
+                // std::cout << "[R2] got: " << v[0] << "," << v[1] << "," << v[2] << std::endl;
             }
         }
     });
@@ -266,6 +266,6 @@ int main() {
     if (t_recv1.joinable()) t_recv1.detach();
     if (t_recv2.joinable()) t_recv2.detach();
 
-    std::cout << "Exiting main." << std::endl;
+    // std::cout << "Exiting main." << std::endl;
     return 0;
 }

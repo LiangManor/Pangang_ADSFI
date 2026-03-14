@@ -90,8 +90,8 @@ bool CameraDetectionApp::ReadConfig()
     instanceID1 = config["instanceID1"].as<uint32_t>();
     instanceID2 = config["instanceID2"].as<uint32_t>();
 
-    std::cout << "Read config result. Image width:  " << imageWidth << "  height: "
-    << imageHeight << "  instanceID1: " << instanceID1 << "  instanceID2:  " << instanceID2 << std::endl;
+    // std::cout << "Read config result. Image width:  " << imageWidth << "  height: "
+    // << imageHeight << "  instanceID1: " << instanceID1 << "  instanceID2:  " << instanceID2 << std::endl;
     return true;
 }
 
@@ -150,7 +150,7 @@ void CameraDetectionApp::cleanPngDirectoryThread()
 
             // ---- 2. 检查目录是否存在 ----
             if (!std::filesystem::exists(dirPath)) {
-                std::cout << "[PNG Cleaner] Directory not found: " << dirPath << std::endl;
+                // std::cout << "[PNG Cleaner] Directory not found: " << dirPath << std::endl;
                 continue;
             }
 
@@ -166,7 +166,7 @@ void CameraDetectionApp::cleanPngDirectoryThread()
             size_t fileCount = pnfFiles.size();
             if (fileCount <= maxFiles) {
                 // 文件数量正常
-                std::cout << "[PNG Cleaner] File count: " << fileCount << " (OK)" << std::endl;
+                // std::cout << "[PNG Cleaner] File count: " << fileCount << " (OK)" << std::endl;
                 continue;
             }
 
@@ -180,9 +180,9 @@ void CameraDetectionApp::cleanPngDirectoryThread()
             // ---- 5. 需要删除的数量 ----
             size_t toDelete = fileCount - maxFiles;
 
-            std::cout << "[PNG Cleaner] Found " << fileCount
-                      << " files, deleting " << toDelete
-                      << " oldest files..." << std::endl;
+            // std::cout << "[PNG Cleaner] Found " << fileCount
+            //           << " files, deleting " << toDelete
+            //           << " oldest files..." << std::endl;
 
             // ---- 6. 删除最老的文件 ----
             for (size_t i = 0; i < toDelete; i++) {
@@ -194,8 +194,8 @@ void CameraDetectionApp::cleanPngDirectoryThread()
                 }
             }
 
-            std::cout << "[PNG Cleaner] Cleanup completed. Remaining: "
-                      << (fileCount - toDelete) << std::endl;
+            // std::cout << "[PNG Cleaner] Cleanup completed. Remaining: "
+            //           << (fileCount - toDelete) << std::endl;
 
         } catch (std::exception& e) {
             std::cerr << "[PNG Cleaner] Exception: " << e.what() << std::endl;
@@ -267,7 +267,7 @@ void saveRGBAsImage(const uint8_t* rgbData, int width, int height, size_t dataSi
     std::string dirName = "have_obj_data";
     if (!std::filesystem::exists(dirName)) {
         std::filesystem::create_directories(dirName);
-        std::cout << "Created directory: " << dirName << std::endl;
+        // std::cout << "Created directory: " << dirName << std::endl;
     }
 
     // ---- 2. 生成文件名 年_月_日_时_分_秒.png ----
@@ -300,7 +300,7 @@ void saveRGBAsImage(const uint8_t* rgbData, int width, int height, size_t dataSi
 
     cv::imwrite(outputFilename, image);
 
-    std::cout << "Saved: " << outputFilename << std::endl;
+    // std::cout << "Saved: " << outputFilename << std::endl;
 }
 
 // ////////////////////////////////////////////////
@@ -668,7 +668,7 @@ void CameraDetectionApp::ObjectDetectionThread()
             Stop();
             break;
         }
-        std::cout << "障碍物总数量 : " << detection.size() << std::endl;
+        // std::cout << "障碍物总数量 : " << detection.size() << std::endl;
         auto data = std::make_shared<Haf3dDetectionOutArray<float32_t>>();
         data->detectionOut3d = detection;
         data->frameID = img2->frameID;
@@ -745,7 +745,7 @@ void CameraDetectionApp::getDirect()
         if (result[0] != -1) {
             this->model = result[0];
             have_obj = result[3];
-            std::cout << "Real-time update - model: " << this->model << std::endl;
+            // std::cout << "Real-time update - model: " << this->model << std::endl;
         }
         
         // 处理其他任务或短暂休息

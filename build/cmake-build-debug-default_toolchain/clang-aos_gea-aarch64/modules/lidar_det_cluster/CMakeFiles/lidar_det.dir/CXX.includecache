@@ -6,6 +6,14 @@
 
 #IncludeRegexTransform: 
 
+/home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/lidar_det_cluster/src/PointProcessing.cpp
+PointProcessing.h
+/home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/lidar_det_cluster/src/PointProcessing.h
+yaml/haf_yaml.h
+/home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/lidar_det_cluster/src/yaml/haf_yaml.h
+yaml-cpp/yaml.h
+-
+
 /home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/lidar_det_cluster/src/PointProcessing.h
 vector
 -
@@ -171,6 +179,14 @@ PointProcessing.h
 /home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/lidar_det_cluster/src/PointProcessing.h
 ground_filter.h
 /home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/lidar_det_cluster/src/ground_filter.h
+
+/home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/lidar_det_cluster/src/main.cpp
+csignal
+-
+core/core.h
+/home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/lidar_det_cluster/src/core/core.h
+lidar_detection.h
+/home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/lidar_det_cluster/src/lidar_detection.h
 
 /home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/lidar_det_cluster/src/secure_matrix.h
 algorithm

@@ -127,7 +127,7 @@ void LidarDetection::cleanPcdDirectoryThread()
 
             // ---- 2. 检查目录是否存在 ----
             if (!std::filesystem::exists(dirPath)) {
-                std::cout << "[PCD Cleaner] Directory not found: " << dirPath << std::endl;
+                // std::cout << "[PCD Cleaner] Directory not found: " << dirPath << std::endl;
                 continue;
             }
 
@@ -143,7 +143,7 @@ void LidarDetection::cleanPcdDirectoryThread()
             size_t fileCount = pcdFiles.size();
             if (fileCount <= maxFiles) {
                 // 文件数量正常
-                std::cout << "[PCD Cleaner] File count: " << fileCount << " (OK)" << std::endl;
+                // std::cout << "[PCD Cleaner] File count: " << fileCount << " (OK)" << std::endl;
                 continue;
             }
 
@@ -157,9 +157,9 @@ void LidarDetection::cleanPcdDirectoryThread()
             // ---- 5. 需要删除的数量 ----
             size_t toDelete = fileCount - maxFiles;
 
-            std::cout << "[PCD Cleaner] Found " << fileCount
-                      << " files, deleting " << toDelete
-                      << " oldest files..." << std::endl;
+            // std::cout << "[PCD Cleaner] Found " << fileCount
+            //           << " files, deleting " << toDelete
+            //           << " oldest files..." << std::endl;
 
             // ---- 6. 删除最老的文件 ----
             for (size_t i = 0; i < toDelete; i++) {
@@ -171,8 +171,8 @@ void LidarDetection::cleanPcdDirectoryThread()
                 }
             }
 
-            std::cout << "[PCD Cleaner] Cleanup completed. Remaining: "
-                      << (fileCount - toDelete) << std::endl;
+            // std::cout << "[PCD Cleaner] Cleanup completed. Remaining: "
+            //           << (fileCount - toDelete) << std::endl;
 
         } catch (std::exception& e) {
             std::cerr << "[PCD Cleaner] Exception: " << e.what() << std::endl;
@@ -231,7 +231,7 @@ void saveCloudAsPCD(const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloudROI)
     std::string dirName = "have_obj_data";
     if (!std::filesystem::exists(dirName)) {
         std::filesystem::create_directories(dirName);
-        std::cout << "Created directory: " << dirName << std::endl;
+        // std::cout << "Created directory: " << dirName << std::endl;
     }
 
     // ---- 3. 生成文件名 年_月_日_时_分_秒.pcd ----
@@ -266,8 +266,8 @@ void saveCloudAsPCD(const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloudROI)
     if (pcl::io::savePCDFileBinary(outputFilename, *cloudROI) == -1) {
         std::cerr << "Failed to save PCD file: " << outputFilename << std::endl;
     } else {
-        std::cout << "Saved PCD: " << outputFilename
-                  << "  (" << cloudROI->size() << " points)" << std::endl;
+        // std::cout << "Saved PCD: " << outputFilename
+        //           << "  (" << cloudROI->size() << " points)" << std::endl;
     }
 }
 
@@ -313,13 +313,13 @@ void LidarDetection::SubLidar()
 		// if (node.GetLidar(lidarData, 4) != HAF_SUCCESS) // A4
 		// if (node.GetLidar(lidarData, 6) != HAF_SUCCESS) // B2
 		{
-            std::cout<<" ----------------get lidardata Failed------------------ "<<std::endl;
+            // std::cout<<" ----------------get lidardata Failed------------------ "<<std::endl;
 			Stop();
 			return;
 		}
 		if (lidarData == nullptr)
 		{
-            std::cout<<" ----------------lidardata if nullptr------------------ " <<std::endl;
+            // std::cout<<" ----------------lidardata if nullptr------------------ " <<std::endl;
 			continue;
 		}
 		// 先判断传感器是否出故障，如果出故障则直接上报，跳过以下步骤。
@@ -745,7 +745,7 @@ TrajectoryType getTrajectoryTypeByIDs(int id1, int id2) {
         }
     }
     
-    std::cout << "No matching trajectory type for IDs: " << id1 << " and " << id2 << std::endl;
+    // std::cout << "No matching trajectory type for IDs: " << id1 << " and " << id2 << std::endl;
     return TrajectoryType::UNKNOWN;
 }
 
@@ -832,10 +832,10 @@ void LidarDetection::getDirect()
 
         if (this->model > 0 && ID_road_start > 0 && ID_road_last > 0 && (ID_road_start != history_ID_road_start || ID_road_last != history_ID_road_last))
         {
-            std::cout << "Received integers: " << this->model << " and " << ID_road_start << " and " << ID_road_last << std::endl;
+            // std::cout << "Received integers: " << this->model << " and " << ID_road_start << " and " << ID_road_last << std::endl;
 
             std::string road_path = getTrajectoryFileNameByIDs(ID_road_start, ID_road_last);
-            std::cout << "loadPoints--------------------" << road_path <<std::endl;
+            // std::cout << "loadPoints--------------------" << road_path <<std::endl;
             point_list->clear();
             PointProcessing::loadPoints(road_path, point_list);
             std::sort(point_list->points.begin(), point_list->points.end(), [](const pcl::PointXYZ& a, const pcl::PointXYZ& b) {
@@ -844,7 +844,7 @@ void LidarDetection::getDirect()
             history_ID_road_start = ID_road_start;
             history_ID_road_last = ID_road_last;
 
-            std::cout << "point_list  size  :" << point_list->size() <<std::endl;
+            // std::cout << "point_list  size  :" << point_list->size() <<std::endl;
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }

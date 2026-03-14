@@ -6,6 +6,14 @@
 
 #IncludeRegexTransform: 
 
+/home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/multisensor_fusion/src/PointProcessing.cpp
+PointProcessing.h
+/home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/multisensor_fusion/src/PointProcessing.h
+yaml/haf_yaml.h
+/home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/multisensor_fusion/src/yaml/haf_yaml.h
+yaml-cpp/yaml.h
+-
+
 /home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/multisensor_fusion/src/PointProcessing.h
 vector
 -
@@ -53,6 +61,14 @@ vector
 -
 secure_matrix.h
 /home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/multisensor_fusion/src/secure_matrix.h
+
+/home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/multisensor_fusion/src/main.cpp
+csignal
+-
+multisensor_fusion.h
+/home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/multisensor_fusion/src/multisensor_fusion.h
+core/core.h
+/home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/multisensor_fusion/src/core/core.h
 
 /home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/multisensor_fusion/src/multisensor_fusion.cpp
 multisensor_fusion.h

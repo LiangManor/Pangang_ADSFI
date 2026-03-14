@@ -43,16 +43,16 @@ void Location::Process()
 		out->pose.pose.orientation.z   = curLidarSlam.front()->pose.pose.orientation.z;// 2号机柜航向角 ------------
 		out->pose.pose.orientation.x   = curLidarSlam.front()->pose.pose.orientation.x;// rfid 的 ID号
 		out->pose.pose.orientation.y   = curLidarSlam.front()->pose.pose.orientation.y;// rfid 的 强度值
-		std::cout<<"组合导航与A3激光雷达状态    = "<<out->header.seq<<std::endl;
-		std::cout<<"rfid的ID                   = "<<out->pose.pose.orientation.x<<std::endl;
-		std::cout<<"rfid的强度值               = "<<out->pose.pose.orientation.y<<std::endl;
-		std::cout<<"x坐标                      = "<<out->pose.pose.position.x<<std::endl;
-		std::cout<<"y坐标                      = "<<out->pose.pose.position.y<<std::endl;
-		std::cout<<"z坐标                      = "<<out->pose.pose.position.z<<std::endl;
-		std::cout<<"yaw                        = "<<out->pose.pose.orientation.z<<std::endl;
+		// std::cout<<"组合导航与A3激光雷达状态    = "<<out->header.seq<<std::endl;
+		// std::cout<<"rfid的ID                   = "<<out->pose.pose.orientation.x<<std::endl;
+		// std::cout<<"rfid的强度值               = "<<out->pose.pose.orientation.y<<std::endl;
+		// std::cout<<"x坐标                      = "<<out->pose.pose.position.x<<std::endl;
+		// std::cout<<"y坐标                      = "<<out->pose.pose.position.y<<std::endl;
+		// std::cout<<"z坐标                      = "<<out->pose.pose.position.z<<std::endl;
+		// std::cout<<"yaw                        = "<<out->pose.pose.orientation.z<<std::endl;
 
 		// --- 写入坐标到文件 ---
-		std::cout<<"-----------save_file_flag : " << save_file << std::endl;
+		// std::cout<<"-----------save_file_flag : " << save_file << std::endl;
         if (ofs.is_open() && save_file)
         {
             ofs << out->pose.pose.position.x << " "

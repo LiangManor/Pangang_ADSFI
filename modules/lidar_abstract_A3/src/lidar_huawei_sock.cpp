@@ -168,8 +168,8 @@ void LidarReceiveMsopThread() {
 			{
 				if (UPPER_BANK != raw->blocks[block].header)
 				{
-				  std::cout << "---------------" << raw->blocks[block].header <<std::endl;
-				  std::cout << "header error" << std::endl;
+				//   std::cout << "---------------" << raw->blocks[block].header <<std::endl;
+				//   std::cout << "header error" << std::endl;
 				  break;
 				}
 				
@@ -180,9 +180,9 @@ void LidarReceiveMsopThread() {
 				int Azimuth2 = raw->Azimuth21 * 256 + raw->Azimuth22;
 
 				if(block == 0)
-				    azimuth = azimuth + HorizontalAngleOffset[raw->lutIndex][Azimuth1]/1000;
+				    azimuth = azimuth + HorizontalAngleOffset[raw->lutIndex][Azimuth1]/1000;
 				else
-				    azimuth = azimuth + HorizontalAngleOffset[raw->lutIndex][Azimuth2]/1000;
+				    azimuth = azimuth + HorizontalAngleOffset[raw->lutIndex][Azimuth2]/1000;
 				   if(azimuth > 120.0)
 					   azimuth = azimuth - 256;
 				//std::cout << "azimuth " << azimuth << std::endl;

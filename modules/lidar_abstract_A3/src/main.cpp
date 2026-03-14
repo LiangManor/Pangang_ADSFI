@@ -181,10 +181,10 @@ int errorCounter = 0;
 int main() 
 {
 	bool result = mdc::visual::Connect();
-	if(result)
-	std::cout << " ----------------- mdc::visual::Connect Yes!" << std::endl;
-	else
-	std::cout << " ----------------- mdc::visual::Connect No!" << std::endl;
+	// if(result)
+	// std::cout << " ----------------- mdc::visual::Connect Yes!" << std::endl;
+	// else
+	// std::cout << " ----------------- mdc::visual::Connect No!" << std::endl;
 	ara::log::InitLogging("DEAS", "CM_DDS_EVENT_ASYNC_SERVER_SAMPLE", ara::log::LogLevel::kVerbose,(ara::log::LogMode::kConsole | ara::log::LogMode::kRemote));
 	ara::exec::ExecutionClient execClient;
 	execClient.ReportExecutionState(ara::exec::ExecutionState::kRunning);
@@ -198,12 +198,12 @@ int main()
 	*參數2：服务端处理method请求的模式，默认kEvent模式
 	**/
 	m_Skeleton = std::make_shared<Skeleton>(InstanceSpecifier("liblidar_a_cm/liblidar_a_cm/LidarCmToAppPPort"), MethodCallProcessingMode::kEvent);
-	std::cout << " ------------------------- m_Skeleton!" << std::endl;
+	// std::cout << " ------------------------- m_Skeleton!" << std::endl;
 	m_Skeleton->OfferService();// 函數功能:发布服务
-	std::cout << " ------------------------- OfferService!" << std::endl;
+	// std::cout << " ------------------------- OfferService!" << std::endl;
 
 	InitSocket();    //udp初始
-	std::cout << " ------------------------- InitSocket!" << std::endl;
+	// std::cout << " ------------------------- InitSocket!" << std::endl;
 	// 注册ros发布者
 	pcPointXYZIRPub = mdc::visual::Publisher::Advertise<mdc::visual::PointCloud2>(ara::core::String("hwPtClound_A3"));// 原始点云的话题
     Parameters params;
@@ -212,7 +212,7 @@ int main()
     yAngle   = params.y_angle;
     zAngle   = params.z_angle;
     isVision = params.isVision;
-    std::cout<<"程序开始运行"<<std::endl;
+    // std::cout<<"程序开始运行"<<std::endl;
    while (true)
    {
       if (lidar_angle.size())

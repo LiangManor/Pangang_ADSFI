@@ -83,9 +83,9 @@ Adsfi::HafStatus MultisensorFusion::Init()
         ID_road = config["ID_road"].as<int>();
 
         // 打印参数
-        std::cout << "model: " << model << std::endl;
-        std::cout << "distance_safe: " << distance_safe << std::endl;
-        std::cout << "ID_road: " << ID_road << std::endl;
+        // std::cout << "model: " << model << std::endl;
+        // std::cout << "distance_safe: " << distance_safe << std::endl;
+        // std::cout << "ID_road: " << ID_road << std::endl;
     } catch (const YAML::Exception &e) {
         std::cerr << "Error reading YAML file: " << e.what() << std::endl;
     }
@@ -141,12 +141,12 @@ void printAndCompareTimestamp(std::shared_ptr<Haf3dDetectionOutArray<float32_t>>
     uint64_t current_nsec = now_nsec.time_since_epoch().count() % 1000000000;
 
     // 打印 data 的时间戳
-    std::cout << "Data Timestamp: " << data->timestamp.sec << " sec, " 
-              << data->timestamp.nsec << " nsec" << std::endl;
+    // std::cout << "Data Timestamp: " << data->timestamp.sec << " sec, " 
+    //           << data->timestamp.nsec << " nsec" << std::endl;
 
     // 打印当前系统时间戳
-    std::cout << "Current System Timestamp: " << current_sec << " sec, " 
-              << current_nsec << " nsec" << std::endl;
+    // std::cout << "Current System Timestamp: " << current_sec << " sec, " 
+    //           << current_nsec << " nsec" << std::endl;
 
     // 计算差值（秒和纳秒）
     int64_t diff_sec = static_cast<int64_t>(current_sec) - static_cast<int64_t>(data->timestamp.sec);
@@ -159,13 +159,13 @@ void printAndCompareTimestamp(std::shared_ptr<Haf3dDetectionOutArray<float32_t>>
     }
 
     // 打印时间差
-    std::cout << "Time Difference: " << diff_sec << " sec, " 
-              << diff_nsec << " nsec" << std::endl;
+    // std::cout << "Time Difference: " << diff_sec << " sec, " 
+    //           << diff_nsec << " nsec" << std::endl;
 
     // 可选：转换为浮点秒（更直观）
     double total_diff_sec = diff_sec + diff_nsec / 1e9;
-    std::cout << "Time Difference (seconds): " << std::fixed << std::setprecision(9) 
-              << total_diff_sec << " sec" << std::endl;
+    // std::cout << "Time Difference (seconds): " << std::fixed << std::setprecision(9) 
+    //           << total_diff_sec << " sec" << std::endl;
 }
 
 
@@ -367,8 +367,8 @@ void MultisensorFusion::FuseData()
             distance = PointProcessing::pointToRoadDistance(img_lidar, local_road_points);
             cls_safe = (distance < distance_safe) ? 0 : 1;
 
-            std::cout << "camera_object_distances_y   : " << distance << std::endl;
-            std::cout << "camera_object_distances_x   : " << img_lidar.x << std::endl;
+            // std::cout << "camera_object_distances_y   : " << distance << std::endl;
+            // std::cout << "camera_object_distances_x   : " << img_lidar.x << std::endl;
             
             // 通过迭代器访问元素
             HafFusionOut<float> one_data;
@@ -401,8 +401,8 @@ void MultisensorFusion::FuseData()
             distance = PointProcessing::pointToRoadDistance(pcl::PointXYZ(iter1->rect.center.x, iter1->rect.center.y, 0.0f), local_road_points);
             cls_safe = (distance < distance_safe) ? 0 : 1;
 
-            std::cout << "lidar_object_distance_y   : " << distance << std::endl;
-            std::cout << "lidar_object_distance_x   : " << iter1->rect.center.x << std::endl;
+            // std::cout << "lidar_object_distance_y   : " << distance << std::endl;
+            // std::cout << "lidar_object_distance_x   : " << iter1->rect.center.x << std::endl;
 
             // 通过迭代器访问元素
             HafFusionOut<float> one_data;
@@ -422,7 +422,7 @@ void MultisensorFusion::FuseData()
             count += 1;
         }
     }
-    std::cout<< "障碍物总数量 :   " << count <<std::endl;
+    // std::cout<< "障碍物总数量 :   " << count <<std::endl;
     SendResult(fusion_data);
     return;
 }
@@ -629,10 +629,10 @@ void MultisensorFusion::SendResult(std::list<Adsfi::HafFusionOut<float>>& fusion
     data_result->fusionOut = fusion_data;
     // std::cout << "Fusion_data.size()  : " << data_result->fusionOut.size() << std::endl;
     for(auto det_fu : data_result->fusionOut){
-        std::cout << "cls: " << static_cast<unsigned int>(det_fu.cls) << std::endl;
-        std::cout << "confidence: " << det_fu.confidence << std::endl;
-        std::cout << "distance_X: " << det_fu.rect.center.x << std::endl;
-        std::cout << "distance_Y: " << det_fu.rect.center.y << std::endl;
+        // std::cout << "cls: " << static_cast<unsigned int>(det_fu.cls) << std::endl;
+        // std::cout << "confidence: " << det_fu.confidence << std::endl;
+        // std::cout << "distance_X: " << det_fu.rect.center.x << std::endl;
+        // std::cout << "distance_Y: " << det_fu.rect.center.y << std::endl;
     }
 
     //     // ========== 写入文件（持续追加） ==========
@@ -699,7 +699,7 @@ TrajectoryType getTrajectoryTypeByIDs(int id1, int id2) {
         }
     }
     
-    std::cout << "No matching trajectory type for IDs: " << id1 << " and " << id2 << std::endl;
+    // std::cout << "No matching trajectory type for IDs: " << id1 << " and " << id2 << std::endl;
     return TrajectoryType::UNKNOWN;
 }
 
@@ -786,10 +786,10 @@ void MultisensorFusion::getDirect()
 
         if (this->model > 0 && ID_road_start > 0 && ID_road_last > 0 && (ID_road_start != history_ID_road_start || ID_road_last != history_ID_road_last))
         {
-            std::cout << "Received integers: " << this->model << " and " << ID_road_start << " and " << ID_road_last << std::endl;
+            // std::cout << "Received integers: " << this->model << " and " << ID_road_start << " and " << ID_road_last << std::endl;
 
             std::string road_path = getTrajectoryFileNameByIDs(ID_road_start, ID_road_last);
-            std::cout << "loadPoints--------------------" << road_path <<std::endl;
+            // std::cout << "loadPoints--------------------" << road_path <<std::endl;
             point_list->clear();
             PointProcessing::loadPoints(road_path, point_list);
             std::sort(point_list->points.begin(), point_list->points.end(), [](const pcl::PointXYZ& a, const pcl::PointXYZ& b) {
@@ -798,7 +798,7 @@ void MultisensorFusion::getDirect()
             history_ID_road_start = ID_road_start;
             history_ID_road_last = ID_road_last;
 
-            std::cout << "point_list  size  :" << point_list->size() <<std::endl;
+            // std::cout << "point_list  size  :" << point_list->size() <<std::endl;
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(30));
     }
