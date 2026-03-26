@@ -782,46 +782,46 @@ void LidarDetection::getDirect()
     {
         // // std::cout << "++++++++++++ getDirect +++++++++++++"<<std::endl;
 
-        // this->model = receiver.receiveMessage()[0];
-        // ID_road_start = receiver.receiveMessage()[1];
-        // ID_road_last = receiver.receiveMessage()[2];
-        // have_obj = receiver.receiveMessage()[3];
+        this->model = receiver.receiveMessage()[0];
+        ID_road_start = receiver.receiveMessage()[1];
+        ID_road_last = receiver.receiveMessage()[2];
+        have_obj = receiver.receiveMessage()[3];
 
         // /////////////////////     手动修改配置参数     ///////////////////////
-        if (ID_road == 0)
-        {
-            ID_road_start = 12;
-            ID_road_last = 15;
-        }
-        else if (ID_road == 1)
-        {
-            ID_road_start = 12;
-            ID_road_last = 16;
+        // if (ID_road == 0)
+        // {
+        //     ID_road_start = 12;
+        //     ID_road_last = 15;
+        // }
+        // else if (ID_road == 1)
+        // {
+        //     ID_road_start = 12;
+        //     ID_road_last = 16;
         
-        }
-        else if (ID_road == 2)
-        {
-            ID_road_start = 12;
-            ID_road_last = 17;
+        // }
+        // else if (ID_road == 2)
+        // {
+        //     ID_road_start = 12;
+        //     ID_road_last = 17;
         
-        }
-        else if (ID_road == 3)
-        {
-            ID_road_start = 13;
-            ID_road_last = 15;
+        // }
+        // else if (ID_road == 3)
+        // {
+        //     ID_road_start = 13;
+        //     ID_road_last = 15;
         
-        }
-        else if (ID_road == 4)
-        {
-            ID_road_start = 13;
-            ID_road_last = 16;
+        // }
+        // else if (ID_road == 4)
+        // {
+        //     ID_road_start = 13;
+        //     ID_road_last = 16;
         
-        }
-        else if (ID_road == 5)
-        {
-            ID_road_start = 13;
-            ID_road_last = 17;
-        }
+        // }
+        // else if (ID_road == 5)
+        // {
+        //     ID_road_start = 13;
+        //     ID_road_last = 17;
+        // }
         ///////////////////////////////////////////
 
         if (this->model >= 0 && ID_road_start >= 0 && ID_road_last >= 0) {  // 检查是否接收成功

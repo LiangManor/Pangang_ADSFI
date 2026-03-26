@@ -6,10 +6,6 @@
 
 #IncludeRegexTransform: 
 
-/home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/lidar_abstract_A4_192/src/LidarServiceInterface.cpp
-ara/lidar/lidarserviceinterface_common.h
--
-
 /home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/lidar_abstract_A4_192/src/lidar_huawei_sock.cpp
 lidar_huawei_sock.h
 /home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/lidar_abstract_A4_192/src/lidar_huawei_sock.h

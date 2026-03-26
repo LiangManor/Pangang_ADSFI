@@ -335,11 +335,11 @@ void PointProcessing::findClosestAndFit(const PointCloudXYZ::Ptr point_list,
                     start_index = i;
                 }
                 // 求相对于当前车体坐标的轨迹相对 z轴 高度
-                transformed_A3_B2.z -= point_list->points[start_index].z;
-                // 对坐标进行缩放
-                transformed_A3_B2.x *= scale;
-                transformed_A3_B2.y *= scale;
-                transformed_A3_B2.z *= scale;
+                // transformed_A3_B2.z -= point_list->points[start_index].z;
+                // // 对坐标进行缩放
+                // transformed_A3_B2.x *= scale;
+                // transformed_A3_B2.y *= scale;
+                // transformed_A3_B2.z *= scale;
                 transformed_points->push_back(transformed_A3_B2);
             }
         }

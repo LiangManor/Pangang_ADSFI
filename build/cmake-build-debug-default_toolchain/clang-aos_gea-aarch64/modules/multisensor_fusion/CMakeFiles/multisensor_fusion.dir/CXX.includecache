@@ -62,14 +62,6 @@ vector
 secure_matrix.h
 /home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/multisensor_fusion/src/secure_matrix.h
 
-/home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/multisensor_fusion/src/main.cpp
-csignal
--
-multisensor_fusion.h
-/home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/multisensor_fusion/src/multisensor_fusion.h
-core/core.h
-/home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/multisensor_fusion/src/core/core.h
-
 /home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/multisensor_fusion/src/multisensor_fusion.cpp
 multisensor_fusion.h
 /home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/multisensor_fusion/src/multisensor_fusion.h

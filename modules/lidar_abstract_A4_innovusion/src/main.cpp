@@ -18,7 +18,6 @@
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 #include <fstream>
-#include "inno_lidar_api.h"
 using namespace std;
 using namespace ara::com;
 using namespace ara::core;
@@ -60,7 +59,7 @@ struct Parameters {
 bool readParameters(const string& filename, Parameters& params) {
     ifstream file(filename);
     if (!file.is_open()) {
-        // cerr << "无法打开文件: " << filename << endl;
+        cerr << "无法打开文件: " << filename << endl;
         return false;
     }
 
@@ -110,7 +109,7 @@ int main()
                                       lidar_option.lidar_udp_port);
     inno_lidar_set_attribute_string(handle, "force_xyz_pointcloud", "1");
 
-    inno_lidar_set_log_level(INNO_LOG_LEVEL_FATAL); // 设置日志级别，-1表示不输出所有级别的日志
+    inno_lidar_set_log_level(INNO_LOG_LEVEL_FATAL); // 设置日志级别，0表示不输出所有级别的日志
     int ret = inno_lidar_set_callbacks(
                                         handle,
                                         // 消息回调函数，接收雷达运行时的调试/错误消息

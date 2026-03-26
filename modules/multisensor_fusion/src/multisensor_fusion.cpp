@@ -342,7 +342,7 @@ void MultisensorFusion::FuseData()
     float distance = 0;
     uint cls_safe = 0;
 
-    if (local_camera != nullptr && !local_camera->detectionOut3d.empty()) {
+    if (local_camera != nullptr && !local_camera->detectionOut3d.empty() && !local_road_points->empty()) {
         HAF_LOG_INFO << "Have camera data.";
         list<Haf3dDetectionOut<float32_t>>::iterator iter;
         for (iter = local_camera->detectionOut3d.begin(); iter != local_camera->detectionOut3d.end(); iter++)
@@ -737,45 +737,45 @@ void MultisensorFusion::getDirect()
     {
         // // std::cout << "++++++++++++ getDirect +++++++++++++"<<std::endl;
 
-        // this->model = receiver.receiveMessage()[0];
-        // ID_road_start = receiver.receiveMessage()[1];
-        // ID_road_last = receiver.receiveMessage()[2];
+        this->model = receiver.receiveMessage()[0];
+        ID_road_start = receiver.receiveMessage()[1];
+        ID_road_last = receiver.receiveMessage()[2];
 
         /////////////////////     手动修改配置参数     ///////////////////////
-        if (ID_road == 0)
-        {
-            ID_road_start = 12;
-            ID_road_last = 15;
-        }
-        else if (ID_road == 1)
-        {
-            ID_road_start = 12;
-            ID_road_last = 16;
+        // if (ID_road == 0)
+        // {
+        //     ID_road_start = 12;
+        //     ID_road_last = 15;
+        // }
+        // else if (ID_road == 1)
+        // {
+        //     ID_road_start = 12;
+        //     ID_road_last = 16;
         
-        }
-        else if (ID_road == 2)
-        {
-            ID_road_start = 12;
-            ID_road_last = 17;
+        // }
+        // else if (ID_road == 2)
+        // {
+        //     ID_road_start = 12;
+        //     ID_road_last = 17;
         
-        }
-        else if (ID_road == 3)
-        {
-            ID_road_start = 13;
-            ID_road_last = 15;
+        // }
+        // else if (ID_road == 3)
+        // {
+        //     ID_road_start = 13;
+        //     ID_road_last = 15;
         
-        }
-        else if (ID_road == 4)
-        {
-            ID_road_start = 13;
-            ID_road_last = 16;
+        // }
+        // else if (ID_road == 4)
+        // {
+        //     ID_road_start = 13;
+        //     ID_road_last = 16;
         
-        }
-        else if (ID_road == 5)
-        {
-            ID_road_start = 13;
-            ID_road_last = 17;
-        }
+        // }
+        // else if (ID_road == 5)
+        // {
+        //     ID_road_start = 13;
+        //     ID_road_last = 17;
+        // }
         ///////////////////////////////////////////
 
         if (this->model >= 0 && ID_road_start >= 0 && ID_road_last >= 0) {  // 检查是否接收成功

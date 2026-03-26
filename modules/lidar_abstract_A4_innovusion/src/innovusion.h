@@ -110,7 +110,6 @@ int CallbackProcessor::process_data(int handler, const InnoDataPacket &pkt) {
       }
       InnoXyzPoint *point = reinterpret_cast<InnoXyzPoint *>(const_cast<char *>(pkt.payload));
       PcdPoint pcd_point;
-      if(point[i].elongation > 2) continue;       //脉冲宽度,根据脉冲宽度简单粗暴的过滤雨雾。
       pcd_point.x = point[i].x;
       pcd_point.y = point[i].y;
       pcd_point.z = point[i].z;
