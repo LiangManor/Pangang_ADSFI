@@ -1,4 +1,5 @@
 file(REMOVE_RECURSE
+  "CMakeFiles/location.dir/src/PointProcessing.cpp.o"
   "CMakeFiles/location.dir/src/location.cpp.o"
   "CMakeFiles/location.dir/src/main.cpp.o"
   "location"

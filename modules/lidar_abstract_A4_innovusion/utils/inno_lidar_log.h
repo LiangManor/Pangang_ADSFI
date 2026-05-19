@@ -63,7 +63,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-  enum InnoLogLevel {
+    enum InnoLogLevel {
     INNO_LOG_LEVEL_FATAL = 0,
     INNO_LOG_LEVEL_CRITICAL = 1,
     INNO_LOG_LEVEL_ERROR = 2,

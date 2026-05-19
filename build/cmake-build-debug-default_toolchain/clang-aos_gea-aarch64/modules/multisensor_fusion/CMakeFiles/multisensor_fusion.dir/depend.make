@@ -250,6 +250,7 @@ modules/multisensor_fusion/CMakeFiles/multisensor_fusion.dir/src/main.cpp.o: /us
 
 modules/multisensor_fusion/CMakeFiles/multisensor_fusion.dir/src/multisensor_fusion.cpp.o: ../../../modules/multisensor_fusion/src/PointProcessing.h
 modules/multisensor_fusion/CMakeFiles/multisensor_fusion.dir/src/multisensor_fusion.cpp.o: ../../../modules/multisensor_fusion/src/hungarian_optimizer.h
+modules/multisensor_fusion/CMakeFiles/multisensor_fusion.dir/src/multisensor_fusion.cpp.o: ../../../modules/multisensor_fusion/src/log.h
 modules/multisensor_fusion/CMakeFiles/multisensor_fusion.dir/src/multisensor_fusion.cpp.o: ../../../modules/multisensor_fusion/src/multisensor_fusion.cpp
 modules/multisensor_fusion/CMakeFiles/multisensor_fusion.dir/src/multisensor_fusion.cpp.o: ../../../modules/multisensor_fusion/src/multisensor_fusion.h
 modules/multisensor_fusion/CMakeFiles/multisensor_fusion.dir/src/multisensor_fusion.cpp.o: ../../../modules/multisensor_fusion/src/secure_matrix.h

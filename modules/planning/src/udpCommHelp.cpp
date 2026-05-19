@@ -44,7 +44,7 @@ udpCommHelp::~udpCommHelp() {
 void udpCommHelp::sendMsg(const std::vector <uint8_t> &message) {
     // 检查客户端套接字是否已初始化
     if (!isConn_ClientSock_ZC) {
-        std::cerr << "客户端套接字尚未初始化，请先调用 initClientSock_ZC。" << std::endl;
+//        std::cerr << "客户端套接字尚未初始化，请先调用 initClientSock_ZC。" << std::endl;
         return;
     }
 
@@ -52,13 +52,13 @@ void udpCommHelp::sendMsg(const std::vector <uint8_t> &message) {
     ssize_t bytesSent = sendto(clientSock_ZC, message.data(), message.size(), 0,
                                (struct sockaddr *) &serverSockZC,
                                sizeof(serverSockZC));
-    if (bytesSent == -1) {
-        // 如果发送失败，输出错误信息
-        std::cerr << "发送数据失败，错误：" << strerror(errno) << std::endl;
-    } else {
-        // 如果发送成功，打印发送的十六进制数据
-        printHex(message);
-    }
+//    if (bytesSent == -1) {
+//        // 如果发送失败，输出错误信息
+//        std::cerr << "发送数据失败，错误：" << strerror(errno) << std::endl;
+//    } else {
+//        // 如果发送成功，打印发送的十六进制数据
+////        printHex(message);
+//    }
 }
 
 /**
@@ -66,12 +66,13 @@ void udpCommHelp::sendMsg(const std::vector <uint8_t> &message) {
  * @param message 发送的消息内容
  */
 void udpCommHelp::printHex(const std::vector <uint8_t> &message) {
-    std::cout << "成功发送 数据：";
-    for (const auto &byte: message) {
-        // 按十六进制格式输出数据
-        std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(byte) << " ";
-    }
-    std::cout << std::dec << std::endl; // 恢复为默认的十进制输出
+//    std::cout << "成功发送 数据：";
+//    for (const auto &byte: message) {
+//        // 按十六进制格式输出数据
+//        std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(byte) << " ";
+//    }
+//    std::cout << std::dec << std::endl; // 恢复为默认的十进制输出
+	return;
 }
 
 /**
@@ -84,7 +85,7 @@ void udpCommHelp::initClientSock_ZC(int destPort, std::string destIP) {
         // 创建客户端UDP套接字
         clientSock_ZC = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
         if (clientSock_ZC == -1) {
-            std::cerr << "创建客户端套接字失败，错误：" << strerror(errno) << std::endl;
+//            std::cerr << "创建客户端套接字失败，错误：" << strerror(errno) << std::endl;
             return;
         }
 
@@ -93,16 +94,17 @@ void udpCommHelp::initClientSock_ZC(int destPort, std::string destIP) {
         serverSockZC.sin_family = AF_INET;
         serverSockZC.sin_port = htons(destPort);
         if (inet_pton(AF_INET, destIP.c_str(), &serverSockZC.sin_addr) <= 0) {
-            std::cerr << "地址转换失败，错误：" << strerror(errno) << std::endl;
+//            std::cerr << "地址转换失败，错误：" << strerror(errno) << std::endl;
             return;
         }
-        std::cout << "目标地址初始化成功，IP：" << destIP << ", 端口：" << destPort << std::endl;
+//        std::cout << "目标地址初始化成功，IP：" << destIP << ", 端口：" << destPort << std::endl;
 
         // 标记套接字连接状态
         isConn_ClientSock_ZC = true;
-        std::cout << "客户端套接字初始化连接成功。" << std::endl;
+//        std::cout << "客户端套接字初始化连接成功。" << std::endl;
     } catch (const std::exception &e) {
-        std::cerr << "**********initClientSock_ZC error: " << e.what() << '\n';
+//        std::cerr << "**********initClientSock_ZC error: " << e.what() << '\n';
+    	return;
     }
 }
 
@@ -155,7 +157,7 @@ void udpCommHelp::initServerZc(const string &ip, int port) {
  */
 void deserializeLidarStatusMessage(const uint8_t *buffer, size_t bufferSize, LidarStatusMessage &message) {
     if (bufferSize < sizeof(LidarStatusMessage)) {
-        std::cerr << "Buffer too small for deserialization" << std::endl;
+//        std::cerr << "Buffer too small for deserialization" << std::endl;
         return;
     }
     // 使用 memcpy 将字节数组内容复制到结构体
@@ -172,7 +174,8 @@ void udpCommHelp::processReceivedData(const uint8_t *receivedBuffer, size_t buff
         LidarStatusMessage statusMessage;
         deserializeLidarStatusMessage(receivedBuffer, bufferSize, statusMessage);
     } else {
-        std::cerr << "Received buffer size does not match expected size of LidarStatusMessage" << std::endl;
+//        std::cerr << "Received buffer size does not match expected size of LidarStatusMessage" << std::endl;
+    	return;
     }
 }
 

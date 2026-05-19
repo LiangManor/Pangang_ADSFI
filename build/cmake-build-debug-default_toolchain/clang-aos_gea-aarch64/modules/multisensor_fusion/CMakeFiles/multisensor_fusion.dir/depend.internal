@@ -251,6 +251,7 @@ modules/multisensor_fusion/CMakeFiles/multisensor_fusion.dir/src/main.cpp.o
 modules/multisensor_fusion/CMakeFiles/multisensor_fusion.dir/src/multisensor_fusion.cpp.o
  /home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/multisensor_fusion/src/PointProcessing.h
  /home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/multisensor_fusion/src/hungarian_optimizer.h
+ /home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/multisensor_fusion/src/log.h
  /home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/multisensor_fusion/src/multisensor_fusion.cpp
  /home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/multisensor_fusion/src/multisensor_fusion.h
  /home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/multisensor_fusion/src/secure_matrix.h

@@ -60,11 +60,11 @@ public:
         return;
     };
     void Process();
+    void Initialize();
     std::vector<int> counter;// 元素大小为4，初始值设为0
     // 实例化sock
     UdpMulticastReceiver receiver;
     float ground_roi_z = 0.3f;
-    int model = 0;
     int mvizVision = 0;
     float curX = 0.;
     float curY = 0.;
@@ -80,6 +80,7 @@ public:
     void RecvLocation();
     bool drivingDiretion(int model, int lidarID);
     void cleanPcdDirectoryThread();
+    void saveCloudAsPCD(const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloudROI);
     GroundFilter ground_filter_;
 
     const uint32_t getLidarID(int model_)
@@ -108,7 +109,10 @@ private:
     int ID_road_start = 0;
     int ID_road_last = 0;
     int ID_road = 0;
+    int model = 0;
+    int model_history = 0;
     int have_obj = 0;
+    int have_obj_history = 0;
 };
 #endif
 

@@ -39,8 +39,6 @@ string
 -
 sys/time.h
 -
-core/core.h
-/home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/planning/src/core/core.h
 core/logger.h
 /home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/planning/src/core/logger.h
 object/object.h
@@ -88,6 +86,10 @@ sys/socket.h
 unistd.h
 -
 fstream
+-
+Eigen/Core
+-
+Eigen/Geometry
 -
 
 /home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/planning/src/udpCommHelp.cpp

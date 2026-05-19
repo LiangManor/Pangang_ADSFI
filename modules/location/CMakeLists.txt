@@ -61,8 +61,65 @@ link_directories(
 )
 add_executable(${APP_NAME} ${C_SOURCE} ${CXX_SOURCE})
 
+# 添加头文件路径
+target_include_directories(${APP_NAME}
+                           PRIVATE
+                           ${MDC_SDK}/sysroot/usr/include/pcl-1.11#pcl头文件
+                           )
+               # 添加动态库的链接
+
+
+# 体素滤波器
+find_library(pcl_common
+             NAMES pcl_common
+             PATHS ${MDC_SDK}/sysroot/usr/lib/aarch64-linux-gnu)
+find_library(pcl_filters
+             NAMES pcl_filters
+             PATHS ${MDC_SDK}/sysroot/usr/lib/aarch64-linux-gnu) #指定库文件的搜索路径
+find_library(pcl_io
+             NAMES pcl_io
+             PATHS ${MDC_SDK}/sysroot/usr/lib/aarch64-linux-gnu)
+find_library(pcl_segmentation
+             NAMES pcl_segmentation
+             PATHS ${MDC_SDK}/sysroot/usr/lib/aarch64-linux-gnu)
+find_library(pcl_kdtree
+             NAMES pcl_kdtree
+             PATHS ${MDC_SDK}/sysroot/usr/lib/aarch64-linux-gnu)
+find_library(pcl_search
+             NAMES pcl_search
+             PATHS ${MDC_SDK}/sysroot/usr/lib/aarch64-linux-gnu)
+find_library(pcl_features
+             NAMES pcl_features
+             PATHS ${MDC_SDK}/sysroot/usr/lib/aarch64-linux-gnu)
+find_library(pcl_sample_consensus
+             NAMES pcl_sample_consensus
+             PATHS ${MDC_SDK}/sysroot/usr/lib/aarch64-linux-gnu)
+find_library(OpenMP_LIB
+             NAMES gomp
+             PATHS /usr/local/ubuntu_crossbuild_devkit/sysroot/usr/lib/gcc/aarch64-linux-gnu/7/)
+find_library(boost_system
+			 NAMES boost_system
+			 PATHS /usr/local/ubuntu_crossbuild_devkit/sysroot/usr/lib/aarch64-linux-gnu)
+find_library(boost_thread
+			 NAMES boost_thread
+			 PATHS /usr/local/ubuntu_crossbuild_devkit/sysroot/usr/lib/aarch64-linux-gnu)    
+
 # 用户需要添加自己的库名称
 target_link_libraries(${APP_NAME}
+	PRIVATE
+    yaml-cpp
+	opencv_dnn
+	opencv_core
+	opencv_imgproc
+	opencv_imgcodecs
+	pcl_common
+	pcl_filters
+	pcl_io
+	pcl_segmentation
+	pcl_kdtree
+	pcl_search
+	pcl_features
+	pcl_sample_consensus
     ${GODEL_LINK_LIBS}
     adb
     adsf

@@ -70,6 +70,18 @@ acl/ops/acl_dvpp.h
 acl/dvpp/hi_dvpp_vpc.h
 ../../../modules/camera_det/include/acl/dvpp/hi_dvpp_vpc.h
 
+../../../modules/camera_det/include/log.h
+stdio.h
+-
+stdint.h
+-
+time.h
+-
+unistd.h
+-
+ara/tsync/synch_master_tb.h
+../../../modules/camera_det/include/ara/tsync/synch_master_tb.h
+
 ../../../modules/camera_det/include/udp.h
 iostream
 -
@@ -187,6 +199,8 @@ camera_det_util.h
 /home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/camera_det/src/camera_det_util.h
 image_nn_inference.h
 /home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/camera_det/src/image_nn_inference.h
+log.h
+/home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/camera_det/src/log.h
 publisher.h
 -
 opencv2/core/core.hpp
@@ -214,25 +228,17 @@ mviz_msgs/ImageFreespace.h
 mviz_msgs/SemanticSegmentation.h
 -
 
-/home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/camera_det/src/image_nn_inference.cpp
+/home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/camera_det/src/camera_detection_main.cpp
+camera_detection_app.h
+/home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/camera_det/src/camera_detection_app.h
+iostream
+-
 image_nn_inference.h
 /home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/camera_det/src/image_nn_inference.h
-core/group.h
-/home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/camera_det/src/core/group.h
-imageprocess/convert_color.h
-/home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/camera_det/src/imageprocess/convert_color.h
-imageprocess/resize.h
-/home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/camera_det/src/imageprocess/resize.h
-imageprocess/crop.h
-/home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/camera_det/src/imageprocess/crop.h
-imageprocess/image.h
-/home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/camera_det/src/imageprocess/image.h
-opencv2/core/core.hpp
--
-opencv2/imgproc.hpp
--
-opencv2/imgcodecs.hpp
--
+core/core.h
+/home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/camera_det/src/core/core.h
+camera_det_util.h
+/home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/camera_det/src/camera_det_util.h
 
 /opt/ros/noetic/include/ros/assert.h
 ros/console.h
@@ -554,20 +560,6 @@ core/logger.h
 acl/acl.h
 /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/sysroot/usr/include/adsfi/adb/include/core/acl/acl.h
 
-/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/sysroot/usr/include/adsfi/adb/include/core/group.h
-string
--
-core/status.h
-/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/sysroot/usr/include/adsfi/adb/include/core/core/status.h
-core/types.h
-/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/sysroot/usr/include/adsfi/adb/include/core/core/types.h
-core/basic_types.h
-/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/sysroot/usr/include/adsfi/adb/include/core/core/basic_types.h
-core/logger.h
-/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/sysroot/usr/include/adsfi/adb/include/core/core/logger.h
-acl/acl.h
-/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/sysroot/usr/include/adsfi/adb/include/core/acl/acl.h
-
 /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/sysroot/usr/include/adsfi/adb/include/core/logger.h
 thread
 -
@@ -645,12 +637,6 @@ acl/acl.h
 /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/sysroot/usr/include/adsfi/adb/include/dnn/acl/acl.h
 
 /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/sysroot/usr/include/adsfi/adb/include/imageprocess/convert_color.h
-imageprocess/image.h
-/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/sysroot/usr/include/adsfi/adb/include/imageprocess/imageprocess/image.h
-channel_type.h
-/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/sysroot/usr/include/adsfi/adb/include/imageprocess/channel_type.h
-
-/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/sysroot/usr/include/adsfi/adb/include/imageprocess/crop.h
 imageprocess/image.h
 /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/sysroot/usr/include/adsfi/adb/include/imageprocess/imageprocess/image.h
 channel_type.h

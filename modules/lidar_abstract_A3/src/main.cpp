@@ -12,7 +12,10 @@
 #include <fstream>
 #include <cstring>
 #include <arpa/inet.h>
+#include "ara/tsync/synch_master_tb.h"
 
+using DataClock = ara::tsync::SynchMasterTB<ara::tsync::SynchMasterIdentity::k0>;
+using ManageClock = ara::tsync::SynchMasterTB<ara::tsync::SynchMasterIdentity::k1>;
 using namespace std;
 #define DEBUG
 
@@ -75,24 +78,17 @@ bool readParameters(const string& filename, Parameters& params) {
 }
 
 
-
-
-
-
 typedef struct PointXYZITR {
 	float x;
 	float y;
 	float z;
-	int32_t time;
+	uint64_t time;
 	float distance;
 	float pitch;
 	float yaw;
 	uint16_t intensity;
 	uint16_t ring;
 }VPoint;
-
-
-
 
 
 void LidarParsing()
@@ -120,10 +116,14 @@ void LidarParsing()
 			point.z = (float)z;
 			point.ring = i;
 			point.intensity = intensity;
-			point.time = time*1000000000;
+			point.time = (uint64_t)(time * 1e9);      // 转换为纳秒
 			points.push_back(point);
 		}
 	}
+
+    uint32_t lidar_sec  = points[0].time / 1000000000ULL;
+    uint32_t lidar_nsec = points[0].time % 1000000000ULL;
+
 	// 填值
 	auto sampleLidar = m_Skeleton->mdcEvent.Allocate();
 	sampleLidar->header.frameId = "A3";  //坐标
@@ -135,6 +135,48 @@ void LidarParsing()
 	sampleLidar->isDense = 1;
 	counter++;
     sampleLidar->header.seq = counter;
+
+    // ⭐⭐⭐（雷达时间戳）
+    sampleLidar->header.stamp.sec  = lidar_sec;
+    sampleLidar->header.stamp.nsec = lidar_nsec;
+
+    // printf("Lidar    : %u.%09u\n", lidar_sec, lidar_nsec);
+
+    // // ⭐⭐⭐（数据面时间戳）
+    // auto tp_dp = DataClock::now();
+
+    // auto ns_dp = std::chrono::duration_cast<std::chrono::nanoseconds>(
+    //             tp_dp.time_since_epoch()).count();
+
+    // uint32_t sec_dp  = ns_dp / 1000000000ULL;
+    // uint32_t nsec_dp = ns_dp % 1000000000ULL;
+
+    // printf("DATA_CLK : %u.%09u\n", sec_dp, nsec_dp);
+
+    // // ⭐⭐⭐（管理面时间戳）
+    // auto tp_mp = ManageClock::now();
+
+    // auto ns_mp = std::chrono::duration_cast<std::chrono::nanoseconds>(
+    //             tp_mp.time_since_epoch()).count();
+
+    // uint32_t sec_mp  = ns_mp / 1000000000ULL;
+    // uint32_t nsec_mp = ns_mp % 1000000000ULL;
+
+    // printf("MP_CLK  : %u.%09u\n", sec_mp, nsec_mp);
+
+    // // ⭐⭐⭐（计算数据面和雷达时间差）
+    // int64_t lidar_ns =
+    // (int64_t)lidar_sec * 1000000000LL + lidar_nsec;
+
+    // int64_t sys_ns =
+    //     (int64_t)sec_dp * 1000000000LL + nsec_dp;
+
+    // int64_t diff_us = (lidar_ns - sys_ns) / 1000LL;
+
+    // printf("DIFF     : %ld us\n", diff_us);
+
+    // // /////
+
     if(counter == 10)
     {
         counter = 0;
@@ -154,10 +196,8 @@ void LidarParsing()
         mdc::visual::PointCloud<mdc::visual::PointXYZI> data;
         data.header.frameId = "map";// ---------点云坐标
         const auto now = std::chrono::high_resolution_clock::now().time_since_epoch();
-        uint32_t sec = std::chrono::duration_cast<std::chrono::seconds>(now).count();
-        uint32_t nsec = std::chrono::duration_cast<std::chrono::nanoseconds>(now).count() % 1000000000UL;
         data.isDense = false;
-        data.header.stamp = mdc::visual::Times { sec, nsec };
+        data.header.stamp = mdc::visual::Times { lidar_sec, lidar_nsec };
         for(int i = 0; i <= points.size(); i++)
         {
             mdc::visual::PointXYZI ptMviz;
@@ -220,6 +260,7 @@ int main()
          LidarParsing();
          lidar_angle.clear();
          errorCounter = 0 ;
+         usleep(80000);//80毫秒
       }
       else if(errorCounter == 200)// 驱动启动之后，200ms收不到数据，则上报故障
       {
@@ -241,11 +282,11 @@ int main()
 	        memcpy(&sampleLidar->data[0], &points[0], data_size);
         }
         m_Skeleton->mdcEvent.Send(std::move(sampleLidar));
-        usleep(1000);//一毫秒
+        usleep(50000);//五十毫秒
       }
       else
       {
-         usleep(1000);//一毫秒
+         usleep(50000);//五十毫秒
          errorCounter++;
       }
    }

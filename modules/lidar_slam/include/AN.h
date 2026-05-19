@@ -87,26 +87,22 @@ class AN
 //        initPoints.push_back(Eigen::Vector3f(-252.811486,35.404516,-6.912572));//1号炼钢
 //        initPoints.push_back(Eigen::Vector3f(-243.707509,39.469838,-6.804280));//2号炼钢
 //        initPoints.push_back(Eigen::Vector3f(-259.924334,41.576952,-7.077676));//3号炼钢
-//        initPoints.push_back(Eigen::Vector3f(24.368005,-1.228467,-0.626337));//1号转盘
-//        initPoints.push_back(Eigen::Vector3f(20.548017,11.650597,-0.608166));//2号转盘
-//        initPoints.push_back(Eigen::Vector3f(28.799568,19.896493,-0.578445));//3号转盘
+//        initPoints.push_back(Eigen::Vector3f(24.268005,-1.228467,-0.626337));//1号转盘
+//        initPoints.push_back(Eigen::Vector3f(20.448017,11.650597,-0.608166));//2号转盘
+//        initPoints.push_back(Eigen::Vector3f(28.699568,19.896493,-0.578445));//3号转盘
 //        initPoints.push_back(Eigen::Vector3f(-196.192668,33.614549,-2.640604));//D4
 //        initPoints.push_back(Eigen::Vector3f(-143.124963,26.418399,-2.117388));//D12
 
-        for(int i = -100; i <= 100; i += 10){
-        	for(int j = -100; j <= 100; j+= 10){
-        		initPoints.push_back(Eigen::Vector3f(i,j,0));
-        	}
-        }
+        initPoints.push_back(Eigen::Vector3f(13.156,5.418,0));//Inwinic
 
 		for (int i = 0; i < initPoints.size(); ++i) {
 			AnchorBox box;
 			box.center_x = initPoints[i].x();
 			box.center_y = initPoints[i].y();
-			box.center_z = 180.0;
+			box.center_z = 2.303;	//-1.6807
 			box.width = 10;
 			box.height = 10;
-			box.point_count = initPoints[i].z() * 3.14 / 180.0;
+			box.point_count = 0;
 			box.is_valid = true;
 			this->anchor_boxes.push_back(box);
 		}
@@ -147,7 +143,7 @@ class AN
         float z;
         pcl::PointCloud<pcl::PointXYZ>::Ptr alignedBest(new pcl::PointCloud<pcl::PointXYZ>());
         Eigen::Matrix4f bestLocation;
-        std::cout << "开始计算初始化位置" << std::endl;
+//        std::cout << "开始计算初始化位置" << std::endl;
         for (size_t i = 0; i < this->anchor_boxes.size(); ++i)
         {
             // 判断anchor是否在规定区域内
@@ -171,10 +167,10 @@ class AN
 						x = box.center_x;
 						y = box.center_y;
 						z = box.center_z;
-						std::cout << "存在更优的初始化位置，分数为：" << score << std::endl;
+//						std::cout << "存在更优的初始化位置，分数为：" << score << std::endl;
 					}
 				}
-				std::cout << "location[" << i+1 << "] = " << score << std::endl;
+//				std::cout << "location[" << i+1 << "] = " << score << std::endl;
             }
             pcl::PointXYZ pt;
             pt.x = box.center_x ;

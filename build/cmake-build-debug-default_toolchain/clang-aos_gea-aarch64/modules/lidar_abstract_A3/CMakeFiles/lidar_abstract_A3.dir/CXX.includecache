@@ -6,6 +6,16 @@
 
 #IncludeRegexTransform: 
 
+/home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/lidar_abstract_A3/src/lidar_huawei_sock.cpp
+lidar_huawei_sock.h
+/home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/lidar_abstract_A3/src/lidar_huawei_sock.h
+netinet/in.h
+-
+arpa/inet.h
+-
+net/if.h
+-
+
 /home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/lidar_abstract_A3/src/lidar_huawei_sock.h
 thread
 -
@@ -57,6 +67,8 @@ cstring
 -
 arpa/inet.h
 -
+ara/tsync/synch_master_tb.h
+/home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/lidar_abstract_A3/src/ara/tsync/synch_master_tb.h
 
 /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/sysroot/usr/include/adsfi/arxml_include/ara/lidar/impl_type_header.h
 impl_type_uint32.h

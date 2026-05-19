@@ -18,10 +18,14 @@
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 #include <fstream>
+#include "inno_lidar_api.h"
+#include "ara/tsync/synch_master_tb.h"
 using namespace std;
 using namespace ara::com;
 using namespace ara::core;
 using Skeleton = ara::lidar::skeleton::LidarServiceInterfaceSkeleton;
+using DataClock = ara::tsync::SynchMasterTB<ara::tsync::SynchMasterIdentity::k0>;
+using ManageClock = ara::tsync::SynchMasterTB<ara::tsync::SynchMasterIdentity::k1>;
 
 
 ara::log::Logger& log_ {ara::log::CreateLogger("act", "cm dds event async server sample context",ara::log::LogLevel::kVerbose)};
@@ -43,7 +47,7 @@ typedef struct PointXYZITR
 
 uint32_t counter = 0;// 激光雷达心跳值（用于感知节点判断是否是新数据）
 int errorCounter = 0;// 激光雷达异常计数器（用于判断丢失多少帧 ，一旦达到上限则上报异常）
-void sendPtCloud(pcl::PointCloud<pcl::PointXYZI>::Ptr cloud);
+void sendPtCloud(pcl::PointCloud<pcl::PointXYZI>::Ptr cloud, double frame_timestamp_sec_first);
 float xAngle = 0.;
 float yAngle = 0.;
 float zAngle = 0.;
@@ -59,7 +63,7 @@ struct Parameters {
 bool readParameters(const string& filename, Parameters& params) {
     ifstream file(filename);
     if (!file.is_open()) {
-        cerr << "无法打开文件: " << filename << endl;
+        // cerr << "无法打开文件: " << filename << endl;
         return false;
     }
 
@@ -109,7 +113,7 @@ int main()
                                       lidar_option.lidar_udp_port);
     inno_lidar_set_attribute_string(handle, "force_xyz_pointcloud", "1");
 
-    inno_lidar_set_log_level(INNO_LOG_LEVEL_FATAL); // 设置日志级别，0表示不输出所有级别的日志
+    inno_lidar_set_log_level(INNO_LOG_LEVEL_FATAL); // 设置日志级别，-1表示不输出所有级别的日志
     int ret = inno_lidar_set_callbacks(
                                         handle,
                                         // 消息回调函数，接收雷达运行时的调试/错误消息
@@ -157,13 +161,12 @@ int main()
     // 等待数据处理完成
     while (!processor.is_done()) 
     {
-        if(!processor.enable)
-        {
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
-            continue;
+        if (!processor.enable) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(5));
+        }else{
+            sendPtCloud(processor.cloud, processor.frame_timestamp_sec_first);
+            std::this_thread::sleep_for(std::chrono::milliseconds(40));
         }
-        // processor.cloud
-        sendPtCloud(processor.cloud);
     }
 
     ret = inno_lidar_stop(handle);//停止读取数据
@@ -178,20 +181,14 @@ int main()
 }
 
 
-void sendPtCloud(pcl::PointCloud<pcl::PointXYZI>::Ptr cloud)
+void sendPtCloud(pcl::PointCloud<pcl::PointXYZI>::Ptr cloud,double frame_timestamp_sec_first)
 {
-    // pcl::PointCloud<pcl::PointXYZI>::Ptr cloudAdjust(new pcl::PointCloud<pcl::PointXYZI>);
-    // Eigen::Translation3f init_translation(1, 1, 1);
-    // std::cout<<"xAngle = "<<xAngle<<std::endl;
-    // std::cout<<"yAngle = "<<yAngle<<std::endl;
-    // std::cout<<"zAngle = "<<zAngle<<std::endl;
-    // Eigen::AngleAxisf init_rotation_x(xAngle*3.1415926/180., Eigen::Vector3f::UnitX());//roll（rad）
-    // Eigen::AngleAxisf init_rotation_y(yAngle*3.1415926/180., Eigen::Vector3f::UnitY());//pitch
-    // Eigen::AngleAxisf init_rotation_z(zAngle*3.1415926/180., Eigen::Vector3f::UnitZ());//yaw
-    // Eigen::Matrix4f RT = (init_translation * init_rotation_z * init_rotation_y * init_rotation_x).matrix();
-    // pcl::transformPointCloud(*cloud, *cloudAdjust, RT);
 
     pcl::PointCloud<pcl::PointXYZI>::Ptr cloudAdjust(new pcl::PointCloud<pcl::PointXYZI>);
+    uint32_t lidar_sec  = (uint32_t)frame_timestamp_sec_first;
+    uint32_t lidar_nsec = (frame_timestamp_sec_first - lidar_sec) * 1e9;
+    lidar_sec = lidar_sec + 37; // 图达通雷达时间戳使用UTC计时，与系统时间戳TAI计时方法存在37秒的差值，需进行校正
+
     // 1. 定义变换（内旋顺序：X → Y → Z → 平移）
     Eigen::Translation3f init_translation(0, 0, 0);
     Eigen::AngleAxisf init_rotation_x(xAngle * M_PI/180., Eigen::Vector3f::UnitX()); // roll
@@ -222,6 +219,49 @@ void sendPtCloud(pcl::PointCloud<pcl::PointXYZI>::Ptr cloud)
 	sampleLidar->isDense = 1;
 	counter++;
     sampleLidar->header.seq = counter;
+
+    // ⭐⭐⭐（雷达时间戳）
+
+    sampleLidar->header.stamp.sec  = lidar_sec;
+    sampleLidar->header.stamp.nsec = lidar_nsec;
+
+    // printf("Lidar    : %u.%09u\n", lidar_sec, lidar_nsec);
+
+    // // ⭐⭐⭐（数据面时间戳）
+    // auto tp_dp = DataClock::now();
+
+    // auto ns_dp = std::chrono::duration_cast<std::chrono::nanoseconds>(
+    //             tp_dp.time_since_epoch()).count();
+
+    // uint32_t sec_dp  = ns_dp / 1000000000ULL;
+    // uint32_t nsec_dp = ns_dp % 1000000000ULL;
+
+    // printf("DATA_CLK : %u.%09u\n", sec_dp, nsec_dp);
+
+    // // ⭐⭐⭐（管理面时间戳）
+    // auto tp_mp = ManageClock::now();
+
+    // auto ns_mp = std::chrono::duration_cast<std::chrono::nanoseconds>(
+    //             tp_mp.time_since_epoch()).count();
+
+    // uint32_t sec_mp  = ns_mp / 1000000000ULL;
+    // uint32_t nsec_mp = ns_mp % 1000000000ULL;
+
+    // printf("MP_CLK  : %u.%09u\n", sec_mp, nsec_mp);
+
+    // // ⭐⭐⭐（计算数据面和雷达时间差）
+    // int64_t lidar_ns =
+    // (int64_t)lidar_sec * 1000000000LL + lidar_nsec;
+
+    // int64_t sys_ns =
+    //     (int64_t)sec_dp * 1000000000LL + nsec_dp;
+
+    // int64_t diff_us = (lidar_ns - sys_ns) / 1000LL;
+
+    // printf("DIFF     : %ld us\n", diff_us);
+
+    // // /////
+
     if(counter == 10)
     {
         counter = 0;
@@ -239,11 +279,11 @@ void sendPtCloud(pcl::PointCloud<pcl::PointXYZI>::Ptr cloud)
 	    if(points.size() == 0) return;
         mdc::visual::PointCloud<mdc::visual::PointXYZI> data;
         data.header.frameId = "map";// ---------点云坐标
-        const auto now = std::chrono::high_resolution_clock::now().time_since_epoch();
-        uint32_t sec = std::chrono::duration_cast<std::chrono::seconds>(now).count();
-        uint32_t nsec = std::chrono::duration_cast<std::chrono::nanoseconds>(now).count() % 1000000000UL;
+        // const auto now = std::chrono::high_resolution_clock::now().time_since_epoch();
+        // uint32_t sec = std::chrono::duration_cast<std::chrono::seconds>(now).count();
+        // uint32_t nsec = std::chrono::duration_cast<std::chrono::nanoseconds>(now).count() % 1000000000UL;
         data.isDense = false;
-        data.header.stamp = mdc::visual::Times { sec, nsec };
+        data.header.stamp = mdc::visual::Times { lidar_sec, lidar_nsec };
         for(int i = 0; i < points.size(); i++)
         {
             mdc::visual::PointXYZI ptMviz;

@@ -187,7 +187,7 @@ PointXYZ PointProcessing::transformPoint(const PointXYZ &p, float tx, float ty, 
 
 // 坐标变换函数（旋转+平移）
 PointXYZ PointProcessing::rotateAndTranslate(const PointXYZ &point, int model) {
-
+    // 定义旋转平移矩阵
     const Eigen::Matrix4f& transformation_matrix = (model == 1) ? transform_model1 : transform_model2;
 
     // 将点转换为齐次坐标
@@ -309,23 +309,21 @@ void PointProcessing::findClosestAndFit(const PointCloudXYZ::Ptr point_list,
 
     if (it != point_list->points.end()) {
         int start_index = std::distance(point_list->points.begin(), it);
-        // const float scale = 0.98828125f;  // 缩放系数
-        const float scale = 1.0f;  // 缩放系数
 
-        if (model == 1) {  // 从最近点向终点方向
-            for (int i = start_index; i < std::min(static_cast<int>(point_list->points.size()), start_index + 120); i++) {
+        // 根据 model 的值选择提取方向
+        if (model == 1) {
+            // 从最近点到终点方向
+            for (int i = start_index; i < std::min(static_cast<int>(point_list->points.size()), start_index + 80); i++) {
                 PointXYZ transformed = transformPoint(point_list->points[i], target.x, target.y, yaw);
                 PointXYZ transformed_A3_A4 = rotateAndTranslate(transformed, model);
+                // // 求相对于当前车体坐标的轨迹相对 z轴 高度
                 // transformed_A3_A4.z -= point_list->points[start_index].z;
-                // // 对坐标进行缩放
-                // transformed_A3_A4.x *= scale;
-                // transformed_A3_A4.y *= scale;
-                // transformed_A3_A4.z *= scale;
+                // std::cout << "Transformed Point: " << transformed_A3_A4.x << ", " << transformed_A3_A4.y << ", " << transformed_A3_A4.z << std::endl;
                 transformed_points->push_back(transformed_A3_A4);
             }
         } else if (model == 2) {  // 从最近点向起点方向
             bool flag = true;
-            for (int i = start_index; i >= std::max(0, start_index - 130); i--) {
+            for (int i = start_index; i >= std::max(0, start_index - 90); i--) {
                 PointXYZ transformed = transformPoint(point_list->points[i], target.x, target.y, yaw);
                 PointXYZ transformed_A3_B2 = rotateAndTranslate(transformed, model);
                 //过滤掉车体占用轨迹点
@@ -334,16 +332,24 @@ void PointProcessing::findClosestAndFit(const PointCloudXYZ::Ptr point_list,
                     flag = false;
                     start_index = i;
                 }
-                // 求相对于当前车体坐标的轨迹相对 z轴 高度
+                // // 求相对于当前车体坐标的轨迹相对 z轴 高度
                 // transformed_A3_B2.z -= point_list->points[start_index].z;
-                // // 对坐标进行缩放
-                // transformed_A3_B2.x *= scale;
-                // transformed_A3_B2.y *= scale;
-                // transformed_A3_B2.z *= scale;
+                // std::cout << "Transformed Point: " << transformed_A3_B2.x << ", " << transformed_A3_B2.y << ", " << transformed_A3_B2.z << std::endl;
                 transformed_points->push_back(transformed_A3_B2);
             }
         }
-        // //基于标定的旋转平移轨迹纠偏
+
+        //基于标定的旋转平移轨迹纠偏
         transformed_points = correctTrajectory(transformed_points);
+
+        // // 拟合2次多项式
+        // coeffs = fitPolynomial(transformed_points, 2);
+
+        // 输出拟合的多项式系数
+        // std::cout << "Fitted polynomial coefficients: ";
+        // for (int i = 0; i < coeffs.size(); ++i) {
+        //     std::cout << coeffs[i] << " ";
+        // }
+        // std::cout << std::endl;
     }
 }

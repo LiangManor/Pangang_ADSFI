@@ -61,7 +61,7 @@ private:
     std::uint64_t last_lidar_ts_nsec = 0;
 
     // std::ofstream min_x_file;        //打开文件，将障碍物距离写入
-    bool flag = false;
+    bool flag_point = false;          // 监测轨迹加载的延迟
     size_t obj_count = 0;       // 去除短时间的漏检问题
     float last_obj_dis = 50;    // 记录上一帧障碍物距离
     
@@ -71,6 +71,7 @@ private:
     uint32_t lidarError = 2;
     uint32_t cameraError = 3;
     int model = 0;
+    int model_history = 0;
     int ID_road = 0;
     int history_ID_road_start = 0;
     int history_ID_road_last = 0;

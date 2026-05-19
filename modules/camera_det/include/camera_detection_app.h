@@ -59,6 +59,7 @@ private:
     bool PrepareDvppMemory(CameraDetection::ImageNnInference& nnInfer);
     bool ReadConfig();
     void getDirect();
+    void saveRGBAsImage(const uint8_t* rgbData, int width, int height, size_t dataSize);
     // bool drivingDiretion(int model, int ImageInsIdx);
 
 private:
@@ -72,7 +73,9 @@ private:
     Adsfi::HafContext context{};
     Adsfi::HafContextParameters contextParam{};    
     int model = 0;
+    int model_history = 0;
     int have_obj = 0;
+    int have_obj_history = 0;
     uint32_t instanceId = 0;
     uint32_t instanceID1 = 0;
     uint32_t instanceID2 = 0;

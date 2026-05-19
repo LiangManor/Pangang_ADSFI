@@ -4,6 +4,7 @@ set(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_CXX
+  "/home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/location/src/PointProcessing.cpp" "/home/inwinic/Wll_project/CRRC/PanG/ADSFI/build/cmake-build-debug-default_toolchain/clang-aos_gea-aarch64/modules/location/CMakeFiles/location.dir/src/PointProcessing.cpp.o"
   "/home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/location/src/location.cpp" "/home/inwinic/Wll_project/CRRC/PanG/ADSFI/build/cmake-build-debug-default_toolchain/clang-aos_gea-aarch64/modules/location/CMakeFiles/location.dir/src/location.cpp.o"
   "/home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/location/src/main.cpp" "/home/inwinic/Wll_project/CRRC/PanG/ADSFI/build/cmake-build-debug-default_toolchain/clang-aos_gea-aarch64/modules/location/CMakeFiles/location.dir/src/main.cpp.o"
   )
@@ -18,6 +19,7 @@ set(CMAKE_TARGET_DEFINITIONS_CXX
 set(CMAKE_CXX_TARGET_INCLUDE_PATH
   "/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/sysroot/usr/include/adsfi/adb/include"
   "/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/sysroot/usr/include/adsfi/adsf/include"
+  "/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/sysroot/usr/include/pcl-1.11"
   "/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/sysroot/usr/include/adsfi/arxml_include"
   "/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/sysroot/usr/local/Ascend/runtime/include"
   "/usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/sysroot/usr/local/Ascend/runtime/include/acl"

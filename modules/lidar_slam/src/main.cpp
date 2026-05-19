@@ -9,7 +9,7 @@ namespace {
     {
         (void)num;
         g_stopFlag = 1;
-        std::cout << "  Signal Interactive attention received." << std::endl;
+//        std::cout << "  Signal Interactive attention received." << std::endl;
         return;
     }
 }

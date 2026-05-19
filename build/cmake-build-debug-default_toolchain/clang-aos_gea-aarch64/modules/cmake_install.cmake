@@ -41,6 +41,7 @@ if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
   include("/home/inwinic/Wll_project/CRRC/PanG/ADSFI/build/cmake-build-debug-default_toolchain/clang-aos_gea-aarch64/modules/3dBbs_lib/cmake_install.cmake")
   include("/home/inwinic/Wll_project/CRRC/PanG/ADSFI/build/cmake-build-debug-default_toolchain/clang-aos_gea-aarch64/modules/camera_det/cmake_install.cmake")
+  include("/home/inwinic/Wll_project/CRRC/PanG/ADSFI/build/cmake-build-debug-default_toolchain/clang-aos_gea-aarch64/modules/can_sample/cmake_install.cmake")
   include("/home/inwinic/Wll_project/CRRC/PanG/ADSFI/build/cmake-build-debug-default_toolchain/clang-aos_gea-aarch64/modules/innovusion_lib/cmake_install.cmake")
   include("/home/inwinic/Wll_project/CRRC/PanG/ADSFI/build/cmake-build-debug-default_toolchain/clang-aos_gea-aarch64/modules/ins_abstract/cmake_install.cmake")
   include("/home/inwinic/Wll_project/CRRC/PanG/ADSFI/build/cmake-build-debug-default_toolchain/clang-aos_gea-aarch64/modules/lidar_abstract_A3/cmake_install.cmake")

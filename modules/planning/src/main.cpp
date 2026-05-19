@@ -12,9 +12,18 @@
 
 using namespace Adsfi;
 namespace {
+	sig_atomic_t g_stopFlag = 0;
+	void INTSigHandler(int32_t num)
+	{
+		(void)num;
+		g_stopFlag = 1;
+//		std::cout << "  Signal Interactive attention received." << std::endl;
+		return;
+	}
 }
 
 int32_t main() {
+	signal(SIGINT, INTSigHandler);
     try {
         // 启用2/3个子线程去独立执行两个函数: 去构建两个UDP通讯（一个udp去订阅车控数据，另一个udp往车控发送数据）
         // 然后再开启1/3个线程，去循环获取感知结果，获取定位结果，然后把结构化数据发送到车控
@@ -26,12 +35,16 @@ int32_t main() {
         // 如果初始化成功则执行下一步
             msf->Process();// 启用两个子线程去独立执行两个函数: getZcData(),mdcBroadcastData()
         } else {
-            std::cout << "初始化失败" << std::endl;
+//            std::cout << "初始化失败" << std::endl;
             return -1;
         }
-        std::cout << "****************end*********************" << std::endl;
+//        std::cout << "****************end*********************" << std::endl;
+        while (!g_stopFlag && !msf->IsError()) {
+			std::this_thread::sleep_for(std::chrono::seconds(1));
+		}
+		msf->Stop();
     } catch (const std::exception &e) {
-        std::cerr << "程序异常：" << e.what() << std::endl;
+//        std::cerr << "程序异常：" << e.what() << std::endl;
     }
     return 0;
 }

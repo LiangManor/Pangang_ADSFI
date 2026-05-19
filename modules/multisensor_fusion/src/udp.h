@@ -71,33 +71,73 @@ void initSock()
     }
 }
 
-// 修改返回类型为std::array<int, 4>，表示包含4个整数的数组
-std::array<int, 4> receiveMessage() 
-{
-    // 缓冲区大小设为4字节，每个字节对应一个整数
-    char buffer[4];
+// // 修改返回类型为std::array<int, 4>，表示包含4个整数的数组
+// std::array<int, 4> receiveMessage() 
+// {
+//     // 缓冲区大小设为4字节，每个字节对应一个整数
+//     char buffer[4];
     
-    ssize_t receivedBytes = recvfrom(sockfd, buffer, sizeof(buffer), 0, nullptr, nullptr);
-    if (receivedBytes < 0) 
+//     ssize_t receivedBytes = recvfrom(sockfd, buffer, sizeof(buffer), 0, nullptr, nullptr);
+//     if (receivedBytes < 0) 
+//     {
+//         perror("Failed to receive message");
+//         return {-1, -1, -1, -1};  // 返回错误值
+//     } 
+//     else if (receivedBytes < 4) 
+//     {
+//         std::cerr << "Received incomplete message (expected 3 bytes, got " 
+//                   << receivedBytes << " bytes)" << std::endl;
+//         return {-1, -1, -1, -1};
+//     }
+//     else 
+//     {
+//         // 将两个字节分别转换为整数
+//         int first = static_cast<int>(static_cast<uint8_t>(buffer[0]));
+//         int second = static_cast<int>(static_cast<uint8_t>(buffer[1]));
+//         int third = static_cast<int>(static_cast<uint8_t>(buffer[2]));
+//         int forth = static_cast<int>(static_cast<uint8_t>(buffer[3]));
+//         return {first, second, third, forth};
+//     }
+// }
+//////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////   防止阻塞式读法，只取最新的一帧  /////////////////////////////////////////////////
+std::array<int, 4> receiveMessage()
+{
+    std::array<int, 4> result = {-1, -1, -1, -1};
+    char buffer[4];
+
+    while (true)
     {
-        perror("Failed to receive message");
-        return {-1, -1, -1, -1};  // 返回错误值
-    } 
-    else if (receivedBytes < 4) 
-    {
-        std::cerr << "Received incomplete message (expected 3 bytes, got " 
-                  << receivedBytes << " bytes)" << std::endl;
-        return {-1, -1, -1, -1};
+        ssize_t receivedBytes = recvfrom(
+            sockfd,
+            buffer,
+            sizeof(buffer),
+            MSG_DONTWAIT,   // 非阻塞
+            nullptr,
+            nullptr
+        );
+
+        if (receivedBytes < 0)
+        {
+            // 直到没数据了才退出循环
+            break;
+        }
+
+        if (receivedBytes < 4)
+        {
+            // std::cerr << "Received incomplete message (expected 4 bytes, got "
+            //           << receivedBytes << " bytes)" << std::endl;
+            continue;
+        }
+
+        // 每次覆盖 → 最终只保留 最新数据包
+        result[0] = static_cast<int>(static_cast<uint8_t>(buffer[0]));
+        result[1] = static_cast<int>(static_cast<uint8_t>(buffer[1]));
+        result[2] = static_cast<int>(static_cast<uint8_t>(buffer[2]));
+        result[3] = static_cast<int>(static_cast<uint8_t>(buffer[3]));
     }
-    else 
-    {
-        // 将两个字节分别转换为整数
-        int first = static_cast<int>(static_cast<uint8_t>(buffer[0]));
-        int second = static_cast<int>(static_cast<uint8_t>(buffer[1]));
-        int third = static_cast<int>(static_cast<uint8_t>(buffer[2]));
-        int forth = static_cast<int>(static_cast<uint8_t>(buffer[3]));
-        return {first, second, third, forth};
-    }
+
+    return result;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////
 

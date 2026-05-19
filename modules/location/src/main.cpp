@@ -30,6 +30,7 @@ int main()
     while (!g_stopFlag) 
     {
         location->Process();
+        location->getDirect();
         static_cast<void>(usleep(sleepTime));// 10ms
     }
     location->Stop();

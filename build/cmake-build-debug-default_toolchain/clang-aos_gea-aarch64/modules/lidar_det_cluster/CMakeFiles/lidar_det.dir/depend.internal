@@ -134,6 +134,7 @@ modules/lidar_det_cluster/CMakeFiles/lidar_det.dir/src/lidar_detection.cpp.o
  /home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/lidar_det_cluster/src/kf.h
  /home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/lidar_det_cluster/src/lidar_detection.cpp
  /home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/lidar_det_cluster/src/lidar_detection.h
+ /home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/lidar_det_cluster/src/log.h
  /home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/lidar_det_cluster/src/secure_matrix.h
  /home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/lidar_det_cluster/src/tracker.h
  /home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/lidar_det_cluster/src/udp.h

@@ -1,26 +1,14 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 #include "lidar_huawei_sock.h"
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <net/if.h>
+// #include "ara/tsync/synch_master_tb.h"
 
+// using DataClock = ara::tsync::SynchMasterTB<ara::tsync::SynchMasterIdentity::k0>;
+// using ManageClock = ara::tsync::SynchMasterTB<ara::tsync::SynchMasterIdentity::k1>;
 
 int m_sock_msop;
 int m_sock_difop;
@@ -30,7 +18,7 @@ std::vector<std::vector<float> > lidar_dist;        //距离
 std::vector<std::vector<int> > lidar_inst;        //强度
 std::vector<std::vector<double> > lidar_mtimestamp;  //时间戳
 uint8_t pkt_year, pkt_month, pkt_day, pkt_hour, pkt_min, pkt_sec;
-uint64_t packet_time_us;
+// uint64_t packet_time_us;
 uint64_t packet_time_s;
 int return_mode_;
 int point_num;
@@ -113,8 +101,31 @@ void LidarReceiveMsopThread() {
     while (true) {
         //获取套接字接收内容
         recvLen = recvfrom(m_sock, recvBuf, sizeof(recvBuf), 0, (struct sockaddr *) &addrFrom, &len);
+		// std::cout << "UDP recv len = " << recvLen << " bytes" << std::endl;		// 打印接收数据长度	
         if (recvLen > 0) //
         {
+
+			// ⭐⭐⭐（解析雷达时间戳）大端序列，解析位置不包含头部42字节
+			uint32_t timestamp_s =
+				((uint32_t)recvBuf[14] << 24) |
+				((uint32_t)recvBuf[15] << 16) |
+				((uint32_t)recvBuf[16] << 8 ) |
+				((uint32_t)recvBuf[17]);
+
+			uint32_t timestamp_us =
+				((uint32_t)recvBuf[18] << 24) |
+				((uint32_t)recvBuf[19] << 16) |
+				((uint32_t)recvBuf[20] << 8 ) |
+				((uint32_t)recvBuf[21]);
+
+			double packet_timestamp =
+				(double)timestamp_s +
+				(double)timestamp_us * 1e-6;
+
+			point_time = packet_timestamp;
+
+			////（解析雷达时间戳）
+
             //std::vector<unsigned char> data[1025];
         	unsigned char data[1002];
             for (int i = 0; i < 1002; i++) {
@@ -123,34 +134,64 @@ void LidarReceiveMsopThread() {
             }
 
 			const raw_packet_t* raw = (const raw_packet_t*)&data[0];
-            
-            struct tm cur_time;
-            memset(&cur_time, 0, sizeof(cur_time));
-            cur_time.tm_year = pkt_year + 2000 - 1900;
-            cur_time.tm_mon = pkt_month - 1;
-            cur_time.tm_mday = pkt_day;
-            cur_time.tm_hour = pkt_hour;
-            cur_time.tm_min = pkt_min;
-            cur_time.tm_sec = pkt_sec;
-			
-            packet_time_s = timegm(&cur_time);
-            packet_time_us = 0;//data[1203] * pow(2, 24) + data[1202] * pow(2, 16) + data[1201] * pow(2, 8) + data[1200];
-            double packet_timestamp = packet_time_s + static_cast<double>(packet_time_us * 1e-6);
+
+			// // ⭐⭐⭐（雷达时间戳）
+			// uint32_t sec  = (uint32_t)packet_timestamp;
+			// uint32_t nsec = (packet_timestamp - sec) * 1e9;
+
+			// printf("Lidar    : %u.%09u\n", sec, nsec);
+
+			// // ⭐⭐⭐（数据面时间戳）
+			// auto tp_dp = DataClock::now();
+
+			// auto ns_dp = std::chrono::duration_cast<std::chrono::nanoseconds>(
+			// 			tp_dp.time_since_epoch()).count();
+
+			// uint32_t sec_dp  = ns_dp / 1000000000ULL;
+			// uint32_t nsec_dp = ns_dp % 1000000000ULL;
+
+			// printf("DATA_CLK : %u.%09u\n", sec_dp, nsec_dp);
+
+			// // ⭐⭐⭐（管理面时间戳）
+			// auto tp_mp = ManageClock::now();
+
+			// auto ns_mp = std::chrono::duration_cast<std::chrono::nanoseconds>(
+			// 			tp_mp.time_since_epoch()).count();
+
+			// uint32_t sec_mp  = ns_mp / 1000000000ULL;
+			// uint32_t nsec_mp = ns_mp % 1000000000ULL;
+
+			// printf("MP_CLK   : %u.%09u\n", sec_mp, nsec_mp);
+
+			// // ⭐⭐⭐（计算数据面和雷达时间差）
+			// int64_t lidar_ns =
+			// (int64_t)sec * 1000000000LL + nsec;
+
+			// int64_t sys_ns =
+			// 	(int64_t)sec_dp * 1000000000LL + nsec_dp;
+
+			// int64_t diff_us = (lidar_ns - sys_ns) / 1000LL;
+
+			// printf("DIFF     : %ld us\n", diff_us);
+
+			// /////
+
+
             if(first_time)
             {
                for(int i=0; i<1500; i++)
-               {   
-                       HorizontalAngleOffset[0][i] = (int16_t)((FovVerticalAngleOffset1[2*i] << 8) | FovVerticalAngleOffset1[2*i+1]);
-                       HorizontalAngleOffset[1][i] = (int16_t)((FovVerticalAngleOffset2[2*i] << 8) | FovVerticalAngleOffset2[2*i+1]);
-                       HorizontalAngleOffset[2][i] = (int16_t)((FovVerticalAngleOffset3[2*i] << 8) | FovVerticalAngleOffset3[2*i+1]);
-                       HorizontalAngleOffset[3][i] = (int16_t)((FovVerticalAngleOffset4[2*i] << 8) | FovVerticalAngleOffset4[2*i+1]);
+               {
+					HorizontalAngleOffset[0][i] = (int16_t)((FovVerticalAngleOffset1[2*i] << 8) | FovVerticalAngleOffset1[2*i+1]);
+					HorizontalAngleOffset[1][i] = (int16_t)((FovVerticalAngleOffset2[2*i] << 8) | FovVerticalAngleOffset2[2*i+1]);
+					HorizontalAngleOffset[2][i] = (int16_t)((FovVerticalAngleOffset3[2*i] << 8) | FovVerticalAngleOffset3[2*i+1]);
+					HorizontalAngleOffset[3][i] = (int16_t)((FovVerticalAngleOffset4[2*i] << 8) | FovVerticalAngleOffset4[2*i+1]);
                }
                for(int i=0; i<96; i++)
-			   {  
-			          FovVerticalAngleOffset[0][i] =  (int16_t)((FovHorizontalAngleOffset1[2*i] << 8) | FovHorizontalAngleOffset1[2*i+1]);
-			          FovVerticalAngleOffset[1][i] =  (int16_t)((FovHorizontalAngleOffset2[2*i] << 8) | FovHorizontalAngleOffset2[2*i+1]);
-			          FovVerticalAngleOffset[2][i] =  (int16_t)((FovHorizontalAngleOffset3[2*i] << 8) | FovHorizontalAngleOffset3[2*i+1]);
-			          FovVerticalAngleOffset[3][i] =  (int16_t)((FovHorizontalAngleOffset4[2*i] << 8) | FovHorizontalAngleOffset4[2*i+1]);
+			   {	
+					FovVerticalAngleOffset[0][i] =  (int16_t)((FovHorizontalAngleOffset1[2*i] << 8) | FovHorizontalAngleOffset1[2*i+1]);
+					FovVerticalAngleOffset[1][i] =  (int16_t)((FovHorizontalAngleOffset2[2*i] << 8) | FovHorizontalAngleOffset2[2*i+1]);
+					FovVerticalAngleOffset[2][i] =  (int16_t)((FovHorizontalAngleOffset3[2*i] << 8) | FovHorizontalAngleOffset3[2*i+1]);
+					FovVerticalAngleOffset[3][i] =  (int16_t)((FovHorizontalAngleOffset4[2*i] << 8) | FovHorizontalAngleOffset4[2*i+1]);
 			   }
                first_time = false;
             }
@@ -313,281 +354,5 @@ void LidarReceiveDifopThread() {
         }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 

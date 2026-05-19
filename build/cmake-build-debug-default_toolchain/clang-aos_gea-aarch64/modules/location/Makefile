@@ -171,6 +171,33 @@ location/fast:
 	cd /home/inwinic/Wll_project/CRRC/PanG/ADSFI/build/cmake-build-debug-default_toolchain/clang-aos_gea-aarch64 && $(MAKE) -f modules/location/CMakeFiles/location.dir/build.make modules/location/CMakeFiles/location.dir/build
 .PHONY : location/fast
 
+src/PointProcessing.o: src/PointProcessing.cpp.o
+
+.PHONY : src/PointProcessing.o
+
+# target to build an object file
+src/PointProcessing.cpp.o:
+	cd /home/inwinic/Wll_project/CRRC/PanG/ADSFI/build/cmake-build-debug-default_toolchain/clang-aos_gea-aarch64 && $(MAKE) -f modules/location/CMakeFiles/location.dir/build.make modules/location/CMakeFiles/location.dir/src/PointProcessing.cpp.o
+.PHONY : src/PointProcessing.cpp.o
+
+src/PointProcessing.i: src/PointProcessing.cpp.i
+
+.PHONY : src/PointProcessing.i
+
+# target to preprocess a source file
+src/PointProcessing.cpp.i:
+	cd /home/inwinic/Wll_project/CRRC/PanG/ADSFI/build/cmake-build-debug-default_toolchain/clang-aos_gea-aarch64 && $(MAKE) -f modules/location/CMakeFiles/location.dir/build.make modules/location/CMakeFiles/location.dir/src/PointProcessing.cpp.i
+.PHONY : src/PointProcessing.cpp.i
+
+src/PointProcessing.s: src/PointProcessing.cpp.s
+
+.PHONY : src/PointProcessing.s
+
+# target to generate assembly for a file
+src/PointProcessing.cpp.s:
+	cd /home/inwinic/Wll_project/CRRC/PanG/ADSFI/build/cmake-build-debug-default_toolchain/clang-aos_gea-aarch64 && $(MAKE) -f modules/location/CMakeFiles/location.dir/build.make modules/location/CMakeFiles/location.dir/src/PointProcessing.cpp.s
+.PHONY : src/PointProcessing.cpp.s
+
 src/location.o: src/location.cpp.o
 
 .PHONY : src/location.o
@@ -238,6 +265,9 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... install"
 	@echo "... list_install_components"
+	@echo "... src/PointProcessing.o"
+	@echo "... src/PointProcessing.i"
+	@echo "... src/PointProcessing.s"
 	@echo "... src/location.o"
 	@echo "... src/location.i"
 	@echo "... src/location.s"

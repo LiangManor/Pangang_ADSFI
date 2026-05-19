@@ -1,0 +1,667 @@
+{
+  "applicationName": "/HuaweiMDC/PlatformApplication/InsCmCenterApplication/SwComponent/ins_a_cm/InsCmProcess",
+  "services": [
+    {
+      "service": "/HuaweiMDC/MdcPlatformServices/PlatformServiceInterface/FmServiceInterface/FmReportEventService",
+      "serviceId": 1089,
+      "events": [],
+      "fields": [],
+      "methods": [
+        {
+          "method": "ReportCheckPoint",
+          "id": 3322,
+          "isFireAndForget": false,
+          "requestTopicName": "RequestReportCheckPointDdsRpc",
+          "replyTopicName": "ReplyReportCheckPointDdsRpc",
+          "requestDataType": [
+            "/HuaweiMDC/StdCppDataType/String"
+          ],
+          "replyDataType": [
+            "/HuaweiMDC/StdCppBasicDataType/int32_t"
+          ],
+          "methodOutputName": "/HuaweiMDC/MdcPlatformServices/PlatformServiceInterface/FmServiceInterface/FmReportEventService/ReportCheckPointOutput"
+        },
+        {
+          "method": "ReportFault",
+          "id": 14388,
+          "isFireAndForget": false,
+          "requestTopicName": "RequestReportFaultDdsRpc",
+          "replyTopicName": "ReplyReportFaultDdsRpc",
+          "requestDataType": [
+            "/HuaweiMDC/MdcPlatformServices/PlatformServiceInterface/DataTypes/FmFaultData"
+          ],
+          "replyDataType": [
+            "/HuaweiMDC/StdCppDataType/Int32"
+          ],
+          "methodOutputName": "/HuaweiMDC/MdcPlatformServices/PlatformServiceInterface/FmServiceInterface/FmReportEventService/ReportFaultOutput"
+        },
+        {
+          "method": "ReportProcState",
+          "id": 24315,
+          "isFireAndForget": false,
+          "requestTopicName": "RequestReportProcStateDdsRpc",
+          "replyTopicName": "ReplyReportProcStateDdsRpc",
+          "requestDataType": [
+            "/HuaweiMDC/StdCppDataType/String",
+            "/HuaweiMDC/StdCppBasicDataType/uint8_t"
+          ],
+          "replyDataType": [
+            "/HuaweiMDC/StdCppBasicDataType/uint32_t",
+            "/HuaweiMDC/StdCppBasicDataType/int32_t"
+          ],
+          "methodOutputName": "/HuaweiMDC/MdcPlatformServices/PlatformServiceInterface/FmServiceInterface/FmReportEventService/ReportProcStateOutput"
+        }
+      ],
+      "instances": [
+        {
+          "shortName": "/HuaweiMDC/PlatformApplication/InsCmCenterApplication/Service/DP/Consumer/Ins610ReportEventRequiredDdsServiceInstance",
+          "instance": "1444",
+          "vlan": "Host0DpEthernetCommConnector",
+          "domainId": 14,
+          "network": "192.168.10.6",
+          "isClient": true,
+          "qosProfile": "default_qos.xml",
+          "events": [],
+          "fields": [],
+          "methods": [
+            {
+              "id": 14388,
+              "methodQosProfile": "default_qos.xml",
+              "dataIds": []
+            },
+            {
+              "id": 3322,
+              "methodQosProfile": "default_qos.xml",
+              "dataIds": []
+            },
+            {
+              "id": 24315,
+              "methodQosProfile": "default_qos.xml",
+              "dataIds": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "service": "/HuaweiMDC/PlatformServiceInterface/ChassisServiceInterface/ChassisReportServiceInterface",
+      "serviceId": 2816,
+      "events": [
+        {
+          "event": "mdcEvent",
+          "id": 10488,
+          "isDpRawData": false,
+          "dataType": "/HuaweiMDC/PlatformServiceInterface/ChassisMsgDataType/ChassisReportMsg",
+          "topicName": "ChassisReportEncodedDdsEvent"
+        }
+      ],
+      "fields": [],
+      "methods": [],
+      "instances": [
+        {
+          "shortName": "/HuaweiMDC/PlatformApplication/InsCmCenterApplication/Service/DP/Consumer/ChassisFromAppDdsRequiredServiceInstance",
+          "instance": "1",
+          "vlan": "Host0DpEthernetCommConnector",
+          "domainId": 0,
+          "network": "192.168.10.6",
+          "isClient": true,
+          "qosProfile": "/var/domainqos.xml",
+          "events": [
+            {
+              "id": 10488,
+              "qosProfile": "/var/eventsqos.xml",
+              "dataIds": []
+            }
+          ],
+          "fields": [],
+          "methods": []
+        }
+      ]
+    },
+    {
+      "service": "/HuaweiMDC/PlatformServiceInterface/DataFlowServiceInterface/DataFlowServiceInterface",
+      "serviceId": 3586,
+      "events": [
+        {
+          "event": "mdcEvent",
+          "id": 10488,
+          "isDpRawData": false,
+          "dataType": "/HuaweiMDC/PlatformServiceInterface/DataFlowMsgDataType/DataFlowDataType",
+          "topicName": "DataFlowDdsEvent"
+        }
+      ],
+      "fields": [],
+      "methods": [],
+      "instances": [
+        {
+          "shortName": "/HuaweiMDC/PlatformApplication/InsCmCenterApplication/Service/DP/Provider/InsDataFlowProvidedDdsServiceInstance",
+          "instance": "4",
+          "vlan": "Host0DpEthernetCommConnector",
+          "domainId": 0,
+          "network": "192.168.10.6",
+          "isClient": false,
+          "qosProfile": "/var/domainqos.xml",
+          "events": [
+            {
+              "id": 10488,
+              "qosProfile": "/var/eventsqos.xml",
+              "dataIds": []
+            }
+          ],
+          "fields": [],
+          "methods": []
+        }
+      ]
+    },
+    {
+      "service": "/HuaweiMDC/PlatformServiceInterface/GnssInfoServiceInterface/GnssInfoServiceInterface",
+      "serviceId": 2561,
+      "events": [
+        {
+          "event": "mdcEvent",
+          "id": 10488,
+          "isDpRawData": false,
+          "dataType": "/HuaweiMDC/PlatformServiceInterface/GnssInfoDataType/GnssInfo",
+          "topicName": "mdcEvent"
+        }
+      ],
+      "fields": [],
+      "methods": [],
+      "instances": [
+        {
+          "shortName": "/HuaweiMDC/PlatformApplication/InsCmCenterApplication/Service/DP/Provider/GnssRawToAppProvidedDdsServiceInstance",
+          "instance": "1",
+          "vlan": "Host0DpEthernetCommConnector",
+          "domainId": 0,
+          "network": "192.168.10.6",
+          "isClient": false,
+          "qosProfile": "/var/domainqos.xml",
+          "events": [
+            {
+              "id": 10488,
+              "qosProfile": "/var/eventsqos.xml",
+              "dataIds": []
+            }
+          ],
+          "fields": [],
+          "methods": []
+        }
+      ]
+    },
+    {
+      "service": "/HuaweiMDC/PlatformServiceInterface/ImuInfoServiceInterface/ImuInfoServiceInterface",
+      "serviceId": 2560,
+      "events": [
+        {
+          "event": "mdcEvent",
+          "id": 10488,
+          "isDpRawData": false,
+          "dataType": "/HuaweiMDC/PlatformServiceInterface/ImuInfoDataType/ImuInfo",
+          "topicName": "mdcEvent"
+        }
+      ],
+      "fields": [],
+      "methods": [],
+      "instances": [
+        {
+          "shortName": "/HuaweiMDC/PlatformApplication/InsCmCenterApplication/Service/DP/Provider/ImuToAppProvidedDdsServiceInstance",
+          "instance": "1",
+          "vlan": "Host0DpEthernetCommConnector",
+          "domainId": 0,
+          "network": "192.168.10.6",
+          "isClient": false,
+          "qosProfile": "/var/domainqos.xml",
+          "events": [
+            {
+              "id": 10488,
+              "qosProfile": "/var/eventsqos.xml",
+              "dataIds": []
+            }
+          ],
+          "fields": [],
+          "methods": []
+        }
+      ]
+    },
+    {
+      "service": "/HuaweiMDC/PlatformServiceInterface/InsGsvInfoServiceInterface/InsGsvInfoServiceInterface",
+      "serviceId": 2564,
+      "events": [
+        {
+          "event": "mdcEvent",
+          "id": 10488,
+          "isDpRawData": false,
+          "dataType": "/HuaweiMDC/PlatformServiceInterface/InsGsvMsgDataType/GsvInfo",
+          "topicName": "InsGsvInfoDdsEvent"
+        }
+      ],
+      "fields": [],
+      "methods": [],
+      "instances": [
+        {
+          "shortName": "/HuaweiMDC/PlatformApplication/InsCmCenterApplication/Service/DP/Provider/GsvInfoToAppProvidedDdsServiceInstance",
+          "instance": "1",
+          "vlan": "Host0DpEthernetCommConnector",
+          "domainId": 0,
+          "network": "192.168.10.6",
+          "isClient": false,
+          "qosProfile": "/var/domainqos.xml",
+          "events": [
+            {
+              "id": 10488,
+              "qosProfile": "/var/eventsqos.xml",
+              "dataIds": []
+            }
+          ],
+          "fields": [],
+          "methods": []
+        }
+      ]
+    },
+    {
+      "service": "/HuaweiMDC/PlatformServiceInterface/InsImuRawInfoServiceInterface/InsImuRawInfoServiceInterface",
+      "serviceId": 2565,
+      "events": [
+        {
+          "event": "mdcEvent",
+          "id": 10488,
+          "isDpRawData": false,
+          "dataType": "/HuaweiMDC/PlatformServiceInterface/InsImuRawMsgDataType/ImuRawInfo",
+          "topicName": "InsImuRawInfoDdsEvent"
+        }
+      ],
+      "fields": [],
+      "methods": [],
+      "instances": [
+        {
+          "shortName": "/HuaweiMDC/PlatformApplication/InsCmCenterApplication/Service/DP/Provider/ImuRawInfoToAppProvidedDdsServiceInstance",
+          "instance": "1",
+          "vlan": "Host0DpEthernetCommConnector",
+          "domainId": 0,
+          "network": "192.168.10.6",
+          "isClient": false,
+          "qosProfile": "/var/domainqos.xml",
+          "events": [
+            {
+              "id": 10488,
+              "qosProfile": "/var/eventsqos.xml",
+              "dataIds": []
+            }
+          ],
+          "fields": [],
+          "methods": []
+        }
+      ]
+    },
+    {
+      "service": "/HuaweiMDC/PlatformServiceInterface/InsInfoServiceInterface/InsInfoServiceInterface",
+      "serviceId": 2562,
+      "events": [
+        {
+          "event": "mdcEvent",
+          "id": 10488,
+          "isDpRawData": false,
+          "dataType": "/HuaweiMDC/PlatformServiceInterface/InsInfoDataType/InsInfo",
+          "topicName": "mdcEvent"
+        }
+      ],
+      "fields": [],
+      "methods": [],
+      "instances": [
+        {
+          "shortName": "/HuaweiMDC/PlatformApplication/InsCmCenterApplication/Service/DP/Provider/InsToAppProvidedDdsServiceInstance",
+          "instance": "1",
+          "vlan": "Host0DpEthernetCommConnector",
+          "domainId": 0,
+          "network": "192.168.10.6",
+          "isClient": false,
+          "qosProfile": "/var/domainqos.xml",
+          "events": [
+            {
+              "id": 10488,
+              "qosProfile": "/var/eventsqos.xml",
+              "dataIds": []
+            }
+          ],
+          "fields": [],
+          "methods": []
+        }
+      ]
+    },
+    {
+      "service": "/HuaweiMDC/PlatformServiceInterface/InsStatusInfoServiceInterface/InsStatusInfoServiceInterface",
+      "serviceId": 2566,
+      "events": [
+        {
+          "event": "mdcEvent",
+          "id": 10488,
+          "isDpRawData": false,
+          "dataType": "/HuaweiMDC/PlatformServiceInterface/InsStatusInfoMsgDataType/InsStatusInfo",
+          "topicName": "InsStatusRawInfoDdsEvent"
+        }
+      ],
+      "fields": [],
+      "methods": [],
+      "instances": [
+        {
+          "shortName": "/HuaweiMDC/PlatformApplication/InsCmCenterApplication/Service/DP/Provider/InsStatusInfoToAppProvidedDdsServiceInstance",
+          "instance": "1",
+          "vlan": "Host0DpEthernetCommConnector",
+          "domainId": 0,
+          "network": "192.168.10.6",
+          "isClient": false,
+          "qosProfile": "/var/domainqos.xml",
+          "events": [
+            {
+              "id": 10488,
+              "qosProfile": "/var/eventsqos.xml",
+              "dataIds": []
+            }
+          ],
+          "fields": [],
+          "methods": []
+        }
+      ]
+    },
+    {
+      "service": "/HuaweiMDC/PlatformServiceInterface/MntAgentServiceInterface/MntDelayServiceInterface",
+      "serviceId": 3776,
+      "events": [
+        {
+          "event": "MntDelayEvent",
+          "id": 43958,
+          "isDpRawData": false,
+          "dataType": "/HuaweiMDC/PlatformServiceInterface/MntAgentMsgDataTypes/DelayDataType/DelayEventDataType",
+          "topicName": "MntDelayDdsEvent"
+        }
+      ],
+      "fields": [],
+      "methods": [],
+      "instances": [
+        {
+          "shortName": "/HuaweiMDC/PlatformApplication/MntAgentApplication/Service/Consumer/MntDelayRequiredServiceInstance",
+          "instance": "1",
+          "vlan": "Host0DpEthernetCommConnector",
+          "domainId": 11,
+          "network": "192.168.10.6",
+          "isClient": true,
+          "qosProfile": "/var/domainqos.xml",
+          "events": [
+            {
+              "id": 43958,
+              "qosProfile": "/var/eventsqos.xml",
+              "dataIds": []
+            }
+          ],
+          "fields": [],
+          "methods": []
+        }
+      ]
+    },
+    {
+      "service": "/HuaweiMDC/PlatformServiceInterface/TimeDelayServiceInterface/TimeDelayServiceInterface",
+      "serviceId": 3587,
+      "events": [
+        {
+          "event": "mdcEvent",
+          "id": 10488,
+          "isDpRawData": false,
+          "dataType": "/HuaweiMDC/PlatformServiceInterface/TimeDelayDataType/TimeDelayDataType",
+          "topicName": "TimeDelayDdsEvent"
+        }
+      ],
+      "fields": [],
+      "methods": [],
+      "instances": [
+        {
+          "shortName": "/HuaweiMDC/PlatformApplication/InsCmCenterApplication/Service/DP/Provider/InsTimeDelayProvidedDdsServiceInstance",
+          "instance": "4",
+          "vlan": "Host0DpEthernetCommConnector",
+          "domainId": 0,
+          "network": "192.168.10.6",
+          "isClient": false,
+          "qosProfile": "/var/domainqos.xml",
+          "events": [
+            {
+              "id": 10488,
+              "qosProfile": "/var/eventsqos.xml",
+              "dataIds": []
+            }
+          ],
+          "fields": [],
+          "methods": []
+        }
+      ]
+    },
+    {
+      "service": "/HuaweiMDC/PlatformServiceInterface/TsyncGnssServiceInterface/TsyncGnssServiceInterface",
+      "serviceId": 2563,
+      "events": [
+        {
+          "event": "mdcEvent",
+          "id": 10488,
+          "isDpRawData": false,
+          "dataType": "/HuaweiMDC/PlatformServiceInterface/TsyncGnssMsgDataTypes/DataTypes/GnssStruct",
+          "topicName": "mdcEvent"
+        }
+      ],
+      "fields": [],
+      "methods": [],
+      "instances": [
+        {
+          "shortName": "/HuaweiMDC/PlatformApplication/InsCmCenterApplication/Service/DP/Provider/UtcTimeToAppProvidedDdsServiceInstance",
+          "instance": "1",
+          "vlan": "Host0DpEthernetCommConnector",
+          "domainId": 0,
+          "network": "192.168.10.6",
+          "isClient": false,
+          "qosProfile": "/var/domainqos.xml",
+          "events": [
+            {
+              "id": 10488,
+              "qosProfile": "/var/eventsqos.xml",
+              "dataIds": []
+            }
+          ],
+          "fields": [],
+          "methods": []
+        }
+      ]
+    },
+    {
+      "service": "/HuaweiMDC/PlatformServiceInterface/TsyncMeasureServiceInterface/TsyncMeasureServiceInterface",
+      "serviceId": 384,
+      "events": [
+        {
+          "event": "mdcEvent",
+          "id": 10488,
+          "isDpRawData": false,
+          "dataType": "/HuaweiMDC/PlatformServiceInterface/TsyncMeasureMsgDataTypes/DataTypes/MeasureData",
+          "topicName": "mdcEvent"
+        }
+      ],
+      "fields": [],
+      "methods": [],
+      "instances": [
+        {
+          "shortName": "/HuaweiMDC/PlatformApplication/InsCmCenterApplication/Service/DP/Consumer/TimeCompensateFromAppDdsRequiredServiceInstance",
+          "instance": "1",
+          "vlan": "Host0DpEthernetCommConnector",
+          "domainId": 0,
+          "network": "192.168.10.6",
+          "isClient": true,
+          "qosProfile": "/var/domainqos.xml",
+          "events": [
+            {
+              "id": 10488,
+              "qosProfile": "/var/eventsqos.xml",
+              "dataIds": []
+            }
+          ],
+          "fields": [],
+          "methods": []
+        }
+      ]
+    },
+    {
+      "service": "/HuaweiMDC/PlatformServiceInterface/UartFwdServiceInterface/UartFwdServiceInterface",
+      "serviceId": 3584,
+      "events": [
+        {
+          "event": "mdcEvent",
+          "id": 10488,
+          "isDpRawData": false,
+          "dataType": "/HuaweiMDC/PlatformServiceInterface/UartFwdMsgDataType/UartBusDataType",
+          "topicName": "UartFwdDdsEvent"
+        }
+      ],
+      "fields": [],
+      "methods": [],
+      "instances": [
+        {
+          "shortName": "/HuaweiMDC/PlatformApplication/InsCmCenterApplication/Service/DP/Consumer/UartMsgFromAppDdsRequiredServiceInstance",
+          "instance": "21",
+          "vlan": "Host0DpEthernetCommConnector",
+          "domainId": 0,
+          "network": "192.168.10.6",
+          "isClient": true,
+          "qosProfile": "/var/domainqos.xml",
+          "events": [
+            {
+              "id": 10488,
+              "qosProfile": "/var/eventsqos.xml",
+              "dataIds": []
+            }
+          ],
+          "fields": [],
+          "methods": []
+        },
+        {
+          "shortName": "/HuaweiMDC/PlatformApplication/InsCmCenterApplication/Service/DP/Provider/UartMsgToAppProvidedDdsServiceInstance",
+          "instance": "1",
+          "vlan": "Host0DpEthernetCommConnector",
+          "domainId": 0,
+          "network": "192.168.10.6",
+          "isClient": false,
+          "qosProfile": "/var/domainqos.xml",
+          "events": [
+            {
+              "id": 10488,
+              "qosProfile": "/var/eventsqos.xml",
+              "dataIds": []
+            }
+          ],
+          "fields": [],
+          "methods": []
+        }
+      ]
+    },
+    {
+      "service": "/HuaweiMDC/PlatformServices/DiagComClient",
+      "serviceId": 101,
+      "events": [
+        {
+          "event": "RequestTrigger",
+          "id": 52019,
+          "isDpRawData": false,
+          "dataType": "/HuaweiMDC/DiagDataType/RequestTriggerType",
+          "topicName": "TopicNameOfRequestTriggerDeployment"
+        }
+      ],
+      "fields": [],
+      "methods": [
+        {
+          "method": "GetRequest",
+          "id": 62768,
+          "isFireAndForget": false,
+          "requestTopicName": "RequestOfRpcOfGetRequestDeployment",
+          "replyTopicName": "ReplyOfRpcOfGetRequestDeployment",
+          "requestDataType": [
+            "/HuaweiMDC/StdCppDataType/String",
+            "/HuaweiMDC/StdCppDataType/UInt64"
+          ],
+          "replyDataType": [
+            "/HuaweiMDC/StdCppDataType/Boolean",
+            "/HuaweiMDC/PlatformServices/DiagMsgDataType/DataTypes/ByteArray"
+          ],
+          "methodOutputName": "/HuaweiMDC/PlatformServices/DiagComClient/GetRequestOutput"
+        },
+        {
+          "method": "SendResponse",
+          "id": 17402,
+          "isFireAndForget": false,
+          "requestTopicName": "RequestOfRpcOfSendResponseDeployment",
+          "replyTopicName": "ReplyOfRpcOfSendResponseDeployment",
+          "requestDataType": [
+            "/HuaweiMDC/StdCppDataType/String",
+            "/HuaweiMDC/StdCppDataType/UInt64",
+            "/HuaweiMDC/StdCppDataType/Boolean",
+            "/HuaweiMDC/PlatformServices/DiagMsgDataType/DataTypes/ByteVector"
+          ],
+          "replyDataType": [],
+          "methodOutputName": "/HuaweiMDC/PlatformServices/DiagComClient/SendResponseOutput"
+        }
+      ],
+      "instances": [
+        {
+          "shortName": "/HuaweiMDC/PlatformApplication/DiagAgentApplication/Service/Consumer/DiagComClient/DidReadInstance",
+          "instance": "1",
+          "vlan": "Host0DpEthernetCommConnector",
+          "domainId": 1,
+          "network": "192.168.10.6",
+          "isClient": true,
+          "qosProfile": "default_qos.xml",
+          "events": [
+            {
+              "id": 52019,
+              "qosProfile": "default_qos.xml",
+              "dataIds": []
+            }
+          ],
+          "fields": [],
+          "methods": [
+            {
+              "id": 62768,
+              "methodQosProfile": "default_qos.xml",
+              "dataIds": []
+            },
+            {
+              "id": 17402,
+              "methodQosProfile": "default_qos.xml",
+              "dataIds": []
+            }
+          ]
+        },
+        {
+          "shortName": "/HuaweiMDC/PlatformApplication/DiagAgentApplication/Service/Consumer/DiagComClient/DidWriteInstance",
+          "instance": "2",
+          "vlan": "Host0DpEthernetCommConnector",
+          "domainId": 1,
+          "network": "192.168.10.6",
+          "isClient": true,
+          "qosProfile": "default_qos.xml",
+          "events": [
+            {
+              "id": 52019,
+              "qosProfile": "default_qos.xml",
+              "dataIds": []
+            }
+          ],
+          "fields": [],
+          "methods": [
+            {
+              "id": 62768,
+              "methodQosProfile": "default_qos.xml",
+              "dataIds": []
+            },
+            {
+              "id": 17402,
+              "methodQosProfile": "default_qos.xml",
+              "dataIds": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

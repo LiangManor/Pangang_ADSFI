@@ -61,29 +61,29 @@ Adsfi::HafStatus LidarSlam::Init()
 
 	// 导入地图
 	importMap();
-	std::cout<<" <----------------- ndt 算法参数 --------------------> "<<std::endl;
-	std::cout<<" initX      "<<initX<<std::endl;
-	std::cout<<" initY      "<<initY<<std::endl;
-	std::cout<<" initZ      "<<initZ<<std::endl;
-	std::cout<<" initThetaX "<<initThetaX<<std::endl;
-	std::cout<<" initThetaY "<<initThetaY<<std::endl;
-	std::cout<<" initThetaZ "<<initThetaZ<<std::endl;
-	std::cout<<" voxelGridSize     "<<voxelGridSize<<std::endl;
-	std::cout<<" ndtGridResolution "<<ndtGridResolution<<std::endl;
-	std::cout<<" precision         "<<precision<<std::endl;
-	std::cout<<" step              "<<step<<std::endl;
-	std::cout<<" iterations        "<<iterations<<std::endl;
-	std::cout<<" threadNum         "<<threadNum<<std::endl;
-	std::cout<<" <----------------- 工作模式 --------------------> "<<std::endl;
-	if(this->workingMode == 0)
-	{
-		std::cout<<"标定模式"<<std::endl;
-		std::cout<<"待标定文件路径:"<<filePath<<std::endl;
-	}
-	else
-	{
-		std::cout<<"普通模式"<<std::endl;
-	}
+//	std::cout<<" <----------------- ndt 算法参数 --------------------> "<<std::endl;
+//	std::cout<<" initX      "<<initX<<std::endl;
+//	std::cout<<" initY      "<<initY<<std::endl;
+//	std::cout<<" initZ      "<<initZ<<std::endl;
+//	std::cout<<" initThetaX "<<initThetaX<<std::endl;
+//	std::cout<<" initThetaY "<<initThetaY<<std::endl;
+//	std::cout<<" initThetaZ "<<initThetaZ<<std::endl;
+//	std::cout<<" voxelGridSize     "<<voxelGridSize<<std::endl;
+//	std::cout<<" ndtGridResolution "<<ndtGridResolution<<std::endl;
+//	std::cout<<" precision         "<<precision<<std::endl;
+//	std::cout<<" step              "<<step<<std::endl;
+//	std::cout<<" iterations        "<<iterations<<std::endl;
+//	std::cout<<" threadNum         "<<threadNum<<std::endl;
+//	std::cout<<" <----------------- 工作模式 --------------------> "<<std::endl;
+//	if(this->workingMode == 0)
+//	{
+//		std::cout<<"标定模式"<<std::endl;
+//		std::cout<<"待标定文件路径:"<<filePath<<std::endl;
+//	}
+//	else
+//	{
+//		std::cout<<"普通模式"<<std::endl;
+//	}
 
 	this->zAngle     = this->zAngle     * (3.1415926536/180.0);
 
@@ -176,12 +176,11 @@ void LidarSlam::Process()
 		// ==================== ABC重定位功能 - 状态检查开始 ====================
 	    double min_distance;
 	    int nearest_index = findNearestRelocPoint(min_distance);
-	    std::cout << "reloc_state_ = " << static_cast<int>(reloc_state_) << std::endl;
 	    switch (reloc_state_) {
 	        case RelocState::IDLE:
 			{
 				alignedPC = align(currentScanPC, score);
-				std::cout << "aligned score = " << score << std::endl;
+//				std::cout << "aligned score = " << score << std::endl;
 				if (lossLocNum > 5)
 				{
 					ekfFilter.first_init_ = false;
@@ -193,7 +192,7 @@ void LidarSlam::Process()
 				float distance_between_2_frames =std::sqrt(std::pow(egoState.x - this->lastLocation(0, 3), 2) + std::pow(egoState.y - this->lastLocation(1, 3), 2) + std::pow(egoState.z - this->lastLocation(2, 3), 2) );
 				if(score > 500.0 || distance_between_2_frames > 10.0)// 如果被完全遮挡
 				{
-					std::cout<<"距离跳变，发送故障停车信号" << std::endl;
+//					std::cout<<"距离跳变，发送故障停车信号" << std::endl;
 					lossLocNum ++;
 					break;
 				}
@@ -214,8 +213,8 @@ void LidarSlam::Process()
 				if (min_distance < reloc_distance_threshold_ && trainDirection == 0) {
 					reloc_state_ = RelocState::WAITING_FOR_TRIGGER;
 					current_reloc_point_index_ = nearest_index;
-					std::cout << "[重定位] 接近重定位点 " << reloc_points_[nearest_index].name
-							  << " (距离: " << min_distance << " 米)" << std::endl;
+//					std::cout << "[重定位] 接近重定位点 " << reloc_points_[nearest_index].name
+//							  << " (距离: " << min_distance << " 米)" << std::endl;
 				}
 				break;
 			}
@@ -225,15 +224,15 @@ void LidarSlam::Process()
 	            // 检查是否收到触发信号
 				{
 					std::lock_guard<std::mutex> state_lock(reloc_state_mutex_);
-					std::cout << "WAITING_FOR_TRIGGER, 当前状态:" << reloc_trigger_received_ << std::endl;
+//					std::cout << "WAITING_FOR_TRIGGER, 当前状态:" << reloc_trigger_received_ << std::endl;
 					if (trainDirection != 0) {
 						reloc_state_ = RelocState::RELOCATING;
-						std::cout << "[重定位] 开始执行重定位，点 "
-								  << reloc_points_[current_reloc_point_index_].name << "..." << std::endl;
+//						std::cout << "[重定位] 开始执行重定位，点 "
+//								  << reloc_points_[current_reloc_point_index_].name << "..." << std::endl;
 					}
-					if(trainDirection != 0 && reloc_state_ == RelocState::WAITING_FOR_TRIGGER){
-						std::cout << "速度已有但转盘未解锁，发送故障停车信号" << std::endl;
-					}
+//					if(trainDirection != 0 && reloc_state_ == RelocState::WAITING_FOR_TRIGGER){
+//						std::cout << "速度已有但转盘未解锁，发送故障停车信号" << std::endl;
+//					}
 				}
 	            break;
 
@@ -244,9 +243,9 @@ void LidarSlam::Process()
 	        	ekfFilter.second_init_ = false;
 	        	reloc_state_ = RelocState::LEAVING;
 
-	            std::cout << "[重定位] 重定位完成，点 "
-	                      << reloc_points_[current_reloc_point_index_].name
-	                      << "，开始离开..." << std::endl;
+//	            std::cout << "[重定位] 重定位完成，点 "
+//	                      << reloc_points_[current_reloc_point_index_].name
+//	                      << "，开始离开..." << std::endl;
 	            break;
 	        }
 
@@ -255,7 +254,7 @@ void LidarSlam::Process()
 				// 状态5: 离开中，检查是否已离开重定位区域
 				float score;
 				alignedPC = align(currentScanPC, score);
-				std::cout << "aligned score = " << score << std::endl;
+//				std::cout << "aligned score = " << score << std::endl;
 				if (lossLocNum > 5)
 				{
 					ekfFilter.first_init_ = false;
@@ -284,7 +283,7 @@ void LidarSlam::Process()
 				if (min_distance > leave_distance_threshold_) {
 					reloc_state_ = RelocState::IDLE;
 					current_reloc_point_index_ = -1;
-					std::cout << "[重定位] 已离开重定位区域，返回IDLE状态" << std::endl;
+//					std::cout << "[重定位] 已离开重定位区域，返回IDLE状态" << std::endl;
 				}
 				break;
 	        }
@@ -299,7 +298,7 @@ void LidarSlam::Process()
 bool LidarSlam::calInitPosture(const pcl::PointCloud<pcl::PointXYZ>::Ptr& currentScanPC)
 {
 	lossLocNum = 0;
-	std::cout<<"AN算法初始化模式"<<std::endl;
+//	std::cout<<"AN算法初始化模式"<<std::endl;
 	pcl::PointCloud<pcl::PointXYZ>::Ptr scan_cloud_aligned(new pcl::PointCloud<pcl::PointXYZ>);
 	bool isInitSuccess = an.get_init_pose(currentScanPC,
 					 scan_cloud_aligned,
@@ -344,7 +343,8 @@ void LidarSlam::sendLocation()
 	{
 		if (node.SendLidarSlam(out) != HAF_SUCCESS)
 		{
-			std::cout << "SendLidarSlam error" << std::endl;
+//			std::cout << "SendLidarSlam error" << std::endl;
+			int temp = 0;
 		}
 	}
 
@@ -374,8 +374,8 @@ void LidarSlam::mvizView(pcl::PointCloud<pcl::PointXYZ>::Ptr alignedPC, vehicleS
     for (size_t i = 0; i < alignedPC->points.size(); i++)
     {
         mdc::visual::PointXYZRGB ptMviz(alignedPC->points[i].x,//x
-                                        alignedPC->points[i].y,//y
-                                        alignedPC->points[i].z,//z
+        		alignedPC->points[i].y,//y
+				alignedPC->points[i].z,//z
                                         0, 0, 255);//  b g r
         data.points.push_back(ptMviz);
     }
@@ -548,18 +548,19 @@ void LidarSlam::importMap()//导入全局地图
 	this->mapCloud.reset(new pcl::PointCloud<pcl::PointXYZ>());
     std::fstream input(this->mapPath.c_str(), ios::in | ios::binary);
     // 检查文件是否成功打开
-    std::cout << "正在检查地图路径 ......";
+//    std::cout << "正在检查地图路径 ......";
     if (input.is_open())
     {
-        std::cout << "[ 地图路径输入正确 ]\n" << std::endl;
+//        std::cout << "[ 地图路径输入正确 ]\n" << std::endl;
+    	int temp = 0;
     }
     else
     {
-        std::cout << "[ 地图路径输入错误, 请确认地图文件地址是否正确 !!! ]\n" << std::endl;
+//        std::cout << "[ 地图路径输入错误, 请确认地图文件地址是否正确 !!! ]\n" << std::endl;
         this->node.Stop();//关闭程序
         return;
     }
-    std::cout << "正在导入全局地图 ......";
+//    std::cout << "正在导入全局地图 ......";
     for(int i = 0; input.good() && !input.eof(); i++)
     {
         pcl::PointXYZ PointXYZ;
@@ -570,11 +571,11 @@ void LidarSlam::importMap()//导入全局地图
 //        }
         this->mapCloud->points.push_back(PointXYZ);
     }
-    std::cout << "地图导入成功" << std::endl;
+//    std::cout << "地图导入成功" << std::endl;
 
     //
     an.init(this->mapCloud);
-    std::cout << "地图已经导入AN算法" << std::endl;
+//    std::cout << "地图已经导入AN算法" << std::endl;
 
     //对地图进行下采样
     this->voxelgrid2.setInputCloud((this->mapCloud));//设置输入点云
@@ -634,9 +635,9 @@ std::vector<std::string> LidarSlam::split(const std::string &readData)
  */
 void LidarSlam::initRelocSystem()
 {
-    std::cout << "\n========================================" << std::endl;
-    std::cout << "初始化ABC重定位系统..." << std::endl;
-    std::cout << "========================================" << std::endl;
+//    std::cout << "\n========================================" << std::endl;
+//    std::cout << "初始化ABC重定位系统..." << std::endl;
+//    std::cout << "========================================" << std::endl;
 
     // 初始化状态变量
     reloc_state_ = RelocState::IDLE;
@@ -644,8 +645,8 @@ void LidarSlam::initRelocSystem()
     udp_socket_ = -1;
     udp_running_ = false;
 
-    reloc_distance_threshold_ = 0.50;  // 20cm，触发重定位的距离阈值
-    leave_distance_threshold_ = 0.80;   // 60cm，判断离开的距离阈值
+    reloc_distance_threshold_ = 0.50;  // 50cm，触发重定位的距离阈值
+    leave_distance_threshold_ = 0.90;   // 90cm，判断离开的距离阈值
     udp_server_port_ = 8888;            // UDP接收端口
     udp_client_ip_ = "192.168.30.42";   // UDP发送目标IP
     udp_client_port_ = 8889;            // UDP发送目标端口
@@ -653,28 +654,28 @@ void LidarSlam::initRelocSystem()
     // 硬编码ABC三个重定位点坐标（单位：米）
     // 请根据实际情况修改这些坐标值
     reloc_points_.clear();
-//    reloc_points_.emplace_back(300,300, "A");   // 点A坐标
-//    reloc_points_.emplace_back(300,300, "B");   // 点B坐标
-//    reloc_points_.emplace_back(300,300, "C");   // 点C坐标
-    reloc_points_.emplace_back(24.368005,-1.228467, "A");   // 点A坐标
-	reloc_points_.emplace_back(20.548017,11.650597, "B");   // 点B坐标
-	reloc_points_.emplace_back(28.799568,19.896493, "C");   // 点C坐标
+//    reloc_points_.emplace_back(24.268005,-1.228467, "A");   // 点A坐标
+//    reloc_points_.emplace_back(20.448017,11.655597, "B");   // 点B坐标
+//    reloc_points_.emplace_back(28.699568,19.896493, "C");   // 点C坐标
+    reloc_points_.emplace_back(300,300, "A");   // 点A坐标
+	reloc_points_.emplace_back(400,400, "B");   // 点B坐标
+	reloc_points_.emplace_back(500,500, "C");   // 点C坐标
 
-    std::cout << "重定位参数配置：" << std::endl;
-    std::cout << "  触发距离阈值: " << reloc_distance_threshold_ << " 米" << std::endl;
-    std::cout << "  离开距离阈值: " << leave_distance_threshold_ << " 米" << std::endl;
-    std::cout << "  UDP接收端口: " << udp_server_port_ << std::endl;
-    std::cout << "  UDP发送目标: " << udp_client_ip_ << ":" << udp_client_port_ << std::endl;
-    std::cout << "\n重定位点坐标：" << std::endl;
-    std::cout << "  点A: (" << reloc_points_[0].x << ", " << reloc_points_[0].y << ")" << std::endl;
-    std::cout << "  点B: (" << reloc_points_[1].x << ", " << reloc_points_[1].y << ")" << std::endl;
-    std::cout << "  点C: (" << reloc_points_[2].x << ", " << reloc_points_[2].y << ")" << std::endl;
+//    std::cout << "重定位参数配置：" << std::endl;
+//    std::cout << "  触发距离阈值: " << reloc_distance_threshold_ << " 米" << std::endl;
+//    std::cout << "  离开距离阈值: " << leave_distance_threshold_ << " 米" << std::endl;
+//    std::cout << "  UDP接收端口: " << udp_server_port_ << std::endl;
+//    std::cout << "  UDP发送目标: " << udp_client_ip_ << ":" << udp_client_port_ << std::endl;
+//    std::cout << "\n重定位点坐标：" << std::endl;
+//    std::cout << "  点A: (" << reloc_points_[0].x << ", " << reloc_points_[0].y << ")" << std::endl;
+//    std::cout << "  点B: (" << reloc_points_[1].x << ", " << reloc_points_[1].y << ")" << std::endl;
+//    std::cout << "  点C: (" << reloc_points_[2].x << ", " << reloc_points_[2].y << ")" << std::endl;
 
     // 设置UDP通信
     setupUDP();
 
-    std::cout << "ABC重定位系统初始化完成！" << std::endl;
-    std::cout << "========================================\n" << std::endl;
+//    std::cout << "ABC重定位系统初始化完成！" << std::endl;
+//    std::cout << "========================================\n" << std::endl;
 }
 
 /**
@@ -720,7 +721,7 @@ void LidarSlam::setupUDP()
     udp_running_ = true;
     udp_receive_thread_ = std::thread(&LidarSlam::udpReceiveThread, this);
 
-    std::cout << "UDP通信设置完成，监听端口: " << udp_server_port_ << std::endl;
+//    std::cout << "UDP通信设置完成，监听端口: " << udp_server_port_ << std::endl;
 }
 
 /**
@@ -740,7 +741,7 @@ void LidarSlam::udpReceiveThread(){
             // 检查是否在等待触发状态
 			std::lock_guard<std::mutex> lock(reloc_state_mutex_);
 			trainDirection = recvBuffer[0];
-			std::cout << "[UDP] 收到方向信号: " << static_cast<int>(trainDirection) << " ，当前转盘状态：" << ((trainDirection == 0) ? "锁定" : "解锁") << std::endl;
+//			std::cout << "[UDP] 收到方向信号: " << static_cast<int>(trainDirection) << " ，当前转盘状态：" << ((trainDirection == 0) ? "锁定" : "解锁") << std::endl;
         }
 
         // 短暂休眠避免CPU占用过高
@@ -762,7 +763,7 @@ void LidarSlam::closeUDP()
         close(udp_socket_);
         udp_socket_ = -1;
     }
-    std::cout << "[UDP] UDP通信已关闭" << std::endl;
+//    std::cout << "[UDP] UDP通信已关闭" << std::endl;
 }
 
 /**
@@ -790,6 +791,7 @@ int LidarSlam::findNearestRelocPoint(double& min_distance)
     int nearest_index = -1;
     min_distance = std::numeric_limits<double>::max();
 
+//    std::cout << "当前距离";
     for (size_t i = 0; i < reloc_points_.size(); ++i) {
         double dist = calculateDistance(current_x, current_y,
                                        reloc_points_[i].x, reloc_points_[i].y);
@@ -797,8 +799,10 @@ int LidarSlam::findNearestRelocPoint(double& min_distance)
             min_distance = dist;
             nearest_index = i;
         }
+        double d1 = reloc_points_[i].x - current_x;
+//        std::cout << i+1 << "号点 " << dist << "米 ";
     }
-
+//    std::cout << std::endl;
     return nearest_index;
 }
 

@@ -80,7 +80,7 @@ public:
      * 发送一个整数消息到组播地址。
      * @param message 整数消息。
      */
-    void sendMessage(uint8_t char1, uint8_t char2, uint8_t char3) {
+    void sendMessage(uint8_t char1, uint8_t char2, uint8_t char3, uint8_t char4) {
         // 检查套接字是否有效
         if (sockfd < 0) {
             std::cerr << "无效的套接字!" << std::endl;
@@ -90,10 +90,10 @@ public:
         // 打印组播地址和端口
         char str[INET_ADDRSTRLEN];
         inet_ntop(AF_INET, &multicastAddr.sin_addr, str, INET_ADDRSTRLEN);
-        std::cout << "发送到组播地址: " << str << " 端口: " << ntohs(multicastAddr.sin_port) << std::endl;
+//        std::cout << "发送到组播地址: " << str << " 端口: " << ntohs(multicastAddr.sin_port) << std::endl;
 
         // 准备要发送的三个字符
-		uint8_t messageBytes[3] = {char1, char2, char3};
+		uint8_t messageBytes[4] = {char1, char2, char3, char4};
 
         // 发送消息到组播地址
         ssize_t sentBytes = sendto(sockfd, messageBytes, sizeof(messageBytes), 0,
@@ -101,11 +101,6 @@ public:
 
         if (sentBytes < 0) {
             perror("发送消息失败");
-        } else {
-            std::cout << "成功发送三个字符: "
-            		<< static_cast<int>(char1) << " 和 "
-					<< static_cast<int>(char2) << " 和 "
-					<< static_cast<int>(char3) << std::endl;
         }
     }
 

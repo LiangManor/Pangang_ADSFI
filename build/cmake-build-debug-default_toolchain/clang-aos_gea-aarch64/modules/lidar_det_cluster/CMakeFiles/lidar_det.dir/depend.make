@@ -133,6 +133,7 @@ modules/lidar_det_cluster/CMakeFiles/lidar_det.dir/src/lidar_detection.cpp.o: ..
 modules/lidar_det_cluster/CMakeFiles/lidar_det.dir/src/lidar_detection.cpp.o: ../../../modules/lidar_det_cluster/src/kf.h
 modules/lidar_det_cluster/CMakeFiles/lidar_det.dir/src/lidar_detection.cpp.o: ../../../modules/lidar_det_cluster/src/lidar_detection.cpp
 modules/lidar_det_cluster/CMakeFiles/lidar_det.dir/src/lidar_detection.cpp.o: ../../../modules/lidar_det_cluster/src/lidar_detection.h
+modules/lidar_det_cluster/CMakeFiles/lidar_det.dir/src/lidar_detection.cpp.o: ../../../modules/lidar_det_cluster/src/log.h
 modules/lidar_det_cluster/CMakeFiles/lidar_det.dir/src/lidar_detection.cpp.o: ../../../modules/lidar_det_cluster/src/secure_matrix.h
 modules/lidar_det_cluster/CMakeFiles/lidar_det.dir/src/lidar_detection.cpp.o: ../../../modules/lidar_det_cluster/src/tracker.h
 modules/lidar_det_cluster/CMakeFiles/lidar_det.dir/src/lidar_detection.cpp.o: ../../../modules/lidar_det_cluster/src/udp.h

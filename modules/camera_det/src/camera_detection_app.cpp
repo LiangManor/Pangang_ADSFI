@@ -22,6 +22,7 @@
 #include "core/logger.h"
 #include "camera_det_util.h"
 #include "image_nn_inference.h"
+#include "log.h"
 #include <publisher.h>
 
 
@@ -128,6 +129,8 @@ HafStatus CameraDetectionApp::Initialize()
     bool connect_state = mdc::visual::Connect();
     // mviz::NodeHandle::Connect();
     // std::cout << "create_det_topic!!!!" << connect_state << "----------------" << std::endl;
+
+    FastLogger::init("CameraDetection.log");
 
     return HAF_SUCCESS;
 }
@@ -247,7 +250,7 @@ void CameraDetectionApp::ShowImageInfo(std::shared_ptr<ImageFrameV2> data) const
 // }
 // ////////////////////////////////////////////////
 // Function to save RGB image in time_name
-void saveRGBAsImage(const uint8_t* rgbData, int width, int height, size_t dataSize)
+void CameraDetectionApp::saveRGBAsImage(const uint8_t* rgbData, int width, int height, size_t dataSize)
 {
     static std::chrono::steady_clock::time_point lastSaveTime = std::chrono::steady_clock::now() - std::chrono::seconds(10);
     // static std::mutex saveMutex;   // 多线程安全
@@ -281,14 +284,15 @@ void saveRGBAsImage(const uint8_t* rgbData, int width, int height, size_t dataSi
 
     char filename[256];
     snprintf(filename, sizeof(filename),
-             "%s/%04d_%02d_%02d_%02d_%02d_%02d.png",
+             "%s/%04d_%02d_%02d_%02d_%02d_%02d_%d.png",
              dirName.c_str(),
              tmTime.tm_year + 1900,
              tmTime.tm_mon + 1,
              tmTime.tm_mday,
              tmTime.tm_hour,
              tmTime.tm_min,
-             tmTime.tm_sec
+             tmTime.tm_sec,
+             this->model
     );
 
     std::string outputFilename(filename);
@@ -299,6 +303,8 @@ void saveRGBAsImage(const uint8_t* rgbData, int width, int height, size_t dataSi
              image, cv::COLOR_RGB2BGR);
 
     cv::imwrite(outputFilename, image);
+
+    FastLogger::log("camera_det saveRGBAsImage model haveobj:",this->model, have_obj, instanceId);
 
     // std::cout << "Saved: " << outputFilename << std::endl;
 }
@@ -605,6 +611,8 @@ void CameraDetectionApp::ObjectDetectionThread()
     const auto channelMax = 255U;
     const auto channelId = static_cast<int32_t>(instanceId % channelMax);
     const auto groupId = 0U;
+    // 帧率计数
+    uint32_t frame_count = 0;
 
     // 在线程的开始，初始化神经网络推理和resize所需要的相关资源
     CameraDetection::ImageNnInference nnInfer(modelFile, channelId, groupId);
@@ -669,6 +677,16 @@ void CameraDetectionApp::ObjectDetectionThread()
             break;
         }
         // std::cout << "障碍物总数量 : " << detection.size() << std::endl;
+        frame_count++;
+        // 1. 每10帧
+        if (have_obj && frame_count % 10 == 0)
+        {
+            if(frame_count > 10000) frame_count = 0;
+            // 记录保存图像中障碍物的位置
+            for(auto det : detection) {
+                FastLogger::log("camera_det object :", det.rect.center.x, det.rect.center.y, det.rect.size.x, det.rect.size.y);
+            }
+        }
         auto data = std::make_shared<Haf3dDetectionOutArray<float32_t>>();
         data->detectionOut3d = detection;
         data->frameID = img2->frameID;
@@ -731,7 +749,7 @@ void CameraDetectionApp::ProcessEntrance()
     // }
 
     threadPool.emplace_back(&CameraDetectionApp::ObjectDetectionThread, this);
-    // threadPool.emplace_back(&CameraDetectionApp::getDirect, this);
+    threadPool.emplace_back(&CameraDetectionApp::getDirect, this);
     // threadPool.emplace_back(&CameraDetectionApp::cleanPngDirectoryThread, this);
     return;
 }
@@ -741,14 +759,27 @@ void CameraDetectionApp::getDirect()
 {
     while(!IsStop())
     {
-        auto result = receiver.receiveMessage();
-        if (result[0] != -1) {
-            this->model = result[0];
-            have_obj = result[3];
-            // std::cout << "Real-time update - model: " << this->model << std::endl;
+        auto msg = receiver.receiveMessage();
+        if(msg[0] == -1 || msg[3] == -1)
+        {
+            std::this_thread::sleep_for(std::chrono::microseconds(5000)); // 5000微秒 = 5毫秒
+            continue;
+        }        
+        this->model = msg[0];
+        have_obj = msg[3];
+
+        if(model != model_history)
+        {
+            FastLogger::log("camera_det model :", model_history, model);
+            model_history = model;
         }
-        
-        // 处理其他任务或短暂休息
-        std::this_thread::sleep_for(std::chrono::microseconds(100)); // 100微秒
+        if(have_obj != have_obj_history)
+        {
+            FastLogger::log("camera_det have_obj :", have_obj_history, have_obj);
+            have_obj_history = have_obj;
+        }
+
+        // std::this_thread::sleep_for(std::chrono::microseconds(1000)); // 1000微秒
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));      // 10毫秒
     }
 }

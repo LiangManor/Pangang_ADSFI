@@ -12,7 +12,7 @@
 #include "hungarian_optimizer.h"
 #include "secure_matrix.h"
 #include <yaml-cpp/yaml.h> // 使用 yaml-cpp 库
-
+#include "log.h"
 // #include <opencv2/core/core.hpp>
 // #include <opencv2/imgproc.hpp>
 // #include <opencv2/dnn.hpp>
@@ -78,7 +78,7 @@ Adsfi::HafStatus MultisensorFusion::Init()
         YAML::Node config = YAML::LoadFile("para.yaml");
 
         // 获取参数
-        model = config["model"].as<int>();
+        // model = config["model"].as<int>();
         distance_safe = config["distance_safe"].as<float>();
         ID_road = config["ID_road"].as<int>();
 
@@ -91,6 +91,8 @@ Adsfi::HafStatus MultisensorFusion::Init()
     }
 
     PointProcessing::loadTransformFromYaml("para.yaml");                //lidar to lidar
+
+    FastLogger::init("MultisensorFusion.log");
     // 写入文件
     // min_x_file.open("min_x_log.txt", std::ios::app);
     // if (!min_x_file.is_open()) {
@@ -129,62 +131,6 @@ void MultisensorFusion::Process()
 }
 
 
-// 打印时间戳并计算与当前时间的差值
-void printAndCompareTimestamp(std::shared_ptr<Haf3dDetectionOutArray<float32_t>>& data) {
-    // 获取当前系统时间（C++11 chrono）
-    auto now = std::chrono::system_clock::now();
-    auto now_sec = std::chrono::time_point_cast<std::chrono::seconds>(now);
-    auto now_nsec = std::chrono::time_point_cast<std::chrono::nanoseconds>(now);
-
-    // 转换为秒和纳秒
-    uint64_t current_sec = now_sec.time_since_epoch().count();
-    uint64_t current_nsec = now_nsec.time_since_epoch().count() % 1000000000;
-
-    // 打印 data 的时间戳
-    // std::cout << "Data Timestamp: " << data->timestamp.sec << " sec, " 
-    //           << data->timestamp.nsec << " nsec" << std::endl;
-
-    // 打印当前系统时间戳
-    // std::cout << "Current System Timestamp: " << current_sec << " sec, " 
-    //           << current_nsec << " nsec" << std::endl;
-
-    // 计算差值（秒和纳秒）
-    int64_t diff_sec = static_cast<int64_t>(current_sec) - static_cast<int64_t>(data->timestamp.sec);
-    int64_t diff_nsec = static_cast<int64_t>(current_nsec) - static_cast<int64_t>(data->timestamp.nsec);
-
-    // 处理纳秒借位（如果 current_nsec < data_timestamp.nsec）
-    if (diff_nsec < 0) {
-        diff_nsec += 1000000000;
-        diff_sec -= 1;
-    }
-
-    // 打印时间差
-    // std::cout << "Time Difference: " << diff_sec << " sec, " 
-    //           << diff_nsec << " nsec" << std::endl;
-
-    // 可选：转换为浮点秒（更直观）
-    double total_diff_sec = diff_sec + diff_nsec / 1e9;
-    // std::cout << "Time Difference (seconds): " << std::fixed << std::setprecision(9) 
-    //           << total_diff_sec << " sec" << std::endl;
-}
-
-
-// // 保存点云到图像的映射关系
-// void MultisensorFusion::generateLidarToPixelMapping(std::string lidarID, std::vector<std::vector<pcl::PointXYZ>>& mapping, 
-//                                                     const std::vector<float>& xValues, const std::vector<float>& yValues) {
-//     // 计算每个点的像素坐标并保存映射关系
-//     for (float lidarY : yValues) {
-//         std::vector<pcl::PointXYZ> rowMapping;
-//         for (float lidarX : xValues) {
-//             float imgX, imgY;
-//             lidar2pixel(lidarID, lidarX, lidarY, 0, imgX, imgY);  // z = 0 平面
-//             rowMapping.push_back(pcl::PointXYZ(imgX, imgY, 0.0f));
-//         }
-//         mapping.push_back(rowMapping);
-//     }
-//     std::cout << "mapping finish size  : "  << mapping.size() <<std::endl;
-// }
-
 void MultisensorFusion::RecvLocation()
 {
     while (!node.IsStop()) {
@@ -197,6 +143,10 @@ void MultisensorFusion::RecvLocation()
         Point_Location.x = data->pose.pose.position.x;
         Point_Location.y = data->pose.pose.position.y;
         Yaw_Location = data->pose.pose.orientation.z;
+
+        // std::cout << "Point_Location.x :" << Point_Location.x << std::endl;
+        // std::cout << "Point_Location.y :" << Point_Location.y << std::endl;
+        // std::cout << "Yaw_Location :" << Yaw_Location << std::endl;
 
         if (point_list->empty()){
             // HAF_LOG_ERROR << "point_list is Empty, Please check Road_file.";
@@ -238,6 +188,8 @@ void MultisensorFusion::RecvLidar(const uint32_t insInx)
             lidar_data = data;
         }
 
+        // FastLogger::logNsDiff(data->timestamp.sec, data->timestamp.nsec, "LidarRecv_diff ");
+
         std::this_thread::sleep_for(std::chrono::milliseconds(30));
     }
     return;
@@ -266,6 +218,8 @@ void MultisensorFusion::RecvCamera(const uint32_t insInx)
             std::lock_guard<std::mutex> lock(data_mutex);
             camera_data = data;
         }
+
+        // FastLogger::logNsDiff(data->timestamp.sec, data->timestamp.nsec, "CameraRecv_diff ");
 
         std::this_thread::sleep_for(std::chrono::milliseconds(30));
     }
@@ -306,6 +260,12 @@ void MultisensorFusion::FuseData()
 
     // ==================【没有生成前方轨迹之前，直接透传激光雷达感知结果】==================
     bool road_ready = (local_road_points && !local_road_points->empty());
+
+    // 监测轨迹点加载的延迟，跟最近一次 model 更改时间戳对比可以知道延迟, model = 0 时，无参考意义。
+    if (road_ready && flag_point) {
+        flag_point = false;     // 轨迹点准备好，重置标志
+        FastLogger::log("multisensorfusion  local_road_points ready ", local_road_points->size(), model);
+    }
 
     if (!road_ready && local_lidar != nullptr && !local_lidar->detectionOut3d.empty()) {
         HAF_LOG_WARN << "Road points not ready, passthrough lidar results.";
@@ -538,7 +498,7 @@ void MultisensorFusion::SendResult(std::list<Adsfi::HafFusionOut<float>>& fusion
     //  消除连续帧中的个别漏检，让信号连续。此处会引入 1s 的延时，人走开后 1s 内会判断存在目标
     if (min_x < 60)
     {
-        flag = true;
+
         obj_count += 1;
         if(obj_count > 20) obj_count = 20;      // 去除短时间漏检
         last_obj_dis = min_x;
@@ -737,9 +697,15 @@ void MultisensorFusion::getDirect()
     {
         // // std::cout << "++++++++++++ getDirect +++++++++++++"<<std::endl;
 
-        this->model = receiver.receiveMessage()[0];
-        ID_road_start = receiver.receiveMessage()[1];
-        ID_road_last = receiver.receiveMessage()[2];
+        auto msg = receiver.receiveMessage();
+        if(msg[0] == -1 || msg[1] == -1 || msg[2] == -1)
+        {
+            std::this_thread::sleep_for(std::chrono::microseconds(5000)); // 5000微秒 = 5毫秒
+            continue;
+        }
+        this->model      = msg[0];
+        ID_road_start    = msg[1];
+        ID_road_last     = msg[2];
 
         /////////////////////     手动修改配置参数     ///////////////////////
         // if (ID_road == 0)
@@ -778,10 +744,13 @@ void MultisensorFusion::getDirect()
         // }
         ///////////////////////////////////////////
 
-        if (this->model >= 0 && ID_road_start >= 0 && ID_road_last >= 0) {  // 检查是否接收成功
-            // std::cout << "Received integers: " << this->model << " and " << ID_road_start << " and " << ID_road_last << std::endl;
-        } else {
-            std::cerr << "Failed to receive valid data" << std::endl;
+        // 记录方向、障碍物 入日志
+        if(model != model_history)
+        {
+            flag_point = true;     // 方向改变，重置轨迹点打时间戳的标志
+            FastLogger::log("multisensorfusion model :", model_history, model);
+            model_history = model;
+            // std::cout << "multisensorfusion model  :" << model_history << model <<std::endl;
         }
 
         if (this->model > 0 && ID_road_start > 0 && ID_road_last > 0 && (ID_road_start != history_ID_road_start || ID_road_last != history_ID_road_last))
@@ -792,6 +761,9 @@ void MultisensorFusion::getDirect()
             // std::cout << "loadPoints--------------------" << road_path <<std::endl;
             point_list->clear();
             PointProcessing::loadPoints(road_path, point_list);
+
+            FastLogger::log(road_path, ID_road_start, ID_road_last);
+
             std::sort(point_list->points.begin(), point_list->points.end(), [](const pcl::PointXYZ& a, const pcl::PointXYZ& b) {
                 return a.x < b.x;  // 按x值升序排序
             });
@@ -800,6 +772,6 @@ void MultisensorFusion::getDirect()
 
             // std::cout << "point_list  size  :" << point_list->size() <<std::endl;
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(30));
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));      // 10毫秒
     }
 }

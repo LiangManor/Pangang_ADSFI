@@ -13,6 +13,7 @@
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 #include <publisher.h>  //点云Mviz可视化
+#include "log.h"
 
 #include <pcl/io/pcd_io.h>
 #include <chrono>
@@ -64,6 +65,8 @@ pcl::PointCloud<pcl::PointXYZ>::Ptr road_point_list(new pcl::PointCloud<pcl::Poi
 
 LidarDetection::~LidarDetection()
 {
+    node.Stop();
+
     for (auto &iter : pool) {
         if (iter.joinable()) {
             iter.join();
@@ -98,7 +101,22 @@ mdc::visual::Publisher objPublisher {};    //聚类结果发布者
 mdc::visual::Publisher guolv_path_Pub {}; //点云
 // mdc::visual::Publisher road_path_Pub {}; //点云
 
+void LidarDetection::Initialize()
+{
+    bool result     = mdc::visual::Connect();
+    pc1PointXYZIRPub = mdc::visual::Publisher::Advertise<mdc::visual::PointCloud2>(ara::core::String("lidar_det_ground_cloud"));// 点云的话题
+    pc2PointXYZIRPub = mdc::visual::Publisher::Advertise<mdc::visual::PointCloud2>(ara::core::String("lidar_det_nogrou_cloud"));// 点云的话题
+    objPublisher    = mdc::visual::Publisher::Advertise<mdc::visual::MarkerArray>(ara::core::String("lidar_det_MarkerArray"));// 聚类框的话题
+    guolv_path_Pub  = mdc::visual::Publisher::Advertise<mdc::visual::PointCloud2>(ara::core::String("lidar_det_path_points"));// 点云的话题
+    // road_path_Pub   = mdc::visual::Publisher::Advertise<mdc::visual::PointCloud2>(ara::core::String("road_path_cloud"));// 点云的话题
+        // 开启单独线程 getDirect() 去获取行驶方向
+    // pool.push_back(std::thread(&LidarDetection::getDirect, this));
 
+    FastLogger::init("LidarDetection.log");
+
+    // std::cout << "LidarDetection Initialize completed." << std::endl;
+
+}
 void LidarDetection::Process()
 {   
     pool.push_back(std::thread(&LidarDetection::SubLidar, this));   // 点云检测子线程
@@ -119,11 +137,15 @@ void LidarDetection::cleanPcdDirectoryThread()
     size_t maxFiles = 5000;
 
 
-    while (true) 
+    while (!node.IsStop()) 
     {
         try {
             // ---- 1. 等待 30 分钟 ----
-            std::this_thread::sleep_for(30min);
+            for (int i = 0; i < 1800 && !node.IsStop(); i++) {
+                std::this_thread::sleep_for(std::chrono::seconds(1));
+            }
+
+            if (node.IsStop()) break;
 
             // ---- 2. 检查目录是否存在 ----
             if (!std::filesystem::exists(dirPath)) {
@@ -210,10 +232,11 @@ void LidarDetection::RecvLocation()
         //根据定位点，加载前方一段距离内的轨迹点 road_point_list （是从 point_list 中提取出来的）
         PointProcessing::findClosestAndFit(point_list, Point_Location, Yaw_Location, model, road_point_list);
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        // std::cout << "findClosestAndFit finished   " << road_point_list->size() << "   points found." << std::endl;
     }
 }
 
-void saveCloudAsPCD(const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloudROI)
+void LidarDetection::saveCloudAsPCD(const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloudROI)
 {
     static std::chrono::steady_clock::time_point lastSaveTime =
         std::chrono::steady_clock::now() - std::chrono::seconds(10);
@@ -224,6 +247,8 @@ void saveCloudAsPCD(const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloudROI)
     if (diff.count() < 2) {
         return; // 2秒内保存过，不再保存
     }
+
+    // FastLogger::log(" saveCloudAsPCD    front :", 11, 11);        //测试暂用
 
     lastSaveTime = now; // 更新保存时间
 
@@ -245,14 +270,15 @@ void saveCloudAsPCD(const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloudROI)
 
     char filename[256];
     snprintf(filename, sizeof(filename),
-             "%s/%04d_%02d_%02d_%02d_%02d_%02d.pcd",
+             "%s/%04d_%02d_%02d_%02d_%02d_%02d_%d.pcd",
              dirName.c_str(),
              tmTime.tm_year + 1900,
              tmTime.tm_mon + 1,
              tmTime.tm_mday,
              tmTime.tm_hour,
              tmTime.tm_min,
-             tmTime.tm_sec
+             tmTime.tm_sec,
+             this->model
     );
 
     std::string outputFilename(filename);
@@ -269,6 +295,8 @@ void saveCloudAsPCD(const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloudROI)
         // std::cout << "Saved PCD: " << outputFilename
         //           << "  (" << cloudROI->size() << " points)" << std::endl;
     }
+
+    // FastLogger::log(" saveCloudAsPCD    finish :", 22, 22);        //测试暂用
 }
 
 
@@ -277,23 +305,21 @@ void saveCloudAsPCD(const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloudROI)
 */
 void LidarDetection::SubLidar()
 {
-    bool result     = mdc::visual::Connect();
-    pc1PointXYZIRPub = mdc::visual::Publisher::Advertise<mdc::visual::PointCloud2>(ara::core::String("lidar_det_ground_cloud"));// 点云的话题
-    pc2PointXYZIRPub = mdc::visual::Publisher::Advertise<mdc::visual::PointCloud2>(ara::core::String("lidar_det_nogrou_cloud"));// 点云的话题
-    objPublisher    = mdc::visual::Publisher::Advertise<mdc::visual::MarkerArray>(ara::core::String("lidar_obj"));// 聚类框的话题
-    guolv_path_Pub  = mdc::visual::Publisher::Advertise<mdc::visual::PointCloud2>(ara::core::String("guolv_path_cloud"));// 点云的话题
-    // road_path_Pub   = mdc::visual::Publisher::Advertise<mdc::visual::PointCloud2>(ara::core::String("road_path_cloud"));// 点云的话题
-        // 开启单独线程 getDirect() 去获取行驶方向
-    // pool.push_back(std::thread(&LidarDetection::getDirect, this));
     TRACKER tracker;
         // ✅ 初始化 GroundFilter
     ground_filter_.setGroundThickness(ground_roi_z);            // 离地面过滤高度
     // ground_filter_.enableRailDetection(1.5f, Eigen::Vector3f(1, 0, 0));
         //加载 lidar2lidar 外参
     PointProcessing::loadTransformFromYaml("Config.yaml");
-    while (!node.IsStop()) 
+
+    // std::cout << "LidarDetection SubLidar started." << std::endl;
+
+        // 帧率计数
+    uint32_t frame_count = 0;
+
+    while (!node.IsStop())
     {
-    	// 获取当前行驶方向的lidarID
+        // 获取当前行驶方向的lidarID
         const uint32_t lidarID = getLidarID(this->model);
         if(lidarID == 0) // 表示不进行检测
         {
@@ -336,6 +362,15 @@ void LidarDetection::SubLidar()
 			}
 			continue;
 		}
+
+        frame_count++;
+        // 1. 每100帧记录一次当前系统时间和激光雷达数据的时间戳，比较两者的差异，判断是否存在较大的时间偏移。
+        if (frame_count % 100 == 0)
+        {
+            if(frame_count > 99999) frame_count = 0;
+            FastLogger::logNs(lidarData->timestamp.sec, lidarData->timestamp.nsec, "compare data time and lidar time and lidarID ", lidarID);
+        }
+
 		// ------------------------------------------- 获取原始数据 ---------------------------------------------- //
 		pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
 		PointT p;
@@ -390,6 +425,14 @@ void LidarDetection::SubLidar()
             }
         }
 
+        // if (frame_count % 20 == 0)
+        // {
+        //     FastLogger::logNs(1600000000, 888888888, "cloudROI finish time");
+        // }
+
+        // std::cout << "cloud->points.size()  :" << cloud->points.size() <<std::endl;
+        // std::cout << "cloudROI  size  :" << cloudROI->size() <<std::endl;
+
         // 检测到目标物后，保存点云
         if (have_obj > 0) saveCloudAsPCD(cloudROI);
 
@@ -437,6 +480,12 @@ void LidarDetection::SubLidar()
                 noFilt_30_x->points.push_back(noFilt->points[i]);
             }
         }
+
+        // if (frame_count % 20 == 0)
+        // {
+        //     FastLogger::logNs(1600000000, 888888888, "Ground_noGround finish time", frame_count);
+        // }
+
         // ------------------------------------------- 近处(30m以内)杂草去除 ---------------------------------------------- //
         // 1. 0~10m
         WEEDREMOVAL weedRemoval;
@@ -448,6 +497,11 @@ void LidarDetection::SubLidar()
         weedRemoval.ang_res_v = 0.1;
         pcl::PointCloud<pcl::PointXYZ>::Ptr noFilt_10_30_weedRemoval(new pcl::PointCloud<pcl::PointXYZ>);
         weedRemoval.weedRemoval(noFilt_10_30,noFilt_10_30_weedRemoval);
+
+        // if (frame_count % 20 == 0)
+        // {
+        //     FastLogger::logNs(1600000000, 888888888, "weedRemoval finish time", frame_count);
+        // }
 
         // ------------------------------------------- 对非地面 上层点 filt进行深度分割 ---------------------------------------------- //
         pcl::PointCloud<pcl::PointXYZ>::Ptr filt_0_30(new pcl::PointCloud<pcl::PointXYZ>);
@@ -485,6 +539,12 @@ void LidarDetection::SubLidar()
         dbscanCluster_30_x.clustering(cloud_30_x);
 		dbscanCluster_0_30.BoundingBox();
 		dbscanCluster_30_x.BoundingBox();
+
+        // if (frame_count % 20 == 0)
+        // {
+        //     FastLogger::logNs(1600000000, 888888888, "dbscanCluster finish time", frame_count);
+        // }
+
         // ------------------------------------------- 目标跟踪 ---------------------------------------------- //
         std::vector<BoundingBox> lidarDets;
 		for(int i = 0; i < dbscanCluster_0_30.obj.size(); i++)
@@ -516,10 +576,22 @@ void LidarDetection::SubLidar()
         std::vector<BoundingBox> track_result;
         float timestamp_1 = -1.;// 没用到
         tracker.track(lidarDets, track_result,timestamp_1);
+
+        // if (frame_count % 20 == 0)
+        // {
+        //     FastLogger::logNs(1600000000, 888888888, "track_result finish time", frame_count);
+        // }
+
+        if(track_result.size() > 0 && frame_count % 10 == 0)
+        {
+            FastLogger::log("lidar_det object num and have_obj: ", track_result.size(), have_obj);
+        }
+
         // -------------------------------------------  聚类结果可视化   ---------------------------------------------- //
         // 可视化
         if(this->mvizVision)
         {
+            // std::cout << "Publishing to Mviz..." << std::endl;
             //往Mviz发送滤波后的ROI区域
             mdc::visual::PointCloud<mdc::visual::PointXYZRGB> data;// 发往mviz的数据流
             data.header.frameId = "map";// ---------点云坐标
@@ -651,10 +723,13 @@ void LidarDetection::SubLidar()
 		// vizMarkerArray.markers[label].color.g = 0;
 		// vizMarkerArray.markers[label].color.b = 0;
 
-		// 往下游节点发送数据
+		// >>>>>>>>>>>>>>>>    往下游节点发送数据      <<<<<<<<<<<<<<<<<
 		auto out = std::make_shared<Haf3dDetectionOutArray<float>>();
 		out->frameID        = std::to_string(this->model);// 传感器id-----------------------
 		out->seq            = 0;// 0表示正常 -------------------------------
+        // out->timestamp = lidarData->timestamp;      // 激光雷达的传感器时间戳
+        out->timestamp.sec = lidarData->timestamp.sec;
+        out->timestamp.nsec = lidarData->timestamp.nsec;
 		// 最近障碍物放在最前边
 		Haf3dDetectionOut<float32_t> out3d;
 		out3d.cls = 1;// 类别
@@ -778,14 +853,25 @@ std::string getTrajectoryFileNameByIDs(int history_ID, int now_ID) {
 
 void LidarDetection::getDirect()
 {
+    uint32_t frame_count = 0;
     while(!node.IsStop())
     {
-        // // std::cout << "++++++++++++ getDirect +++++++++++++"<<std::endl;
+        // std::cout << "++++++++++++ getDirect +++++++++++++"<<std::endl;
 
-        this->model = receiver.receiveMessage()[0];
-        ID_road_start = receiver.receiveMessage()[1];
-        ID_road_last = receiver.receiveMessage()[2];
-        have_obj = receiver.receiveMessage()[3];
+        // frame_count++;
+        // if(frame_count > 10000) frame_count = 0;
+        // FastLogger::logNs(1600000000, 888888888, "getDirect strat time, frame_count, have_obj", frame_count, have_obj);
+
+        auto msg = receiver.receiveMessage();
+        if(msg[0] == -1 || msg[1] == -1 || msg[2] == -1 || msg[3] == -1)
+        {
+            std::this_thread::sleep_for(std::chrono::microseconds(5000)); // 5000微秒 = 5毫秒
+            continue;
+        }
+        this->model      = msg[0];
+        ID_road_start    = msg[1];
+        ID_road_last     = msg[2];
+        have_obj         = msg[3];
 
         // /////////////////////     手动修改配置参数     ///////////////////////
         // if (ID_road == 0)
@@ -824,10 +910,18 @@ void LidarDetection::getDirect()
         // }
         ///////////////////////////////////////////
 
-        if (this->model >= 0 && ID_road_start >= 0 && ID_road_last >= 0) {  // 检查是否接收成功
-            // std::cout << "Received integers: " << this->model << " and " << ID_road_start << " and " << ID_road_last << std::endl;
-        } else {
-            std::cerr << "Failed to receive valid data" << std::endl;
+        // 记录方向、障碍物 入日志
+        if(model != model_history)
+        {
+            FastLogger::log("lidar_det model :", model_history, model);
+            // std::cout << "lidar_det model  :" << model_history << model <<std::endl;
+            model_history = model;
+        }
+        if(have_obj != have_obj_history)
+        {
+            FastLogger::log("lidar_det have_obj :", have_obj_history, have_obj);
+            // std::cout << "lidar_det have_obj  :" << have_obj_history << have_obj <<std::endl;
+            have_obj_history = have_obj;
         }
 
         if (this->model > 0 && ID_road_start > 0 && ID_road_last > 0 && (ID_road_start != history_ID_road_start || ID_road_last != history_ID_road_last))
@@ -835,9 +929,18 @@ void LidarDetection::getDirect()
             // std::cout << "Received integers: " << this->model << " and " << ID_road_start << " and " << ID_road_last << std::endl;
 
             std::string road_path = getTrajectoryFileNameByIDs(ID_road_start, ID_road_last);
+
+            // FastLogger::logNs(1600000000, 888888888, "getDirect getTrajectoryFileNameByIDs finish time, frame_count, have_obj", frame_count, have_obj);
+
             // std::cout << "loadPoints--------------------" << road_path <<std::endl;
             point_list->clear();
             PointProcessing::loadPoints(road_path, point_list);
+
+            FastLogger::log(road_path, ID_road_start, ID_road_last);
+
+            // FastLogger::logNs(1600000000, 888888888, "getDirect loadPoints finish time, frame_count, have_obj", frame_count, have_obj);
+
+
             std::sort(point_list->points.begin(), point_list->points.end(), [](const pcl::PointXYZ& a, const pcl::PointXYZ& b) {
                 return a.x < b.x;  // 按x值升序排序
             });
@@ -846,6 +949,10 @@ void LidarDetection::getDirect()
 
             // std::cout << "point_list  size  :" << point_list->size() <<std::endl;
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+
+        // FastLogger::logNs(1600000000, 888888888, "getDirect finish time, frame_count, have_obj", frame_count, have_obj);
+
+        // std::this_thread::sleep_for(std::chrono::microseconds(2000)); // 2000微秒 = 2毫秒
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));      // 10毫秒
     }
 }

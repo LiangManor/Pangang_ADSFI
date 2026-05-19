@@ -57,6 +57,9 @@ class CallbackProcessor {
   int recorder_data(int lidar_handle, void *context, enum InnoRecorderCallbackType type,
                                       const char *buffer, int len);
 
+  // std::atomic<uint64_t> data_frame_id{0};
+  // uint64_t last_sent_frame_id = 0;
+
  public:
   CallbackProcessor(const CallbackProcessor &) = delete;
   CallbackProcessor &operator=(const CallbackProcessor &) = delete;
@@ -66,6 +69,8 @@ class CallbackProcessor {
   int64_t frame_so_far_ = -1;
   volatile bool done_ = false;
   std::vector<PcdPoint> frame_data_;
+
+  double frame_timestamp_sec_first = 0.0;   // ⭐新增
   bool enable = false;
   pcl::PointCloud<pcl::PointXYZI>::Ptr cloud;
 };
@@ -110,12 +115,20 @@ int CallbackProcessor::process_data(int handler, const InnoDataPacket &pkt) {
       }
       InnoXyzPoint *point = reinterpret_cast<InnoXyzPoint *>(const_cast<char *>(pkt.payload));
       PcdPoint pcd_point;
+      // if(point[i].elongation > 2) continue;       //脉冲宽度,根据脉冲宽度简单粗暴的过滤雨雾。
       pcd_point.x = point[i].x;
       pcd_point.y = point[i].y;
       pcd_point.z = point[i].z;
       pcd_point.reflectivity = point[i].refl;
       double frame_timestamp_sec = pkt.common.ts_start_us / kUsInSecond + point[i].ts_10us / k10UsInSecond;
       pcd_point.timestamp = frame_timestamp_sec;
+      // ⭐保存帧时间（只需要第一点）
+      if(frame_data_.empty())
+      {
+          this->frame_timestamp_sec_first = frame_timestamp_sec;
+      }
+
+
       pcd_point.facet = point[i].facet;
       pcd_point.is_2nd_return = point[i].is_2nd_return;
       pcd_point.multi_return = point[i].multi_return;
@@ -154,7 +167,8 @@ int CallbackProcessor::process_data(int handler, const InnoDataPacket &pkt) {
       frame_data_.emplace_back(pcd_point);
     }
   }
-  // 
+  // // 每次新数据时递增
+  // data_frame_id++;
   return 0;
 }
 

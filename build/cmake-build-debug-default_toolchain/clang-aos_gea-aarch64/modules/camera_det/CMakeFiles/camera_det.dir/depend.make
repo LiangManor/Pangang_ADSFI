@@ -4,6 +4,7 @@
 modules/camera_det/CMakeFiles/camera_det.dir/src/camera_detection_app.cpp.o: ../../../modules/camera_det/include/camera_det_util.h
 modules/camera_det/CMakeFiles/camera_det.dir/src/camera_detection_app.cpp.o: ../../../modules/camera_det/include/camera_detection_app.h
 modules/camera_det/CMakeFiles/camera_det.dir/src/camera_detection_app.cpp.o: ../../../modules/camera_det/include/image_nn_inference.h
+modules/camera_det/CMakeFiles/camera_det.dir/src/camera_detection_app.cpp.o: ../../../modules/camera_det/include/log.h
 modules/camera_det/CMakeFiles/camera_det.dir/src/camera_detection_app.cpp.o: ../../../modules/camera_det/include/udp.h
 modules/camera_det/CMakeFiles/camera_det.dir/src/camera_detection_app.cpp.o: /home/inwinic/MDC610/ShoftWare/MDC_Application_Visualizer-2.2.001-0000000-Ubuntu20/mviz_devel_kit/include/mviz/logger.h
 modules/camera_det/CMakeFiles/camera_det.dir/src/camera_detection_app.cpp.o: /home/inwinic/MDC610/ShoftWare/MDC_Application_Visualizer-2.2.001-0000000-Ubuntu20/mviz_devel_kit/include/mviz/mviz.h

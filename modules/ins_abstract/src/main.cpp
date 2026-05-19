@@ -31,6 +31,7 @@ using gnssSkeleton = ara::gnss::skeleton::GnssInfoServiceInterfaceSkeleton;
 using imuSkeleton  = ara::imu::skeleton::ImuInfoServiceInterfaceSkeleton;
 using namespace ara::com;
 using namespace ara::core;
+using namespace mdc::visual;
 
 // cm通讯
 std::shared_ptr<gnssSkeleton> gnss_Skeleton;
@@ -47,7 +48,8 @@ ara::ins::Time GetCurrentTime();
 void HCFDINSPVATB(const std::vector<uint8_t> & data);
 void HCFDRAWIMUVB(const std::vector<uint8_t> & data);
 
-
+mdc::visual::Publisher pc1PointXYZIRPub {}; //点云
+mdc::visual::Publisher pc2PointXYZIRPub {}; //点云
 
 /*
  * 打印can数详细信息
@@ -232,6 +234,10 @@ int main(int argc, char* argv[])
         mainLog.LogError() << canName << "Init failed!";
         return -1;
     }
+
+    pc1PointXYZIRPub = mdc::visual::Publisher::Advertise<mdc::visual::PointCloud2>(ara::core::String("imu_orgin_data"));// 点云的话题
+    pc2PointXYZIRPub = mdc::visual::Publisher::Advertise<mdc::visual::PointCloud2>(ara::core::String("imu_ekf_data"));// 点云的话题
+
     timeval tv = {2, 0};
     socketCan.SetRecvTimeout(tv);
     // 注册GNSS的CM服务，目的是往下游节点发送数据
@@ -279,8 +285,8 @@ int main(int argc, char* argv[])
         }
         else
         {
-            CanfdData(tstamp, canName, receiveFrame);
-//            std::cout<<"解析canFD"<<std::endl;
+            CanfdData(tstamp, canName, receiveFrame);           //解析IMU数据
+           std::cout<<"解析canFD——imu"<<std::endl;
             counter = 0;
         }
     }
@@ -618,12 +624,50 @@ void HCFDRAWIMUVB(const std::vector<uint8_t> & data)
 		sampleImu->angularVelocity.x = sampleImu->angularVelocity.x - filter.meanAngX;
 		sampleImu->angularVelocity.y = sampleImu->angularVelocity.y - filter.meanAngY;
 		sampleImu->angularVelocity.z = sampleImu->angularVelocity.z - filter.meanAngZ;
-//		std::cout<<"------零漂校正"<<"  ax = "<<sampleImu->acceleration.x
-//				                 <<"  ay = "<<sampleImu->acceleration.y
-//								 <<"  az = "<<sampleImu->acceleration.z
-//								 <<"  xAngular = "<<sampleImu->acceleration.x
-//								 <<"  yAngular = "<<sampleImu->acceleration.y
-//								 <<"  zAngular = "<<sampleImu->angularVelocity.z<<std::endl;
+		// std::cout<<"------零漂校正"<<"  ax = "<<sampleImu->acceleration.x
+		// 		                 <<"  ay = "<<sampleImu->acceleration.y
+		// 						 <<"  az = "<<sampleImu->acceleration.z
+		// 						 <<"  xAngular = "<<sampleImu->angularVelocity.x
+		// 						 <<"  yAngular = "<<sampleImu->angularVelocity.y
+		// 						 <<"  zAngular = "<<sampleImu->angularVelocity.z<<std::endl;
+
+        // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  ros topic <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<//
+        mdc::visual::PointCloud<mdc::visual::PointXYZRGB> data1;// 发往mviz的数据流
+        data1.header.frameId = "map";// ---------点云坐标
+        data1.isDense = false;
+        // data1.header.stamp = mdc::visual::Times { sec, nsec };
+
+        // ===============================
+        // acceleration
+        // 白色
+        // ===============================
+        mdc::visual::PointXYZRGB accelPt1(
+            sampleImu->acceleration.x,
+            sampleImu->acceleration.y,
+            sampleImu->acceleration.z,
+            255, 255, 255);
+
+        data1.points.push_back(accelPt1);
+
+
+        // ===============================
+        // angular velocity
+        // 红色
+        // ===============================
+        mdc::visual::PointXYZRGB gyroPt1(
+            sampleImu->angularVelocity.x,
+            sampleImu->angularVelocity.y,
+            sampleImu->angularVelocity.z,
+            255, 0, 0);
+
+        data1.points.push_back(gyroPt1);
+        // 发布
+        pc1PointXYZIRPub.Publish(data1);
+
+        // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  ros topic <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<//
+
+
+
 		// 低通滤波
 		// 三轴加速度(m/s²)
 		sampleImu->acceleration.x    = filter.LowPassFilter_kalman(sampleImu->acceleration.x,    filter.varianceAx);
@@ -640,6 +684,41 @@ void HCFDRAWIMUVB(const std::vector<uint8_t> & data)
 //								 <<"  xAngular = "<<sampleImu->acceleration.x
 //								 <<"  yAngular = "<<sampleImu->acceleration.y
 //								 <<"  zAngular = "<<sampleImu->angularVelocity.z<<std::endl;
+
+        // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  ros topic <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<//
+        mdc::visual::PointCloud<mdc::visual::PointXYZRGB> data2;// 发往mviz的数据流
+        data2.header.frameId = "map";// ---------点云坐标
+        data2.isDense = false;
+        // data2.header.stamp = mdc::visual::Times { sec, nsec };
+
+        // ===============================
+        // acceleration
+        // 白色
+        // ===============================
+        mdc::visual::PointXYZRGB accelPt2(
+            sampleImu->acceleration.x,
+            sampleImu->acceleration.y,
+            sampleImu->acceleration.z,
+            255, 255, 255);
+
+        data2.points.push_back(accelPt2);
+
+
+        // ===============================
+        // angular velocity
+        // 红色
+        // ===============================
+        mdc::visual::PointXYZRGB gyroPt2(
+            sampleImu->angularVelocity.x,
+            sampleImu->angularVelocity.y,
+            sampleImu->angularVelocity.z,
+            255, 0, 0);
+
+        data2.points.push_back(gyroPt2);
+        // 发布
+        pc2PointXYZIRPub.Publish(data2);
+        // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  ros topic <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<//
+
 		// 发送数据
 	    counterImu++;
         

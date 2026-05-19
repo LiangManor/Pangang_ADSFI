@@ -209,6 +209,32 @@ _mviz_devel_kit_for_camera_det/fast:
 .PHONY : _mviz_devel_kit_for_camera_det/fast
 
 #=============================================================================
+# Target rules for targets named can_receive_sample
+
+# Build rule for target.
+can_receive_sample: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 can_receive_sample
+.PHONY : can_receive_sample
+
+# fast build rule for target.
+can_receive_sample/fast:
+	$(MAKE) -f modules/can_sample/can_receive_sample/CMakeFiles/can_receive_sample.dir/build.make modules/can_sample/can_receive_sample/CMakeFiles/can_receive_sample.dir/build
+.PHONY : can_receive_sample/fast
+
+#=============================================================================
+# Target rules for targets named can_send_sample
+
+# Build rule for target.
+can_send_sample: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 can_send_sample
+.PHONY : can_send_sample
+
+# fast build rule for target.
+can_send_sample/fast:
+	$(MAKE) -f modules/can_sample/can_send_sample/CMakeFiles/can_send_sample.dir/build.make modules/can_sample/can_send_sample/CMakeFiles/can_send_sample.dir/build
+.PHONY : can_send_sample/fast
+
+#=============================================================================
 # Target rules for targets named innolidarutils
 
 # Build rule for target.
@@ -562,6 +588,8 @@ help:
 	@echo "... _roscpp_serialization"
 	@echo "... camera_det"
 	@echo "... _mviz_devel_kit_for_camera_det"
+	@echo "... can_receive_sample"
+	@echo "... can_send_sample"
 	@echo "... innolidarutils"
 	@echo "... innolidarutils_cpplint"
 	@echo "... innolidarsdkcommon_cpplint"

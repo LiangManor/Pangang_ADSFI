@@ -2,12 +2,8 @@
  * Description:  Define multisensor_fusion.cpp
  * Copyright (c) Huawei Technologies Co., Ltd. 2019-2021. All rights reserved.
  */
-
-
-
 #include<string>
 #include <sys/time.h>
-#include "core/core.h"
 #include "core/logger.h"
 #include "object/object.h"
 #include<yaml-cpp/yaml.h>
@@ -17,40 +13,18 @@
 #include "multisensor_fusion.h"
 #include <memory>
 
-using namespace std;
 using namespace Adsfi;
-static Slam slam;
-static uint8_t hb = 0;
-static Obstacle pre;
-static SensorFault ses;
-std::string workList;
-
-static Pair myPair;
-
-static Fusions fu;
-static ZcData zcData;
-std::string lidarIdStr;
-std::string radarIdStr;
-std::vector <std::string> radarIdList;
-static int de = 0; // de表示火车行驶方向， 1表示向1端前进， 2表示向2端前进
 Logger &logger = Logger::getInstance();
-
-int historyStation  = 0; // 初始化时候将其设置为 0
-int historyDiretion = 0; // 行驶方向只有1、2，所以初始化时候将其设置为 0
-
-int historySymbol;
-
 
 /**
  * 把工位点文本, [x1,y1],[x2,y2]转成集合方便获取
  * @param workList
- * @return
+ * @return pairs
  */
 std::vector <Pair> parseWorkList(const std::string &workList) {
     std::vector <Pair> pairs;
     std::string cleanedWorkList = workList;
 
-    // 删除不需要的字符，如 '[' 和 ']'
     cleanedWorkList.erase(std::remove(cleanedWorkList.begin(), cleanedWorkList.end(), '['), cleanedWorkList.end());
     cleanedWorkList.erase(std::remove(cleanedWorkList.begin(), cleanedWorkList.end(), ']'), cleanedWorkList.end());
 
@@ -60,27 +34,21 @@ std::vector <Pair> parseWorkList(const std::string &workList) {
     // 逐个解析每对值
     while (std::getline(ss, pairStr, ',')) {
         Pair p;
-        std::stringstream pairStream(pairStr);
-        pairStream >> p.x;  // 第一个值给 p.x
-        if (std::getline(ss, pairStr, ',')) {
-            p.y = std::stof(pairStr);  // 第二个值给 p.y
-            pairs.push_back(p);        // 添加到 pairs 集合中
-        }
+        try {
+			p.x = std::stof(pairStr);
+			if (std::getline(ss, pairStr, ',')) {
+				p.y = std::stof(pairStr);
+				pairs.push_back(p);
+			}
+		} catch (const std::exception& e) {
+			logger.log(Logger::ERROR, "解析工位点失败: " + std::string(e.what()));
+		}
     }
-
     return pairs;
 }
 
-
-// 根据索引获取 Pair 对象
-void getPairAtIndex(const std::vector <Pair> &pairs, size_t index) {
-    if (index < pairs.size()) {
-        myPair = pairs[index];
-    }
-}
-
 /**
- * 把16进制转字节码
+ * 把16进制字符串转字节数组
  * @param hexStr
  * @return
  */
@@ -94,44 +62,33 @@ std::vector <uint8_t> hexStringToBytes(const std::string &hexStr) {
             hexStream.ignore(); // 忽略空格
         }
     }
-
     return bytes;
 }
 
-
-/**
- * MultisensorFusion的构造函数
- * @param configFile
- */
- // 
+// ==================== MultisensorFusion的构造函数 ====================
 MultisensorFusion::MultisensorFusion(std::string configFile) : node(configFile) {
     try {
-        // 使用YAML的api加载配置文件
+    	int a = 0;
         YAML::Node config = YAML::LoadFile(configFile);
-        // 获取工位点信息集合
-        workList = config["workList"].as<std::string>();
-        // 创建线程并保存到容器中
-        std::vector <std::thread> threads;// 是不是多余了？？？？？？？？？？？？？
-        
+        // 获取工位点信息
+        workList_ = config["workList"].as<std::string>();
+        workPairs_ = parseWorkList(workList_);
+
         // 1.往车控发送数据
         int destPort_ZC = config["ClientSock_ZC"]["destPort"].as<int>();
         std::string destIP_ZC = config["ClientSock_ZC"]["destIP"].as<std::string>();
+//        std::cout << "destIP_ZC = " << destIP_ZC << ", destPort_ZC = " << destPort_ZC << std::endl;
         // -------------- 只是开启一个子线程去设置通讯 车控端的ip 和 车控端的端口
         pool.push_back(std::thread(&udpCommHelp::initClientSock_ZC, & this->udpHelp, destPort_ZC, destIP_ZC));
+
         // 2.获取车控发过来的数据
         int serverPort_ZC = config["serverSock_ZC"]["destPort"].as<int>();
         std::string serverDestIP_ZC = config["serverSock_ZC"]["destIP"].as<std::string>();
         // -------------- 只是开启一个子线程去设置 本机通讯ip(没用到) 和 本机端口
         pool.push_back(std::thread(&udpCommHelp::initServerZc, &this->udpHelp, serverDestIP_ZC, serverPort_ZC));
         // 3.获取感知结果，获取定位结果，然后把结构化数据发送到车控
-        // ------------- 该线程内部有个死循环
         pool.push_back(std::thread(&MultisensorFusion::getFusionSend, this));
-        // 等待所有线程完成
-        for (auto &thread: threads) {// 是不是多余了？？？？？？？？？？？？？
-            if (thread.joinable()) {
-                thread.join();
-            }
-        }
+
     } catch (const YAML::Exception &yamlEx) {
         logger.logException(std::runtime_error(yamlEx.what()));
     } catch (const std::exception &e) {
@@ -139,15 +96,158 @@ MultisensorFusion::MultisensorFusion(std::string configFile) : node(configFile) 
     } catch (...) {
         logger.log(Logger::ERROR, "初始化位置异常");
     }
-    std::cout << "MultisensorFusion 构造函数执行完毕..." << std::endl;
 
-    outFile.open("sendData.txt");
-    outFile1.open("slamData.txt");
-    outFile2.open("recvData.txt");
+    // 初始化状态变量
+	udp_socket_ = -1;
+	udp_running_ = false;
+	udp_server_port_ = 8889;            // UDP接收端口
+	udp_client_ip_ = "192.168.30.42";   // UDP发送目标IP
+	udp_client_port_ = 8888;            // UDP发送目标端口
+
+//	std::cout << "  UDP接收端口: " << udp_server_port_ << std::endl;
+//	std::cout << "  UDP发送目标: " << udp_client_ip_ << ":" << udp_client_port_ << std::endl;
+
+	// 设置UDP通信
+	setupUDP();
+
+    // 打开日志文件
+    sendFile.open("sendData.txt");
+    slamFile.open("slamData.txt");
+    recvFile.open("recvData.txt");
+    if (!sendFile.is_open() || !slamFile.is_open() || !recvFile.is_open()) {
+		logger.log(Logger::ERROR, "无法打开日志文件");
+	}
+
+//    std::cout << "MultisensorFusion 构造函数执行完毕..." << std::endl;
 }
 
+MultisensorFusion::~MultisensorFusion() {
+//	std::cout << "开始析构" << std::endl;
+    isThreadRunning = false;
+    udp_running_ = false;
 
+    // 关闭socket以中断阻塞的recvfrom，关闭UDP线程
+	if (udp_socket_ >= 0) {
+		shutdown(udp_socket_, SHUT_RDWR);
+		close(udp_socket_);
+		udp_socket_ = -1;
+	}
 
+	if (udp_receive_thread_.joinable()) {
+		udp_receive_thread_.join();
+	}
+
+	// 关闭感知线程、定位线程、中车数据接收线程
+    for (auto &it: pool) {
+        if (it.joinable()) {
+            it.join();
+        }
+    }
+
+    // 关闭数据记录句柄
+    if(sendFile.is_open()){
+    	sendFile.close();
+    }
+    if(slamFile.is_open()){
+    	slamFile.close();
+	}
+    if(recvFile.is_open()){
+		recvFile.close();
+	}
+//    std::cout << "析构完成" << std::endl;
+}
+
+/**
+ * 设置UDP通信
+ * 功能：创建UDP socket，绑定端口，启动接收线程
+ */
+void MultisensorFusion::setupUDP()
+{
+    // 创建UDP socket
+    udp_socket_ = socket(AF_INET, SOCK_DGRAM, 0);
+    if (udp_socket_ < 0) {
+        std::cerr << "错误: 创建UDP socket失败！" << std::endl;
+        return;
+    }
+
+    // 设置服务器地址（接收端）
+    memset(&udp_server_addr_, 0, sizeof(udp_server_addr_));
+    udp_server_addr_.sin_family = AF_INET;
+    udp_server_addr_.sin_addr.s_addr = INADDR_ANY;
+    udp_server_addr_.sin_port = htons(udp_server_port_);
+
+    // 绑定socket
+    if (::bind(udp_socket_, (struct sockaddr*)&udp_server_addr_, sizeof(udp_server_addr_)) < 0) {
+        std::cerr << "错误: 绑定UDP端口 " << udp_server_port_ << " 失败！" << std::endl;
+        close(udp_socket_);
+        udp_socket_ = -1;
+        return;
+    }
+
+    // 设置客户端地址（发送端）
+    memset(&udp_client_addr_, 0, sizeof(udp_client_addr_));
+    udp_client_addr_.sin_family = AF_INET;
+    udp_client_addr_.sin_port = htons(udp_client_port_);
+    inet_pton(AF_INET, udp_client_ip_.c_str(), &udp_client_addr_.sin_addr);
+
+    // 设置非阻塞模式
+    struct timeval tv;
+    tv.tv_sec = 0;
+    tv.tv_usec = 100000; // 100ms超时
+    setsockopt(udp_socket_, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
+
+    // 启动UDP接收线程
+    udp_running_ = true;
+    udp_receive_thread_ = std::thread(&MultisensorFusion::udpReceiveTunableSignalThread, this);
+
+//    std::cout << "UDP通信设置完成，监听端口: " << udp_server_port_ << std::endl;
+}
+
+void MultisensorFusion::udpReceiveTunableSignalThread()
+{
+    uint8_t buffer[1];
+    struct sockaddr_in sender_addr;
+    socklen_t sender_len = sizeof(sender_addr);
+
+    while (udp_running_) {
+        int recv_len = recvfrom(udp_socket_, buffer, 1, 0,
+                               (struct sockaddr*)&sender_addr, &sender_len);
+
+        if (recv_len > 0) {
+//            std::cout << "[UDP] slam的转盘确认信号: 0x" << std::hex << (int)buffer[0] << std::dec << std::endl;
+            // 线程安全更新
+			updateTunableStatusConfirm(buffer[0]);
+        }
+
+        // 短暂休眠避免CPU占用过高
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    }
+}
+
+/**
+ * 发送UDP完成信号
+ * 功能：重定位完成后向外部系统发送0xFF完成标志
+ */
+void MultisensorFusion::sendUDPTunSpeed(uint8_t diRection)
+{
+    if (udp_socket_ < 0) {
+        std::cerr << "[UDP] 警告: UDP socket未初始化，无法发送完成信号" << std::endl;
+        return;
+    }
+
+    uint8_t sendBuff[1];
+    sendBuff[0] = diRection;
+    int sent_len = sendto(udp_socket_, sendBuff, sizeof(sendBuff), 0,
+                         (struct sockaddr*)&udp_client_addr_,
+                         sizeof(udp_client_addr_));
+
+//    if (sent_len < 0) {
+//        std::cerr << "[UDP] 错误: 发送完成信号失败！" << std::endl;
+//    } else {
+//        std::cout << "[UDP] 成功发送方向信号 tbSignal " << static_cast<int>(diRection) << " 到 "
+//                  << udp_client_ip_ << ":" << udp_client_port_ << std::endl;
+//    }
+}
 
 /**
  * 独立线程，去获取感知数据和定位数据，同时给车控发送结构数据
@@ -155,28 +255,30 @@ MultisensorFusion::MultisensorFusion(std::string configFile) : node(configFile) 
 void MultisensorFusion::getFusionSend() {
     //这里延迟,是为了等待node节点初始化完成,因为是异步的
     std::this_thread::sleep_for(std::chrono::milliseconds(5000));
-    while (true) {
+    while (isThreadRunning) {
         try {
-            getPreFusion();// 获取感知结果
-            RecvLocation();// 获取定位结果
-            // 该if...else if是为了避免自动模式时，slam.direction的值为1、2，所以发送给车控之前要转换成 170 （朝2端前进）和 85 （朝1端前进）
-            if (slam.direction == 2) {
-                slam.direction = 170;
-            } else if (slam.direction == 1) {
-                slam.direction = 85;
-            }
-            //设置定位信息
-            fu.setSlam(slam);
-            //设置感知数据(障碍物信息)
-            fu.setOb(pre);
-            std::cout<<"debug slam.direction = "<<(int)slam.direction<<std::endl;
-            //发送数据到车控
-            std::cout<<"发送心跳为："<<static_cast<int>(slam.hb) << ", 方向为："<<static_cast<int>(slam.direction) << ", 距离为："<<static_cast<int>(slam.station_distance)<<std::endl;
+            getPreFusion();		// 获取感知结果
+            RecvLocation();		// 获取定位结果
+			Fusions fusionsCopy = getFusionsCopy();		// 获取数据副本用于发送
 
-            outFile << fu.toHexString() << std::endl;
-            outFile1 << static_cast<int>(slam.hb) << ", " << slam.headX << ", " << slam.headY << ", "<< slam.headZ << ", " << static_cast<int>(slam.direction) << std::endl;
-            udpHelp.sendMsg(hexStringToBytes(fu.toHexString()));
-            //每50ms执行一次
+            // 该if...else if是为了避免自动模式时，slam.direction的值为1、2，所以发送给车控之前要转换成 170 （朝2端前进）和 85 （朝1端前进）
+			uint8_t direction = fusionsCopy.slam.direction;
+			if (direction == FusionConstants::DIRECTION_TO_END2) {
+				fusionsCopy.slam.direction = FusionConstants::DIRECTION_MANUAL_END2;
+			} else if (direction == FusionConstants::DIRECTION_TO_END1) {
+				fusionsCopy.slam.direction = FusionConstants::DIRECTION_MANUAL_END1;
+			}
+			// 写入日志文件
+			std::string hexData = fusionsCopy.toHexString();
+			sendFile << hexData << std::endl;
+			slamFile << static_cast<int>(fusionsCopy.slam.hb) << ", "
+					 << fusionsCopy.slam.headX << ", "
+					 << fusionsCopy.slam.headY << ", "
+					 << fusionsCopy.slam.headZ << ", "
+					 << fusionsCopy.slam.headT << std::endl;
+			// 发送数据到车控
+			udpHelp.sendMsg(hexStringToBytes(hexData));
+
             std::this_thread::sleep_for(std::chrono::milliseconds(50));
         }
         catch (std::exception &e) {
@@ -185,133 +287,71 @@ void MultisensorFusion::getFusionSend() {
     }
 }
 
-
-
-
-MultisensorFusion::~MultisensorFusion() {
-    isThreadRunning = false;
-    for (auto &it: pool) {
-        if (it.joinable()) {
-            it.join();
-        }
-    }
-
-    if(outFile.is_open())
-    {
-    	outFile.close();
-    }
-    if(outFile1.is_open())
-	{
-    	outFile1.close();
-	}
-    if(outFile2.is_open())
-	{
-		outFile2.close();
-	}
-}
-
-
-
 /**
  * 进程管理
  */
 void MultisensorFusion::Process() {
     // 开启线程去获取车控端的结构化数据
     pool.push_back(std::thread(&MultisensorFusion::getZcData, this));
-    // 开启线程，在内部广播车辆的行驶方向
+//    // 开启线程，在内部广播车辆的行驶方向
     pool.push_back(std::thread(&MultisensorFusion::mdcBroadcastData, this));
 }
-
 
 //---------------------------------------Process函数去调用一下两个函数
 /**
  * 定时接收来自车控的数据
  */
 void MultisensorFusion::getZcData() {
-    try {
-        //读取配置文件中workList的信息
-        std::vector <Pair> pairs = parseWorkList(workList);
-        while (true) {
-            unsigned char buf[3080];
-            memset(buf, 0, sizeof(buf));
-            // -------接收来自车控的结构化数据数据
-            int recv_len = udpHelp.recvData_clientSock_zc(buf, sizeof(buf));
-            if (recv_len > 0) 
-            {
-                std::vector<unsigned char> buf_vec(buf, buf + recv_len);
-                // 打印所有接收到的数据
-                std::cout<<"-------------------------------------------------------"<<std::endl;
-                std::cout<<" ------ 原始HEX "<<std::endl;
-                for (int i = 0; i < recv_len; i++) 
-                {
-                    std::cout << std::hex << static_cast<int>(buf_vec[i]) << " ";
-                    outFile2 << static_cast<int>(buf_vec[i]) << ", ";
-                }
-                outFile2 << std::endl;
-                std::cout << std::dec << std::endl;
+	while (isThreadRunning) {
+		unsigned char buf[3080];
+		memset(buf, 0, sizeof(buf));
+		// -------接收来自车控的结构化数据数据
+		int recv_len = udpHelp.recvData_clientSock_zc(buf, sizeof(buf));
+		if (recv_len > 0)
+		{
+			std::vector<unsigned char> buf_vec(buf, buf + recv_len);
+			// 写入接收日志
+			for (int i = 0; i < recv_len; i++){
+				recvFile << static_cast<int>(buf_vec[i]) << ", ";
+			}
+			recvFile << std::endl;
 
-                // 将数据设置到 ZcData 对象中
-                zcData.setData(buf_vec);
-                // 获取目标工位点的坐标
-                // 此处需要更改 --------------------------- 
-                // 筛选需要停车的目标工位点
-                
-                // 打印解析后的数据
-                std::cout<<" ------ 解析后数据 "<<std::endl;
-                std::cout<<"VCU HB:"<<static_cast<int>(zcData.HB)<<std::endl;
-                std::cout<<"RED_Alarm:"<<static_cast<int>(zcData.RED_Alarm)<<std::endl;
-                std::cout<<"Yellow_Alarm:"<<static_cast<int>(zcData.Yellow_Alarm)<<std::endl;
-                std::cout<<"Coup_Status:"<<static_cast<int>(zcData.Coup_Status)<<std::endl;
-                std::cout<<"Target Station:"<<static_cast<int>(zcData.Station)<<std::endl;
-                std::cout<<"Run_Mode:"<<static_cast<int>(zcData.Run_Mode)<<std::endl;
-                std::cout<<"Station_Num:"<<static_cast<int>(zcData.Station_Num)<<std::endl;
-                // 
-                int number = static_cast<int>(zcData.Station_Num);
-                if(number == 0)
-                {
-                	zcData.Station = 0;
-                }
-                for(int i = 1; i <= number; i++)
-                {
-                	std::cout<<" Station ID ["<<(int)(zcData.All_Station[i-1].Station_ID)<<"]:"<<std::endl;
-                	std::cout<<"            不作为:"<< (zcData.All_Station[i-1].Station_Status & 0x01)<<std::endl;
-                	std::cout<<"            降速  :"<< (zcData.All_Station[i-1].Station_Status & (0x01 << 1))<<std::endl;
-                	std::cout<<"            停车  :"<< (zcData.All_Station[i-1].Station_Status & (0x01 << 2))<<std::endl;
-                	std::cout<<"            Status      :"<< (zcData.All_Station[i-1].Station_Status & (0x01 << 4))<<std::endl;
-                	std::cout<<"            道岔信号确认 :"<< (zcData.All_Station[i-1].Station_Status & (0x01 << 5))<<std::endl;
-                    
-                    // 判断当前工位点是否需要停车
-                	if((zcData.All_Station[i-1].Station_Status & (0x01 << 4)) == 16)
-                	{
-                		continue;
-                	}
-                    if( (zcData.All_Station[i-1].Station_Status & (0x01 << 2)) == 4 || (zcData.All_Station[i-1].Station_Status & (0x01 << 5)) == 0)
-                    {
-                        zcData.Station = uint8_t(zcData.All_Station[i-1].Station_ID);
-                        std::cout<<" *** 目标工位点是 [ "<<static_cast<int>(zcData.Station)<<" ] *** "<<std::endl;
-                        break;
-                    }
-                }
-                if(zcData.Station != 0)
-                {
-                    getPairAtIndex(pairs, // 工位点信息
-                                   zcData.Station - 1);//筛选出的工位点
-                }
-                else// 如果接收工位点信息为0，特殊处理
-                {
-                    myPair.setX(0.0);
-                    myPair.setY(0.0);
-                }
-            }
-            //休眠 20 毫秒
-            std::this_thread::sleep_for(std::chrono::milliseconds(20));
-        }
-    } catch (const std::exception &e) {
-        std::cerr << e.what() << '\n';
-    }
+			// ===== 关键修改：一次性完成所有ZcData更新 =====
+			{
+				std::lock_guard<std::mutex> lock(fusions_mutex_);
+				ZcData& zc = fusions_.zcData;
+
+				// 1. 解析原始数据
+				zc.setData(buf_vec);
+
+				// 2. 立即筛选目标工位点（在同一个锁内）
+				int number = static_cast<int>(zc.Station_Num);
+				if (number > 0){
+					for (int i = 1; i <= number; i++) {
+						uint8_t status = zc.All_Station[i-1].Station_Status;
+						if ((status & (0x01 << 4)) == 16) {
+							continue;
+						}
+						if ((status & (0x01 << 2)) == 4 || (status & (0x01 << 5)) == 0) {
+							zc.Station = zc.All_Station[i-1].Station_ID;
+							break;
+						}
+					}
+				}
+
+				if (zc.Station != FusionConstants::INVALID_STATION && (zc.Station - 1) < workPairs_.size()) {
+					fusions_.targetPair = workPairs_[zc.Station - 1];
+				}
+
+				// 发送UDP
+				sendUDPTunSpeed(zc.Direction);
+			}
+			// ===== 锁已释放 =====
+		}
+		//休眠 20 毫秒
+		std::this_thread::sleep_for(std::chrono::milliseconds(20));
+	}
 }
-
-
 
 /**
  * 发送组播数据，用于在 MDC 内部广播方向
@@ -322,95 +362,76 @@ void MultisensorFusion::mdcBroadcastData() {
     uint16_t port = 8848;  // 替换为需要的端口
     std::string interfaceName = "eth0.12";  // 替换为实际的网卡名称
     UdpMulticastSender sender(multicastAddress, port, interfaceName);
-    while (true) {
-        std::cout << "Sent heartbeat: " << de << std::endl;
-        // 该 if 和 if else 语句的目的是：当车子为手动模式时候，
-        // 车控发过来的数据是170，此时需要把数据转成1、2，以便在mdc内部广播方向
-        // 因为，如果为自动模式，de的值为 1 或 2 ，为手动模式时de的值为 170 或 85 （de 在 RecvLocation 函数被赋值）
-        if (de == 170) {
-            de = 2;
-        } else if (de == 85) {
-            de = 1;
-        }
+    while (isThreadRunning) {
+    	// 获取当前方向
+		int currentDir = getDirection();
 
-        std::cout << "开始发送广播数据" << std::endl;
-        if(zcData.Station_Num > 0)
-        {
-        	sender.sendMessage(zcData.Direction, zcData.All_Station.front().Station_ID, zcData.All_Station[zcData.Station_Num-1].Station_ID);
+		// 方向转换：170->2, 85->1
+		if (currentDir == FusionConstants::DIRECTION_MANUAL_END2) {
+			currentDir = FusionConstants::DIRECTION_TO_END2;
+		} else if (currentDir == FusionConstants::DIRECTION_MANUAL_END1) {
+			currentDir = FusionConstants::DIRECTION_TO_END1;
+		}
+
+        uint8_t preDirection = static_cast<uint8_t>(currentDir & 0xFF);
+        // 获取ZcData副本
+		ZcData zcCopy = getZcDataCopy();
+		uint8_t obstacleStatus = getObstacleStatus();
+
+        if(zcCopy.Station_Num > 0){
+        	sender.sendMessage(preDirection, zcCopy.All_Station.front().Station_ID, zcCopy.All_Station[zcCopy.Station_Num-1].Station_ID, obstacleStatus);
         }
         else {
-        	sender.sendMessage(zcData.Direction, zcData.All_Station.front().Station_ID, zcData.All_Station.back().Station_ID);
+        	sender.sendMessage(0, 0, 0, 0);
 		}
         // 等待 100 毫秒
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 }
 
-
 //---------------------------------------构造函数去调用一下两个函数 getPreFusion（），RecvLocation（）
 /*
  * 获取感知数据
  */
 void MultisensorFusion::getPreFusion() {
-    // 定义融合输出数据容器
     HafFusionOutArray <float32_t> data;
     // 从节点获取融合输出对象数据
     auto fusionOutObjectsDataPtrVec = node.GetNFusionOutObjectData(1);
     if (!fusionOutObjectsDataPtrVec.empty()) {
         // 提取数据到data
         data = *fusionOutObjectsDataPtrVec.front();
-    } else {
-        std::cout << "Failed to Get First fusionOutObjects Data or null pointer" << std::endl;
     }
+
     // 提取数据帧ID 和 异常标志
     std::string idStr = data.frameID;
     uint32_t isEx = data.seq;
-    if (idStr == "1") {
-        if (isEx == 1) {
-            ses.a4 = 1;
-        } else {
-            ses.a4 = 0;
-        }
+    // 更新传感器故障状态
+	updateSensorFault([&idStr, isEx](SensorFault& sf) {
+		if (idStr == "1") {
+			sf.a4 = (isEx == 1);
+		} else if (idStr == "2") {
+			sf.b2 = (isEx == 1);
+		}
+	});
 
-    } else if (idStr == "2") {
-        if (isEx == 1) {
-            ses.b2 = 1;
-        } else {
-            ses.b2 = 0;
-        }
-    }
-    // 如果接收到集合里面无数据,说明没有障碍物
-    if (data.fusionOut.size() <= 0) {
-        std::cout << "此时无障碍物" << std::endl;
-        //障碍物信息归零
-        pre.Obstacle_Type = 0;
-        pre.Obstacle_Distance = 0;
-        pre.confidence = 0;
-        pre.rect_center_x = 0;
-        pre.rect_center_y = 0;
-        pre.rect_size_x = 0;
-        pre.rect_size_y = 0;
-        pre.abs_rect_size_x = 0 + 30000;
-        pre.abs_rect_size_y = 0 + 30000;
-        pre.velocity_x = 0 + 30000;
-        pre.velocity_y = 0 + 30000;
-    }
-    // 遍历融合输出数据
-    for (const auto &iter: data.fusionOut) {
-        // 提取并处理障碍物信息
-        pre.Obstacle_Type = iter.cls;// 障碍物类型
-        float32_t x = iter.rect.center.x;// 障碍物中心X坐标
-        float32_t y = iter.rect.center.y;// 障碍物中心Y坐标
-        // 输出中心坐标
-        std::cout << "x = " << x << ", y = " << y << std::endl;
-        float32_t z = iter.rect.center.z;// 障碍物中心Z坐标
-        float32_t distance = std::sqrt(x * x + y * y + z * z);// 计算障碍物到车体的距离
-        pre.Obstacle_Distance = (int) (distance * 100);// 距离保存为整型，单位为厘米
-    }
-    return;
+	// 更新障碍物数据
+	if (data.fusionOut.size() <= 0) {
+		updateObstacle([](Obstacle& obs) {
+			obs.reset();
+		});
+	} else {
+		for (const auto &iter : data.fusionOut) {
+			updateObstacle([&iter](Obstacle& obs) {
+				obs.Obstacle_Type = iter.cls;
+				float32_t x = iter.rect.center.x;
+				float32_t y = iter.rect.center.y;
+				float32_t z = iter.rect.center.z;
+				float32_t distance = std::sqrt(x * x + y * y + z * z);
+				obs.Obstacle_Distance = static_cast<int>(distance * 100);
+			});
+		}
+	}
 }
-
-
 
 /**
  * 接收来自定位的数据
@@ -420,180 +441,140 @@ void MultisensorFusion::RecvLocation() {
         // 获取定位数据
         HafLocation data;
         auto curLocationVec = node.GetNLocationData(1);
-        if (!curLocationVec.empty() && curLocationVec.front() != nullptr) {
-            data = *curLocationVec.front();
-        } else {
-            HAF_LOG_ERROR << "Failed to Get First Location Data";
+
+        if(curLocationVec.empty() || curLocationVec.front() == nullptr){
+        	HAF_LOG_ERROR << "Failed to Get First Location Data";
+        	return;
         }
-        // 提取数据并初始化变量
-        uint32_t seq = data.header.seq;//组合导航状态：0正常，1异常
+        data = *curLocationVec.front();
 
-        // 获取1端定位点
-        float headX = data.pose.pose.position.x;   // 1号机柜位置X 米
-        float headY = data.pose.pose.position.y;   // 1号机柜位置Y
-        float headZ = data.pose.pose.position.z;   // 1号机柜位置Z ----------- 无用
-        float headT = data.pose.pose.orientation.z;// 1号机柜航向角 rad
-        float64_t rfidId = data.pose.pose.orientation.x;// RFID ID
-        float64_t rfidRssi = data.pose.pose.orientation.y;// RFID信号强度
-        std::cout<<" 标签id = "<<data.pose.pose.orientation.x<<std::endl;
-        std::cout<<" 标签id(rfidId) = "<<rfidId<<std::endl;
+        // 提取定位数据
+		uint32_t seq = data.header.seq;
+		float headX = data.pose.pose.position.x;
+		float headY = data.pose.pose.position.y;
+		float headZ = data.pose.pose.position.z;
+		float headT = data.pose.pose.orientation.z;
+		float64_t rfidId = data.pose.pose.orientation.x;
+		float64_t rfidRssi = data.pose.pose.orientation.y;
 
-        // qjj更改
-        // 估算2端定位点
-        float tail_x_temp;
-        float tail_y_temp;
-        getAnotherXY(data.pose.pose.position.x,
-					 data.pose.pose.position.y,
-					 data.pose.pose.orientation.z,
-				     tail_x_temp,tail_y_temp);
-        float64_t tail_x = tail_x_temp;// x
-        float64_t tail_y = tail_y_temp;// y
-        float64_t tail_z = headZ;      // z
-        float64_t tail_t = getAnotherYaw(headT);// yaw
-        ses.gps = seq;// 
+		// 计算车尾位置
+		Eigen::AngleAxisd rollAngle(0, Eigen::Vector3d::UnitX());
+		Eigen::AngleAxisd pitchAngle(0, Eigen::Vector3d::UnitY());
+		Eigen::AngleAxisd yawAngle(headT, Eigen::Vector3d::UnitZ());
+		Eigen::Quaterniond q = yawAngle * pitchAngle * rollAngle;
+		Eigen::Matrix3d R = q.toRotationMatrix();
+		Eigen::Vector3d offset_body(-FusionConstants::TRAIN_LENGTH, 0.0, 0.0);
+		Eigen::Vector3d head_pos(headX, headY, headZ);
+		Eigen::Vector3d tail_pos = head_pos + R * offset_body;
 
-        // 获取工位点坐标
-        float stationX = myPair.x;
-        float stationY = myPair.y;
+		float64_t tail_x = tail_pos(0);
+		float64_t tail_y = tail_pos(1);
+		float64_t tail_z = tail_pos(2);
+		float64_t tail_t = getAnotherYaw(headT);
 
-        float dis_1toStation,dis_2toStation;
-        // 有更新了目标工位点，才会重新计算朝1端走还是朝2端走
-        // zcData.Station 初始值为 0 (以及上一次)，historyStation 初始值也为 0
-        int zcDataStation = static_cast<int>(zcData.Station);
-        std::cout << "当前目标工位点       : "<<zcDataStation<<std::endl;
-        // 工位点不为0，才进行距离计算
-		if(zcDataStation != 0)
+		// 获取当前状态（需要加锁读取）
+		ZcData zcCopy = getZcDataCopy();
+		Pair targetPairCopy = getTargetPair();
+		int zcDataStation = static_cast<int>(zcCopy.Station);
+
+		float dis_1toStation = 0.0f;
+		float dotProduct = 0.0f;
+		int newDirection = 0;
+		int newHistoryStation = 0;
+		int newHistoryDirection = 0;
+		int newHistorySymbol = 0;
+
+		// 读取当前历史状态
 		{
-	        if ( zcDataStation != historyStation) // 如果工位点发生变化,需要重新确定一下行驶方向
-	        {
-	            // 1. 更新历史工位点
-	            historyStation = zcDataStation;
-	            if(zcDataStation != 0)
-	            {
-                    // 2. 计算1、2端与目标工位点的距离
-                    // 计算1端到目标工位点的距离
-                    dis_1toStation = std::sqrt((headX - stationX) * (headX - stationX) + (headY - stationY) * (headY - stationY));
-                    // 计算2端到目标工位点的距离
-                    dis_2toStation = std::sqrt((tail_x - stationX) * (tail_x - stationX) + (tail_y - stationY) * (tail_y - stationY));
-	                // 3. 计算朝1端走还是朝2端走
-	                if (dis_1toStation < dis_2toStation) // 如果离1端更近,朝1端方向行驶
-	                {
-	                    historyDiretion = 1;
-	                }
-	                else// 如果离2端更近,朝2端方向行驶
-	                {
-	                    historyDiretion = 2;
-	                }
-	                
-	                // 记录当前位置与目标工位点在x坐标轴上的 '作差' 符号
-	                if((headX - stationX) < 0.)
-	                {
-	                    historySymbol = -1;
-	                }
-	                else
-	                {
-	                    historySymbol = 1;
-	                }
-	            }
-	        }
-	        else // 如果工位点不发生变化，则只计算工位点与定位lidar的空间距离
-	        {
-	            // 因为目标工位点不变，所以用上一次的行驶方向作为当前行驶方向
-	            // 因此，进入该函数，只需要计算目标工位点到车辆当前位置的距离
-                dis_1toStation = std::sqrt((headX - stationX) * (headX - stationX) + (headY - stationY) * (headY - stationY));
-                // 新需求：写一个函数去判断工位点坐标的数值相减是否发生符号变化，如果发生了变化则说明越过了工位点
-                int historySymbolTemp;
-                if((headX - stationX) < 0.)
-                {
-                    historySymbolTemp = -1;
-                }
-                else
-                {
-                    historySymbolTemp = 1;
-                }
-                // 
-                if(historySymbolTemp != historySymbol)
-                {
-                    dis_1toStation = 0.0;
-                }
-                
-	        }
-			std::cout << "slam判定当前应朝      : "<<historyDiretion<<" 端方向前进" << std::endl;
-			std::cout << "车辆与目标工位点距离    : " << dis_1toStation <<"（米）"<< std::endl;
-			std::cout << "slam_yaw            : "<<data.pose.pose.orientation.z<<" (rad)"<<std::endl;
+			std::lock_guard<std::mutex> lock(fusions_mutex_);
+			newHistoryStation = fusions_.historyStation;
+			newHistoryDirection = fusions_.historyDirection;
+			newHistorySymbol = fusions_.historySymbol;
 		}
-//		 工位点为0，则不进行处理
-		else
-		{
-			historyStation = zcDataStation;
+		if (zcDataStation != FusionConstants::INVALID_STATION) {
+			// 获取工位点坐标
+			float stationX = targetPairCopy.x;
+			float stationY = targetPairCopy.y;
+			// 计算1端到目标工位点的距离
+			dis_1toStation = std::sqrt((headX - stationX) * (headX - stationX) +
+									   (headY - stationY) * (headY - stationY));
+
+			// 1. 构建从1端(车头)指向2端(车尾)的矢量
+			float vec1to2_X = tail_x - headX;
+			float vec1to2_Y = tail_y - headY;
+			// 2. 构建从1端(车头)指向工位点的矢量
+			float vec1toStation_X = stationX - headX;
+			float vec1toStation_Y = stationY - headY;
+			dotProduct = vec1toStation_X * vec1to2_X + vec1toStation_Y * vec1to2_Y;
+
+
+			// 更新了目标工位点，才会重新计算朝1端走还是朝2端走
+			if (newHistoryStation != zcDataStation) {
+				// 1. 更新历史工位点
+				newHistoryStation = zcDataStation;
+				// 2. 点积为负,朝1端方向行驶，否则朝2端
+				newHistoryDirection = (dotProduct < 0) ?
+									  FusionConstants::DIRECTION_TO_END1 :
+									  FusionConstants::DIRECTION_TO_END2;
+			}
+
+			newDirection = newHistoryDirection;
+		} else {
+			newHistoryStation = zcDataStation;
 			dis_1toStation = 0.0;
-			dis_2toStation = 0.0;
+			dotProduct = 0.0;
+			newHistoryDirection = 0;
+			newDirection = 0;
 		}
 
+		// 线程安全更新所有Slam和状态数据
+		{
+			std::lock_guard<std::mutex> lock(fusions_mutex_);
 
+			// 更新状态
+			fusions_.historyStation = newHistoryStation;
+			fusions_.historyDirection = newHistoryDirection;
+			fusions_.historySymbol = newHistorySymbol;
+			fusions_.direction = newDirection;
 
-        // cxy：获取 目标工位点与车辆距离 
-        slam.station_distance=(int)(dis_1toStation*100);
-        // 获取行驶方向
-        slam.direction = historyDiretion;
-        de = historyDiretion;
-        // 获取工位站ID
-        slam.station_info = zcDataStation;
+			// 更新传感器故障
+			fusions_.sensorFault.gps = seq;
 
-        // 手动模式（手动模式优先级别最高，切换手动模式时，slam.direction会重新更改为遥控器给的前进方向）
-        if (zcData.Run_Mode == 10)
-        {
-            //slam.direction = zcData.Direction;
-            //de = zcData.Direction;// 手动模式时，de 被赋值为 170 、85
-            std::cout << "中车方向：" << static_cast<int>(zcData.Direction) << std::endl;
-        } 
-        // 无人化模式
-        else if (zcData.Run_Mode == 11) 
-        {
-            //de = slam.direction;// 自动模式时，de 被赋值为 1 、2
-        }
+			// 更新Slam数据
+			Slam& slam = fusions_.slam;
+			slam.station_distance = static_cast<int>(dis_1toStation * 100);
+			slam.direction = newDirection;
+			slam.station_info = zcDataStation;
+			slam.hb = fusions_.incrementHeartbeat();
+			slam.version = 0;
+			slam.rfid_tag_id = static_cast<int>(rfidId);
+			slam.rfid_rssi = (rfidRssi >= 1) ? 1 : 0;
 
-        slam.hb = static_cast<int>(hb++);
-        slam.version = 0;
-        slam.rfid_tag_id = (int) rfidId;
-        if (rfidRssi >= 1) {
-            slam.rfid_rssi = 1;
-        } else {
-            slam.rfid_rssi = 0;
-        }
-
-        if(stationX==0.0&&stationY==0.0){
-        	slam.direction=0;
-        	//de=0;
-        }
-
-        // 更新Slam数据,根据协议文档偏移量
-        slam.headX = (int) (headX * 100) + 100000;
-        slam.headY = (int) (headY * 100) + 100000;
-        slam.headZ = (int) (headZ * 100) + 100000;
-        slam.headT = (int) (headT * 100) + 315;
-        slam.tailX = (int) (tail_x * 100) + 100000;
-        slam.tailY = (int) (tail_y * 100) + 100000;
-        slam.tailZ = (int) (tail_z * 100) + 100000;
-        slam.tailT = (int) (tail_t * 100) + 315;
-        std::cout << "Slam Data:" << std::endl;
-        std::cout << "HB: " << slam.hb << std::endl;
-        std::cout << "Version: " << slam.version << std::endl;
-        std::cout << "RFID Tag ID: " << slam.rfid_tag_id << std::endl;
-        std::cout << "RFID RSSI: " << slam.rfid_rssi << std::endl;
-        std::cout << "Head Position (X, Y, Z, T): ("
-                  << slam.headX << ", " << slam.headY << ", "
-                  << slam.headZ << ", " << slam.headT << ")" << std::endl;
-        std::cout << "Tail Position (X, Y, Z, T): ("
-                  << slam.tailX << ", " << slam.tailY << ", "
-                  << slam.tailZ << ", " << slam.tailT << ")" << std::endl;
+			slam.headX = static_cast<int>(headX * 100) + FusionConstants::POSITION_OFFSET;
+			slam.headY = static_cast<int>(headY * 100) + FusionConstants::POSITION_OFFSET;
+			slam.headZ = static_cast<int>(headZ * 100) + FusionConstants::POSITION_OFFSET;
+			slam.headT = static_cast<int>(headT * 100) + FusionConstants::ANGLE_OFFSET;
+			slam.tailX = static_cast<int>(tail_x * 100) + FusionConstants::POSITION_OFFSET;
+			slam.tailY = static_cast<int>(tail_y * 100) + FusionConstants::POSITION_OFFSET;
+			slam.tailZ = static_cast<int>(tail_z * 100) + FusionConstants::POSITION_OFFSET;
+			slam.tailT = static_cast<int>(tail_t * 100) + FusionConstants::ANGLE_OFFSET;
+		}
+		// 写入日志（在锁外执行）
+//		std::cout << "目标工位点：" << zcDataStation
+//				  << ", 方向：" << newDirection
+//				  << ", 距离：" << static_cast<int>(dis_1toStation * 100) << std::endl;
+		slamFile << zcDataStation << ", " << newDirection << ", "
+				 << static_cast<int>(dis_1toStation * 100) << ", "
+				 << dis_1toStation << ", " << dotProduct << ", "
+				 << newHistoryDirection << ", " << newHistorySymbol << ", "
+				 << targetPairCopy.x << ", " << targetPairCopy.y << ", "
+				 << headX << ", " << headY << ", " << headT << ", "
+				 ;
     }
     catch (const std::exception &e) {
-        // 捕获并记录标准异常
         logger.logException(std::runtime_error(e.what()));
     }
     catch (...) {
-        // 捕获并记录未知异常
         logger.log(Logger::ERROR, "getLocation捕获到未知异常");
     }
 }

@@ -57,9 +57,22 @@ include modules/location/CMakeFiles/location.dir/progress.make
 # Include the compile flags for this target's objects.
 include modules/location/CMakeFiles/location.dir/flags.make
 
+modules/location/CMakeFiles/location.dir/src/PointProcessing.cpp.o: modules/location/CMakeFiles/location.dir/flags.make
+modules/location/CMakeFiles/location.dir/src/PointProcessing.cpp.o: ../../../modules/location/src/PointProcessing.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/inwinic/Wll_project/CRRC/PanG/ADSFI/build/cmake-build-debug-default_toolchain/clang-aos_gea-aarch64/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object modules/location/CMakeFiles/location.dir/src/PointProcessing.cpp.o"
+	cd /home/inwinic/Wll_project/CRRC/PanG/ADSFI/build/cmake-build-debug-default_toolchain/clang-aos_gea-aarch64/modules/location && /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/clang++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/location.dir/src/PointProcessing.cpp.o -c /home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/location/src/PointProcessing.cpp
+
+modules/location/CMakeFiles/location.dir/src/PointProcessing.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/location.dir/src/PointProcessing.cpp.i"
+	cd /home/inwinic/Wll_project/CRRC/PanG/ADSFI/build/cmake-build-debug-default_toolchain/clang-aos_gea-aarch64/modules/location && /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/location/src/PointProcessing.cpp > CMakeFiles/location.dir/src/PointProcessing.cpp.i
+
+modules/location/CMakeFiles/location.dir/src/PointProcessing.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/location.dir/src/PointProcessing.cpp.s"
+	cd /home/inwinic/Wll_project/CRRC/PanG/ADSFI/build/cmake-build-debug-default_toolchain/clang-aos_gea-aarch64/modules/location && /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/location/src/PointProcessing.cpp -o CMakeFiles/location.dir/src/PointProcessing.cpp.s
+
 modules/location/CMakeFiles/location.dir/src/location.cpp.o: modules/location/CMakeFiles/location.dir/flags.make
 modules/location/CMakeFiles/location.dir/src/location.cpp.o: ../../../modules/location/src/location.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/inwinic/Wll_project/CRRC/PanG/ADSFI/build/cmake-build-debug-default_toolchain/clang-aos_gea-aarch64/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object modules/location/CMakeFiles/location.dir/src/location.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/inwinic/Wll_project/CRRC/PanG/ADSFI/build/cmake-build-debug-default_toolchain/clang-aos_gea-aarch64/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object modules/location/CMakeFiles/location.dir/src/location.cpp.o"
 	cd /home/inwinic/Wll_project/CRRC/PanG/ADSFI/build/cmake-build-debug-default_toolchain/clang-aos_gea-aarch64/modules/location && /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/clang++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/location.dir/src/location.cpp.o -c /home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/location/src/location.cpp
 
 modules/location/CMakeFiles/location.dir/src/location.cpp.i: cmake_force
@@ -72,7 +85,7 @@ modules/location/CMakeFiles/location.dir/src/location.cpp.s: cmake_force
 
 modules/location/CMakeFiles/location.dir/src/main.cpp.o: modules/location/CMakeFiles/location.dir/flags.make
 modules/location/CMakeFiles/location.dir/src/main.cpp.o: ../../../modules/location/src/main.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/inwinic/Wll_project/CRRC/PanG/ADSFI/build/cmake-build-debug-default_toolchain/clang-aos_gea-aarch64/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object modules/location/CMakeFiles/location.dir/src/main.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/inwinic/Wll_project/CRRC/PanG/ADSFI/build/cmake-build-debug-default_toolchain/clang-aos_gea-aarch64/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object modules/location/CMakeFiles/location.dir/src/main.cpp.o"
 	cd /home/inwinic/Wll_project/CRRC/PanG/ADSFI/build/cmake-build-debug-default_toolchain/clang-aos_gea-aarch64/modules/location && /usr/local/mdc_sdk_llvm/dp_gea/mdc_cross_compiler/bin/clang++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/location.dir/src/main.cpp.o -c /home/inwinic/Wll_project/CRRC/PanG/ADSFI/modules/location/src/main.cpp
 
 modules/location/CMakeFiles/location.dir/src/main.cpp.i: cmake_force
@@ -85,17 +98,19 @@ modules/location/CMakeFiles/location.dir/src/main.cpp.s: cmake_force
 
 # Object files for target location
 location_OBJECTS = \
+"CMakeFiles/location.dir/src/PointProcessing.cpp.o" \
 "CMakeFiles/location.dir/src/location.cpp.o" \
 "CMakeFiles/location.dir/src/main.cpp.o"
 
 # External object files for target location
 location_EXTERNAL_OBJECTS =
 
+modules/location/location: modules/location/CMakeFiles/location.dir/src/PointProcessing.cpp.o
 modules/location/location: modules/location/CMakeFiles/location.dir/src/location.cpp.o
 modules/location/location: modules/location/CMakeFiles/location.dir/src/main.cpp.o
 modules/location/location: modules/location/CMakeFiles/location.dir/build.make
 modules/location/location: modules/location/CMakeFiles/location.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/inwinic/Wll_project/CRRC/PanG/ADSFI/build/cmake-build-debug-default_toolchain/clang-aos_gea-aarch64/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Linking CXX executable location"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/inwinic/Wll_project/CRRC/PanG/ADSFI/build/cmake-build-debug-default_toolchain/clang-aos_gea-aarch64/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Linking CXX executable location"
 	cd /home/inwinic/Wll_project/CRRC/PanG/ADSFI/build/cmake-build-debug-default_toolchain/clang-aos_gea-aarch64/modules/location && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/location.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.

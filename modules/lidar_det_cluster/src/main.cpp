@@ -28,10 +28,12 @@ int main()
         // std::cout << "Lidar detection sample init failed!" << std::endl;
         return -1;
     }
+    ldt->Initialize();
     ldt->Process();
     while ((!g_stopFlag) && (!ldt->IsStop())) {
         std::this_thread::sleep_for(std::chrono::seconds(1));
     }
     ldt->Stop();
+    // FastLogger.flush(); // 确保日志被写入文件
     return 0;
 }

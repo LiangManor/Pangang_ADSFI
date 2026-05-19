@@ -1,0 +1,234 @@
+{
+  "instanceSpecifiers": [
+    {
+      "instanceSpecifier": "ins_a_cm/ins_a_cm/",
+      "service": "/HuaweiMDC/PlatformServices/DiagComClient",
+      "instanceIdentifiers": [
+        {
+          "protocol": "DDS",
+          "instanceIdentifier": "1",
+          "shortName": "/HuaweiMDC/PlatformApplication/DiagAgentApplication/Service/Consumer/DiagComClient/DidReadInstance"
+        },
+        {
+          "protocol": "DDS",
+          "instanceIdentifier": "2",
+          "shortName": "/HuaweiMDC/PlatformApplication/DiagAgentApplication/Service/Consumer/DiagComClient/DidWriteInstance"
+        }
+      ]
+    },
+    {
+      "instanceSpecifier": "ins_a_cm/ins_a_cm/CanFdMsgFromMcuRPort",
+      "service": "/HuaweiMDC/MdcPlatformServices/CanFdRxServiceInterface/CanFdRxServiceInterface",
+      "instanceIdentifiers": [
+        {
+          "protocol": "SOMEIP",
+          "instanceIdentifier": "1",
+          "shortName": "/HuaweiMDC/PlatformApplication/InsCmCenterApplication/Service/DP/Consumer/CanFdMsgFromMcuRequiredSomeipServiceInstance"
+        }
+      ]
+    },
+    {
+      "instanceSpecifier": "ins_a_cm/ins_a_cm/ChassisFromAppRPort",
+      "service": "/HuaweiMDC/PlatformServiceInterface/ChassisServiceInterface/ChassisReportServiceInterface",
+      "instanceIdentifiers": [
+        {
+          "protocol": "DDS",
+          "instanceIdentifier": "1",
+          "shortName": "/HuaweiMDC/PlatformApplication/InsCmCenterApplication/Service/DP/Consumer/ChassisFromAppDdsRequiredServiceInstance"
+        }
+      ]
+    },
+    {
+      "instanceSpecifier": "ins_a_cm/ins_a_cm/GnssRawToAppPPort",
+      "service": "/HuaweiMDC/PlatformServiceInterface/GnssInfoServiceInterface/GnssInfoServiceInterface",
+      "instanceIdentifiers": [
+        {
+          "protocol": "DDS",
+          "instanceIdentifier": "1",
+          "shortName": "/HuaweiMDC/PlatformApplication/InsCmCenterApplication/Service/DP/Provider/GnssRawToAppProvidedDdsServiceInstance"
+        }
+      ]
+    },
+    {
+      "instanceSpecifier": "ins_a_cm/ins_a_cm/GsvMsgToAppPPort",
+      "service": "/HuaweiMDC/PlatformServiceInterface/InsGsvInfoServiceInterface/InsGsvInfoServiceInterface",
+      "instanceIdentifiers": [
+        {
+          "protocol": "DDS",
+          "instanceIdentifier": "1",
+          "shortName": "/HuaweiMDC/PlatformApplication/InsCmCenterApplication/Service/DP/Provider/GsvInfoToAppProvidedDdsServiceInstance"
+        }
+      ]
+    },
+    {
+      "instanceSpecifier": "ins_a_cm/ins_a_cm/ImuRawMsgToAppPPort",
+      "service": "/HuaweiMDC/PlatformServiceInterface/InsImuRawInfoServiceInterface/InsImuRawInfoServiceInterface",
+      "instanceIdentifiers": [
+        {
+          "protocol": "DDS",
+          "instanceIdentifier": "1",
+          "shortName": "/HuaweiMDC/PlatformApplication/InsCmCenterApplication/Service/DP/Provider/ImuRawInfoToAppProvidedDdsServiceInstance"
+        }
+      ]
+    },
+    {
+      "instanceSpecifier": "ins_a_cm/ins_a_cm/ImuToAppPPort",
+      "service": "/HuaweiMDC/PlatformServiceInterface/ImuInfoServiceInterface/ImuInfoServiceInterface",
+      "instanceIdentifiers": [
+        {
+          "protocol": "DDS",
+          "instanceIdentifier": "1",
+          "shortName": "/HuaweiMDC/PlatformApplication/InsCmCenterApplication/Service/DP/Provider/ImuToAppProvidedDdsServiceInstance"
+        }
+      ]
+    },
+    {
+      "instanceSpecifier": "ins_a_cm/ins_a_cm/InsCfgClientRPort",
+      "service": "/HuaweiMDC/MdcPlatformServices/ConfigServerServiceInterface/ConfigServerServiceInterface",
+      "instanceIdentifiers": [
+        {
+          "protocol": "SOMEIP",
+          "instanceIdentifier": "1",
+          "shortName": "/HuaweiMDC/PlatformApplication/InsCmCenterApplication/Service/DP/Consumer/InsCfgServerRequiredServiceInstance"
+        }
+      ]
+    },
+    {
+      "instanceSpecifier": "ins_a_cm/ins_a_cm/InsDataFlowPPort",
+      "service": "/HuaweiMDC/PlatformServiceInterface/DataFlowServiceInterface/DataFlowServiceInterface",
+      "instanceIdentifiers": [
+        {
+          "protocol": "DDS",
+          "instanceIdentifier": "4",
+          "shortName": "/HuaweiMDC/PlatformApplication/InsCmCenterApplication/Service/DP/Provider/InsDataFlowProvidedDdsServiceInstance"
+        }
+      ]
+    },
+    {
+      "instanceSpecifier": "ins_a_cm/ins_a_cm/InsDevmFromAppRPort",
+      "service": "/HuaweiMDC/PlatformServiceInterface/DevmCenterServiceInterface/DevmCenterServiceInterface",
+      "instanceIdentifiers": [
+        {
+          "protocol": "SOMEIP",
+          "instanceIdentifier": "1",
+          "shortName": "/HuaweiMDC/PlatformApplication/InsCmCenterApplication/Service/DP/Consumer/InsDevmAppFromCenterRequiredASomeipServiceInstance"
+        },
+        {
+          "protocol": "SOMEIP",
+          "instanceIdentifier": "101",
+          "shortName": "/HuaweiMDC/PlatformApplication/InsCmCenterApplication/Service/DP/Consumer/InsDevmAppFromCenterRequiredBSomeipServiceInstance"
+        }
+      ]
+    },
+    {
+      "instanceSpecifier": "ins_a_cm/ins_a_cm/InsMntRPort",
+      "service": "/HuaweiMDC/PlatformServiceInterface/MntAgentServiceInterface/MntDelayServiceInterface",
+      "instanceIdentifiers": [
+        {
+          "protocol": "DDS",
+          "instanceIdentifier": "1",
+          "shortName": "/HuaweiMDC/PlatformApplication/MntAgentApplication/Service/Consumer/MntDelayRequiredServiceInstance"
+        }
+      ]
+    },
+    {
+      "instanceSpecifier": "ins_a_cm/ins_a_cm/InsNrmcRPort",
+      "service": "/HuaweiMDC/MdcPlatformServices/NrmcServiceInterface/NrmCenterServiceInterface",
+      "instanceIdentifiers": [
+        {
+          "protocol": "SOMEIP",
+          "instanceIdentifier": "1",
+          "shortName": "/HuaweiMDC/PlatformApplication/InsCmCenterApplication/Service/DP/Consumer/InsFromNrmcSomeipServiceInstance"
+        }
+      ]
+    },
+    {
+      "instanceSpecifier": "ins_a_cm/ins_a_cm/InsStatusInfoToAppPPort",
+      "service": "/HuaweiMDC/PlatformServiceInterface/InsStatusInfoServiceInterface/InsStatusInfoServiceInterface",
+      "instanceIdentifiers": [
+        {
+          "protocol": "DDS",
+          "instanceIdentifier": "1",
+          "shortName": "/HuaweiMDC/PlatformApplication/InsCmCenterApplication/Service/DP/Provider/InsStatusInfoToAppProvidedDdsServiceInstance"
+        }
+      ]
+    },
+    {
+      "instanceSpecifier": "ins_a_cm/ins_a_cm/InsTimeDelayPPort",
+      "service": "/HuaweiMDC/PlatformServiceInterface/TimeDelayServiceInterface/TimeDelayServiceInterface",
+      "instanceIdentifiers": [
+        {
+          "protocol": "DDS",
+          "instanceIdentifier": "4",
+          "shortName": "/HuaweiMDC/PlatformApplication/InsCmCenterApplication/Service/DP/Provider/InsTimeDelayProvidedDdsServiceInstance"
+        }
+      ]
+    },
+    {
+      "instanceSpecifier": "ins_a_cm/ins_a_cm/InsToAppPPort",
+      "service": "/HuaweiMDC/PlatformServiceInterface/InsInfoServiceInterface/InsInfoServiceInterface",
+      "instanceIdentifiers": [
+        {
+          "protocol": "DDS",
+          "instanceIdentifier": "1",
+          "shortName": "/HuaweiMDC/PlatformApplication/InsCmCenterApplication/Service/DP/Provider/InsToAppProvidedDdsServiceInstance"
+        }
+      ]
+    },
+    {
+      "instanceSpecifier": "ins_a_cm/ins_a_cm/TimeCompensateFromAppRPort",
+      "service": "/HuaweiMDC/PlatformServiceInterface/TsyncMeasureServiceInterface/TsyncMeasureServiceInterface",
+      "instanceIdentifiers": [
+        {
+          "protocol": "DDS",
+          "instanceIdentifier": "1",
+          "shortName": "/HuaweiMDC/PlatformApplication/InsCmCenterApplication/Service/DP/Consumer/TimeCompensateFromAppDdsRequiredServiceInstance"
+        }
+      ]
+    },
+    {
+      "instanceSpecifier": "ins_a_cm/ins_a_cm/UartMsgFromAppRPort",
+      "service": "/HuaweiMDC/PlatformServiceInterface/UartFwdServiceInterface/UartFwdServiceInterface",
+      "instanceIdentifiers": [
+        {
+          "protocol": "DDS",
+          "instanceIdentifier": "21",
+          "shortName": "/HuaweiMDC/PlatformApplication/InsCmCenterApplication/Service/DP/Consumer/UartMsgFromAppDdsRequiredServiceInstance"
+        }
+      ]
+    },
+    {
+      "instanceSpecifier": "ins_a_cm/ins_a_cm/UartMsgToAppPPort",
+      "service": "/HuaweiMDC/PlatformServiceInterface/UartFwdServiceInterface/UartFwdServiceInterface",
+      "instanceIdentifiers": [
+        {
+          "protocol": "DDS",
+          "instanceIdentifier": "1",
+          "shortName": "/HuaweiMDC/PlatformApplication/InsCmCenterApplication/Service/DP/Provider/UartMsgToAppProvidedDdsServiceInstance"
+        }
+      ]
+    },
+    {
+      "instanceSpecifier": "ins_a_cm/ins_a_cm/UtcTimeToAppPPort",
+      "service": "/HuaweiMDC/PlatformServiceInterface/TsyncGnssServiceInterface/TsyncGnssServiceInterface",
+      "instanceIdentifiers": [
+        {
+          "protocol": "DDS",
+          "instanceIdentifier": "1",
+          "shortName": "/HuaweiMDC/PlatformApplication/InsCmCenterApplication/Service/DP/Provider/UtcTimeToAppProvidedDdsServiceInstance"
+        }
+      ]
+    },
+    {
+      "instanceSpecifier": "ins_a_cm/ins_a_cm/reportEventRPort",
+      "service": "/HuaweiMDC/MdcPlatformServices/PlatformServiceInterface/FmServiceInterface/FmReportEventService",
+      "instanceIdentifiers": [
+        {
+          "protocol": "DDS",
+          "instanceIdentifier": "1444",
+          "shortName": "/HuaweiMDC/PlatformApplication/InsCmCenterApplication/Service/DP/Consumer/Ins610ReportEventRequiredDdsServiceInstance"
+        }
+      ]
+    }
+  ]
+}

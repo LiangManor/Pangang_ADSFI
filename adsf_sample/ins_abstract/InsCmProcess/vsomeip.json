@@ -1,0 +1,86 @@
+{
+  "logging": {
+    "level": "info",
+    "console": "false",
+    "syslog": {
+      "enable": "true"
+    }
+  },
+  "routing": "someipd",
+  "services": [],
+  "clients": [
+    {
+      "service": "1793",
+      "instance": "1",
+      "initial_delay_min": "10",
+      "initial_delay_max": "100",
+      "repetitions_base_delay": "200",
+      "repetitions_max": "3",
+      "ttl": "10",
+      "unreliable": [
+        "51793"
+      ],
+      "eventgroups": [
+        {
+          "eventgroup": "1"
+        }
+      ]
+    },
+    {
+      "service": "3392",
+      "instance": "1",
+      "initial_delay_min": "10",
+      "initial_delay_max": "100",
+      "repetitions_base_delay": "200",
+      "repetitions_max": "3",
+      "ttl": "10",
+      "unreliable": [
+        "52561"
+      ],
+      "eventgroups": [
+        {
+          "eventgroup": "1"
+        },
+        {
+          "eventgroup": "2"
+        }
+      ]
+    },
+    {
+      "service": "3456",
+      "instance": "1",
+      "initial_delay_min": "10",
+      "initial_delay_max": "100",
+      "repetitions_base_delay": "200",
+      "repetitions_max": "3",
+      "ttl": "10",
+      "unreliable": [
+        "52623"
+      ]
+    },
+    {
+      "service": "3456",
+      "instance": "101",
+      "initial_delay_min": "10",
+      "initial_delay_max": "100",
+      "repetitions_base_delay": "200",
+      "repetitions_max": "3",
+      "ttl": "10",
+      "unreliable": [
+        "52622"
+      ]
+    },
+    {
+      "service": "3648",
+      "instance": "1",
+      "initial_delay_min": "10",
+      "initial_delay_max": "100",
+      "repetitions_base_delay": "200",
+      "repetitions_max": "3",
+      "ttl": "10",
+      "unreliable": [
+        "52565"
+      ]
+    }
+  ]
+}
